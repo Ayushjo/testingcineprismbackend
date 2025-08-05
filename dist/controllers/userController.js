@@ -39,9 +39,6 @@ exports.registerUser = registerUser;
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log("=== LOGIN REQUEST DEBUG START ===");
-        console.log("Request Origin:", req.headers.origin);
-        console.log("NODE_ENV:", process.env.NODE_ENV);
         const user = await __1.default.user.findFirst({
             where: { email },
         });
@@ -51,46 +48,46 @@ const loginUser = async (req, res) => {
         const isPasswordValid = await bcrypt_1.default.compare(password, user.password);
         if (isPasswordValid) {
             const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "7d" });
-            // TRY MULTIPLE COOKIE APPROACHES
-            console.log("\n=== TRYING MULTIPLE COOKIE APPROACHES ===");
-            // Approach 1: Standard SameSite=None
-            const cookieOptions1 = {
+            console.log("=== TESTING DIFFERENT SAMESITE VALUES ===");
+            // Test 1: SameSite=None (current)
+            res.cookie("token_none", token, {
                 httpOnly: true,
                 secure: true,
                 sameSite: "none",
                 maxAge: 7 * 24 * 60 * 60 * 1000,
                 path: "/",
-            };
-            // Approach 2: Add explicit domain
-            const cookieOptions2 = {
+            });
+            // Test 2: SameSite=Lax (might work better)
+            res.cookie("token_lax", token, {
                 httpOnly: true,
                 secure: true,
-                sameSite: "none",
+                sameSite: "lax",
                 maxAge: 7 * 24 * 60 * 60 * 1000,
                 path: "/",
-                domain: ".railway.app",
-            };
-            // Approach 3: Manual header setting
-            const manualCookieString = `token=${token}; Max-Age=${7 * 24 * 60 * 60}; Path=/; HttpOnly; Secure; SameSite=None`;
-            console.log("Trying approach 1 - Standard cookie");
-            res.cookie("token", token, cookieOptions1);
-            console.log("Trying approach 2 - With domain");
-            res.cookie("token2", token, cookieOptions2);
-            console.log("Trying approach 3 - Manual header");
-            const existingSetCookie = res.getHeader("Set-Cookie") || [];
-            const setCookieArray = Array.isArray(existingSetCookie)
-                ? existingSetCookie
-                : [existingSetCookie];
-            setCookieArray.push(manualCookieString);
-            res.setHeader("Set-Cookie", setCookieArray);
-            // Check what we actually set
-            console.log("Final Set-Cookie headers:", res.getHeader("Set-Cookie"));
+            });
+            // Test 3: No SameSite specified
+            res.cookie("token_unset", token, {
+                httpOnly: true,
+                secure: true,
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                path: "/",
+            });
+            // Test 4: Not secure (for debugging only)
+            res.cookie("token_insecure", token, {
+                httpOnly: true,
+                secure: false,
+                sameSite: "lax",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                path: "/",
+            });
+            console.log("Set 4 different cookie variations");
+            console.log("Set-Cookie headers:", res.getHeader("Set-Cookie"));
             res.status(200).json({
                 message: "Login successful",
                 token,
                 debug: {
-                    cookiesAttempted: 3,
-                    timestamp: new Date().toISOString(),
+                    cookieVariations: 4,
+                    checkDevTools: "Look in Application > Cookies to see which ones were accepted",
                 },
             });
         }
