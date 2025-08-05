@@ -40,12 +40,13 @@ export default client;
 app.use(
   cors({
     origin: function (origin, callback) {
-      const allowedOrigins = [
-        "https://testingcineprism.vercel.app",
-      ];
+      console.log("Origin received:", origin); // Add this line
+      const allowedOrigins = ["https://testingcineprism.vercel.app"];
       if (!origin || allowedOrigins.includes(origin)) {
+        console.log("Origin allowed"); // Add this line
         callback(null, true);
       } else {
+        console.log("Origin blocked:", origin); // Add this line
         callback(new Error("Not allowed by CORS"));
       }
     },
