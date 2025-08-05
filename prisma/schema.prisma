@@ -1,0 +1,100 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model User{
+  id String @id @default(uuid())
+  username String
+  email String @unique
+  password String
+  role Role @default(USER)
+  comments Comment[]
+  likes Like[]
+  opinions UnpopularOpinion[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Post{
+  id String @id @default(uuid())
+  title String
+  content String
+  origin String
+  duration Int
+  genres String[]
+  images PostImage[]
+  comments Comment[]
+  likes Like[]
+  adminId Int @default(1)
+  year Int
+  rating Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PostImage{
+  id String @id @default(uuid())
+  imageUrl String
+  postId String
+  post Post @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comment{
+  id String @id @default(uuid())
+  content String
+  userId String
+  postId String?
+  opinionId String?
+  parentCommentId String?
+  replies Comment[] @relation(name: "CommentToComment")
+  user User @relation(fields: [userId], references: [id])
+  post Post? @relation(fields: [postId], references: [id])
+  opinion UnpopularOpinion? @relation(fields: [opinionId], references: [id])
+  parentComment Comment? @relation("CommentToComment",fields: [parentCommentId],references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Like{
+  id String @id @default(uuid())
+  userId String
+  postId String?
+  opinionId String?
+  user User @relation(fields: [userId], references: [id])
+  post Post? @relation(fields: [postId], references: [id])
+  opinion UnpopularOpinion? @relation(fields: [opinionId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([userId, postId])
+}
+
+model UnpopularOpinion{
+  id String @id @default(uuid())
+  userId String
+  content String
+  genres String[]
+  
+  user User @relation(fields: [userId], references: [id])
+  likes Like[]
+  comments Comment[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+}

@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const userController_1 = require("../controllers/userController");
+const extractUser_1 = require("../middlewares/extractUser");
+const router = (0, express_1.Router)();
+router.route("/register").post(userController_1.registerUser);
+router.route("/login").post(userController_1.loginUser);
+router.route("/me").get(userController_1.fetchUser);
+router.route("/create-opinion").post(extractUser_1.extractUserDetails, userController_1.postOpinion);
+router.route("/fetch-opinions").get(userController_1.fetchAllOpinions);
+router.route("/like").post(extractUser_1.extractUserDetails, userController_1.toggleLike);
+exports.default = router;
