@@ -38,7 +38,18 @@ exports.default = client;
 // }
 // findAdmin();
 app.use((0, cors_1.default)({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+        console.log("Origin received:", origin); // Add this line
+        const allowedOrigins = ["https://testingcineprism.vercel.app"];
+        if (!origin || allowedOrigins.includes(origin)) {
+            console.log("Origin allowed"); // Add this line
+            callback(null, true);
+        }
+        else {
+            console.log("Origin blocked:", origin); // Add this line
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],

@@ -49,7 +49,7 @@ const loginUser = async (req, res) => {
         if (isPasswordValid) {
             const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "7d" });
             res.cookie("token", token, {
-                httpOnly: false,
+                httpOnly: true,
                 secure: false,
                 sameSite: "lax",
                 maxAge: 7 * 24 * 60 * 60 * 1000,
