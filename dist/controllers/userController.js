@@ -39,30 +39,97 @@ exports.registerUser = registerUser;
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+        // === DEBUGGING: REQUEST INFO ===
+        console.log("=== LOGIN REQUEST DEBUG START ===");
+        console.log("Timestamp:", new Date().toISOString());
+        console.log("Request Origin:", req.headers.origin);
+        console.log("Request Host:", req.headers.host);
+        console.log("Request User-Agent:", req.headers["user-agent"]);
+        console.log("Request Referer:", req.headers.referer);
+        console.log("All Request Headers:", JSON.stringify(req.headers, null, 2));
+        console.log("NODE_ENV:", process.env.NODE_ENV);
+        console.log("Request body email:", email);
+        console.log("=== END REQUEST INFO ===\n");
         const user = await __1.default.user.findFirst({
             where: { email },
         });
         if (!user) {
+            console.log("❌ User not found for email:", email);
             return res.status(404).json({ message: "User not found" });
         }
+        console.log("✅ User found:", {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+        });
         const isPasswordValid = await bcrypt_1.default.compare(password, user.password);
         if (isPasswordValid) {
+            console.log("✅ Password validation successful");
             const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "7d" });
-            res.cookie("token", token, {
+            console.log("✅ JWT token generated");
+            console.log("Token length:", token.length);
+            console.log("Token preview:", token.substring(0, 50) + "...");
+            // === DEBUGGING: COOKIE CONFIGURATION ===
+            const cookieOptions = {
                 httpOnly: true,
                 secure: true,
                 sameSite: "none",
                 maxAge: 7 * 24 * 60 * 60 * 1000,
                 path: "/",
+            };
+            console.log("\n=== COOKIE DEBUG START ===");
+            console.log("Cookie options:", JSON.stringify(cookieOptions, null, 2));
+            console.log("Cookie max age in days:", cookieOptions.maxAge / (24 * 60 * 60 * 1000));
+            // Check current response headers before setting cookie
+            console.log("Response headers BEFORE setting cookie:", res.getHeaders());
+            // Set the cookie
+            res.cookie("token", token, cookieOptions);
+            // Check response headers after setting cookie
+            console.log("Response headers AFTER setting cookie:", res.getHeaders());
+            // Try to get the set-cookie header specifically
+            const setCookieHeader = res.getHeader("Set-Cookie");
+            console.log("Set-Cookie header value:", setCookieHeader);
+            console.log("Set-Cookie header type:", typeof setCookieHeader);
+            if (Array.isArray(setCookieHeader)) {
+                console.log("Set-Cookie header array length:", setCookieHeader.length);
+                setCookieHeader.forEach((cookie, index) => {
+                    console.log(`Set-Cookie[${index}]:`, cookie);
+                });
+            }
+            // Manual verification of cookie string
+            const expectedCookieString = `token=${token}; Max-Age=${cookieOptions.maxAge}; Path=/; HttpOnly; Secure; SameSite=None`;
+            console.log("Expected cookie string preview:", expectedCookieString.substring(0, 100) + "...");
+            console.log("=== END COOKIE DEBUG ===\n");
+            // === DEBUGGING: RESPONSE INFO ===
+            console.log("=== RESPONSE DEBUG START ===");
+            console.log("About to send response with status 200");
+            console.log("Response message: Login successful");
+            console.log("Including token in response body: YES");
+            const response = res.status(200).json({
+                message: "Login successful",
+                token,
+                debug: {
+                    cookieSet: !!setCookieHeader,
+                    timestamp: new Date().toISOString(),
+                    userAgent: req.headers["user-agent"],
+                    origin: req.headers.origin,
+                },
             });
-            res.status(200).json({ message: "Login successful", token });
+            console.log("✅ Response sent successfully");
+            console.log("=== LOGIN REQUEST DEBUG END ===\n");
+            return response;
         }
         else {
-            res.status(401).json({ message: "Invalid credentials" });
+            console.log("❌ Password validation failed for user:", email);
+            return res.status(401).json({ message: "Invalid credentials" });
         }
     }
     catch (error) {
-        console.log("Login error:", error.message);
+        console.log("💥 LOGIN ERROR OCCURRED:");
+        console.log("Error message:", error.message);
+        console.log("Error stack:", error.stack);
+        console.log("Error name:", error.name);
+        console.log("Full error object:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
         res.status(500).json({ message: error.message });
     }
 };
