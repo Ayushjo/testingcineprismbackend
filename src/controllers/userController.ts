@@ -52,7 +52,7 @@ export const loginUser = async (req: Request, res: Response) => {
         { expiresIn: "7d" }
       );
       res.cookie("token", token, {
-        httpOnly: false,
+        httpOnly: true,
         secure: false,
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
