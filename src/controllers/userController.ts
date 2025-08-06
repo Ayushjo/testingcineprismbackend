@@ -53,45 +53,13 @@ export const loginUser = async (req: Request, res: Response) => {
         { expiresIn: "7d" }
       );
 
-      console.log("=== TESTING DIFFERENT SAMESITE VALUES ===");
-
-      // Test 1: SameSite=None (current)
-      res.cookie("token_none", token, {
+      res.cookie("token", token, {
         httpOnly: true,
         secure: true,
-        sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: "/",
+        //@ts-ignore
+        sameSite: "None",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
-
-      // Test 2: SameSite=Lax (might work better)
-      res.cookie("token_lax", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: "/",
-      });
-
-      // Test 3: No SameSite specified
-      res.cookie("token_unset", token, {
-        httpOnly: true,
-        secure: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: "/",
-      });
-
-      // Test 4: Not secure (for debugging only)
-      res.cookie("token_insecure", token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: "/",
-      });
-
-      console.log("Set 4 different cookie variations");
-      console.log("Set-Cookie headers:", res.getHeader("Set-Cookie"));
 
       res.status(200).json({
         message: "Login successful",
