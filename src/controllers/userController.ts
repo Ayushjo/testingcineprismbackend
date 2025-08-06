@@ -152,10 +152,10 @@ export const fetchAllOpinions = async (req: Request, res: Response) => {
 
 export const toggleLike = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const opinionId  = req.body?.opinionId;
+    const opinionId = req.body?.opinionId;
     const postId = req.body?.postId;
     console.log(opinionId, postId);
-    
+
     if (!opinionId && !postId) {
       return res.status(400).json({ message: "Bad request" });
     } else if (opinionId) {
@@ -211,6 +211,16 @@ export const toggleLike = async (req: AuthorizedRequest, res: Response) => {
     }
   } catch (error: any) {
     console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const logoutUser = async (req: Request, res: Response) => {
+  try {
+    res.clearCookie("token");
+    res.status(200).json({message:"Cookie deleted successfully"});
+  } catch (error:any) {
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };

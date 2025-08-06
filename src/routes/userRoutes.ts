@@ -3,6 +3,7 @@ import {
   fetchAllOpinions,
   fetchUser,
   loginUser,
+  logoutUser,
   postOpinion,
   registerUser,
   toggleLike,
@@ -17,4 +18,5 @@ router.route("/me").get(fetchUser);
 router.route("/create-opinion").post(extractUserDetails, postOpinion);
 router.route("/fetch-opinions").get(fetchAllOpinions);
 router.route("/like").post(extractUserDetails, toggleLike);
+router.route("/logout").post(logoutUser);
 export default router;
