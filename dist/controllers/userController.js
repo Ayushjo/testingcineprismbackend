@@ -8,6 +8,7 @@ const __1 = __importDefault(require(".."));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const js_cookie_1 = __importDefault(require("js-cookie"));
 dotenv_1.default.config();
 const registerUser = async (req, res) => {
     try {
@@ -216,7 +217,7 @@ const toggleLike = async (req, res) => {
 exports.toggleLike = toggleLike;
 const logoutUser = async (req, res) => {
     try {
-        res.clearCookie("token");
+        js_cookie_1.default.remove("token");
         res.status(200).json({ message: "Cookie deleted successfully" });
     }
     catch (error) {

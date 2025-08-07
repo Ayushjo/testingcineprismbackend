@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { AuthorizedRequest } from "../middlewares/extractUser";
-import { cli } from "winston/lib/winston/config";
+import Cookies from "js-cookie";
 dotenv.config();
 export const registerUser = async (req: Request, res: Response) => {
   try {
@@ -217,9 +217,9 @@ export const toggleLike = async (req: AuthorizedRequest, res: Response) => {
 
 export const logoutUser = async (req: Request, res: Response) => {
   try {
-    res.clearCookie("token");
-    res.status(200).json({message:"Cookie deleted successfully"});
-  } catch (error:any) {
+    Cookies.remove("token");
+    res.status(200).json({ message: "Cookie deleted successfully" });
+  } catch (error: any) {
     console.log(error);
     res.status(500).json({ message: error.message });
   }
