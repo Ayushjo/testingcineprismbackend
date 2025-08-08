@@ -224,3 +224,31 @@ export const logoutUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const handleComment = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const opinionId = req.body?.opinionId;
+    const postId = req.body?.postId;
+    const parentCommentId = req.body?.parentCommentId;
+
+    if (!opinionId && !postId && !parentCommentId) {
+      return res.status(400).json({ message: "Bad request" });
+    } else if (opinionId) {
+      const content = req.body?.content;
+      const userId = req.user.id;
+      const comment = await client.comment.create({
+        data: {
+          content,
+          userId,
+          opinionId,
+        },
+      });
+      res
+        .status(200)
+        .json({ comment, message: "Comment created successfully" });
+    }
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};

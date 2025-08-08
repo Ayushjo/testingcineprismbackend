@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   fetchAllOpinions,
   fetchUser,
+  handleComment,
   loginUser,
   logoutUser,
   postOpinion,
@@ -19,4 +20,5 @@ router.route("/create-opinion").post(extractUserDetails, postOpinion);
 router.route("/fetch-opinions").get(fetchAllOpinions);
 router.route("/like").post(extractUserDetails, toggleLike);
 router.route("/logout").post(logoutUser);
+router.route("/opinion-comment").post(extractUserDetails, handleComment);
 export default router;

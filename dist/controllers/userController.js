@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logoutUser = exports.toggleLike = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = exports.loginUser = exports.registerUser = void 0;
+exports.handleComment = exports.logoutUser = exports.toggleLike = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = exports.loginUser = exports.registerUser = void 0;
 const __1 = __importDefault(require(".."));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -226,3 +226,32 @@ const logoutUser = async (req, res) => {
     }
 };
 exports.logoutUser = logoutUser;
+const handleComment = async (req, res) => {
+    try {
+        const opinionId = req.body?.opinionId;
+        const postId = req.body?.postId;
+        const parentCommentId = req.body?.parentCommentId;
+        if (!opinionId && !postId && !parentCommentId) {
+            return res.status(400).json({ message: "Bad request" });
+        }
+        else if (opinionId) {
+            const content = req.body?.content;
+            const userId = req.user.id;
+            const comment = await __1.default.comment.create({
+                data: {
+                    content,
+                    userId,
+                    opinionId,
+                },
+            });
+            res
+                .status(200)
+                .json({ comment, message: "Comment created successfully" });
+        }
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.handleComment = handleComment;

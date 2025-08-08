@@ -11,4 +11,5 @@ router.route("/create-opinion").post(extractUser_1.extractUserDetails, userContr
 router.route("/fetch-opinions").get(userController_1.fetchAllOpinions);
 router.route("/like").post(extractUser_1.extractUserDetails, userController_1.toggleLike);
 router.route("/logout").post(userController_1.logoutUser);
+router.route("/opinion-comment").post(extractUser_1.extractUserDetails, userController_1.handleComment);
 exports.default = router;
