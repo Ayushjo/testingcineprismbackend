@@ -3,12 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleComment = exports.logoutUser = exports.toggleLike = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = exports.loginUser = exports.registerUser = void 0;
+exports.fetchCommentsWithOpinionId = exports.handleComment = exports.logoutUser = exports.toggleLike = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = exports.loginUser = exports.registerUser = void 0;
 const __1 = __importDefault(require(".."));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const js_cookie_1 = __importDefault(require("js-cookie"));
+const commentHelpers_1 = require("../helpers/commentHelpers");
 dotenv_1.default.config();
 const registerUser = async (req, res) => {
     try {
@@ -243,10 +244,22 @@ const handleComment = async (req, res) => {
                     userId,
                     opinionId,
                 },
+                include: {
+                    user: true
+                }
             });
+            const formattedComment = {
+                id: comment.id,
+                username: comment.user.username,
+                avatarInitial: comment.user.username[0].toUpperCase(),
+                commentText: comment.content,
+                userId: comment.userId,
+                createdAt: comment.createdAt,
+                replies: [],
+            };
             res
                 .status(200)
-                .json({ comment, message: "Comment created successfully" });
+                .json({ formattedComment, message: "Comment created successfully" });
         }
     }
     catch (error) {
@@ -255,3 +268,33 @@ const handleComment = async (req, res) => {
     }
 };
 exports.handleComment = handleComment;
+const fetchCommentsWithOpinionId = async (req, res) => {
+    try {
+        const { opinionId } = req.body;
+        if (!opinionId) {
+            return res.status(400).json({ message: "OpinionId is required" });
+        }
+        // Fetch top-level comments with recursive replies (up to 5 levels deep)
+        const comments = await __1.default.comment.findMany({
+            where: {
+                opinionId: opinionId,
+                parentCommentId: null, // Only top-level comments
+            },
+            include: (0, commentHelpers_1.getCommentInclude)(0, 5), // Support up to 5 levels of nesting
+            orderBy: {
+                createdAt: "asc",
+            },
+        });
+        // Format comments recursively
+        const formattedComments = comments.map(commentHelpers_1.formatComment);
+        res.status(200).json({
+            comments: formattedComments,
+            message: "Comments fetched successfully",
+        });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.fetchCommentsWithOpinionId = fetchCommentsWithOpinionId;

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { AuthorizedRequest } from "../middlewares/extractUser";
 import Cookies from "js-cookie";
+import { formatComment, getCommentInclude } from "../helpers/commentHelpers";
 dotenv.config();
 export const registerUser = async (req: Request, res: Response) => {
   try {
@@ -242,11 +243,59 @@ export const handleComment = async (req: AuthorizedRequest, res: Response) => {
           userId,
           opinionId,
         },
+        include:{
+          user:true
+        }
       });
+      const formattedComment = {
+        id: comment.id,
+        username: comment.user.username,
+        avatarInitial: comment.user.username[0].toUpperCase(),
+        commentText: comment.content,
+        userId: comment.userId,
+        createdAt: comment.createdAt,
+        replies: [],
+      };
       res
         .status(200)
-        .json({ comment, message: "Comment created successfully" });
+        .json({ formattedComment, message: "Comment created successfully" });
     }
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const fetchCommentsWithOpinionId = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { opinionId } = req.body;
+
+    if (!opinionId) {
+      return res.status(400).json({ message: "OpinionId is required" });
+    }
+
+    // Fetch top-level comments with recursive replies (up to 5 levels deep)
+    const comments = await client.comment.findMany({
+      where: {
+        opinionId: opinionId,
+        parentCommentId: null, // Only top-level comments
+      },
+      include: getCommentInclude(0, 5), // Support up to 5 levels of nesting
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    // Format comments recursively
+    const formattedComments = comments.map(formatComment);
+
+    res.status(200).json({
+      comments: formattedComments,
+      message: "Comments fetched successfully",
+    });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
