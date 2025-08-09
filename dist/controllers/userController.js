@@ -261,6 +261,23 @@ const handleComment = async (req, res) => {
                 .status(200)
                 .json({ formattedComment, message: "Comment created successfully" });
         }
+        else if (parentCommentId) {
+            const content = req.body?.content;
+            const userId = req.user.id;
+            const comment = await __1.default.comment.create({
+                data: {
+                    content,
+                    userId,
+                    parentCommentId,
+                },
+                include: {
+                    user: true
+                }
+            });
+            res
+                .status(200)
+                .json({ message: "Comment created successfully" });
+        }
     }
     catch (error) {
         console.log(error.message);
