@@ -8,7 +8,6 @@ const __1 = __importDefault(require(".."));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const js_cookie_1 = __importDefault(require("js-cookie"));
 const commentHelpers_1 = require("../helpers/commentHelpers");
 dotenv_1.default.config();
 const registerUser = async (req, res) => {
@@ -218,8 +217,20 @@ const toggleLike = async (req, res) => {
 exports.toggleLike = toggleLike;
 const logoutUser = async (req, res) => {
     try {
-        js_cookie_1.default.remove("token");
-        res.status(200).json({ message: "Cookie deleted successfully" });
+        // Method 1: Using res.clearCookie() - Recommended
+        res.clearCookie("token", {
+            httpOnly: true, // Include if your cookie was set with httpOnly
+            secure: true, // Include if your cookie was set with secure flag
+            sameSite: "none", // Include if your cookie was set with  // Include if your cookie was set with a specific path
+        });
+        // Method 2: Alternative - Set cookie with expired date
+        // res.cookie("token", "", {
+        //   httpOnly: true,
+        //   secure: process.env.NODE_ENV === "production",
+        //   sameSite: "strict",
+        //   expires: new Date(0) // Set expiry to past date
+        // });
+        res.status(200).json({ message: "Logged out successfully" });
     }
     catch (error) {
         console.log(error);

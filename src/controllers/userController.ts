@@ -218,8 +218,22 @@ export const toggleLike = async (req: AuthorizedRequest, res: Response) => {
 
 export const logoutUser = async (req: Request, res: Response) => {
   try {
-    Cookies.remove("token");
-    res.status(200).json({ message: "Cookie deleted successfully" });
+    // Method 1: Using res.clearCookie() - Recommended
+    res.clearCookie("token", {
+      httpOnly: true, // Include if your cookie was set with httpOnly
+      secure: true, // Include if your cookie was set with secure flag
+      sameSite: "none", // Include if your cookie was set with  // Include if your cookie was set with a specific path
+    });
+
+    // Method 2: Alternative - Set cookie with expired date
+    // res.cookie("token", "", {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production",
+    //   sameSite: "strict",
+    //   expires: new Date(0) // Set expiry to past date
+    // });
+
+    res.status(200).json({ message: "Logged out successfully" });
   } catch (error: any) {
     console.log(error);
     res.status(500).json({ message: error.message });
