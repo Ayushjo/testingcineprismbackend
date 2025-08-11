@@ -13,4 +13,5 @@ router.route("/like").post(extractUser_1.extractUserDetails, userController_1.to
 router.route("/logout").post(userController_1.logoutUser);
 router.route("/opinion-comment").post(extractUser_1.extractUserDetails, userController_1.handleComment);
 router.route("/fetch-comments").post(userController_1.fetchCommentsWithOpinionId);
+router.route("/load-more-replies").post(extractUser_1.extractUserDetails, userController_1.loadMoreReplies);
 exports.default = router;

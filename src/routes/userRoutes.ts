@@ -4,6 +4,7 @@ import {
   fetchCommentsWithOpinionId,
   fetchUser,
   handleComment,
+  loadMoreReplies,
   loginUser,
   logoutUser,
   postOpinion,
@@ -23,4 +24,5 @@ router.route("/like").post(extractUserDetails, toggleLike);
 router.route("/logout").post(logoutUser);
 router.route("/opinion-comment").post(extractUserDetails, handleComment);
 router.route("/fetch-comments").post(fetchCommentsWithOpinionId);
+router.route("/load-more-replies").post(extractUserDetails,loadMoreReplies);
 export default router;

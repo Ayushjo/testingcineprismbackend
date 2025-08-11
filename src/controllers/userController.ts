@@ -242,91 +242,261 @@ export const logoutUser = async (req: Request, res: Response) => {
 
 export const handleComment = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const opinionId = req.body?.opinionId;
-    const postId = req.body?.postId;
-    const parentCommentId = req.body?.parentCommentId;
+    const { opinionId, postId, parentCommentId, content } = req.body;
 
     if (!opinionId && !postId && !parentCommentId) {
       return res.status(400).json({ message: "Bad request" });
-    } else if (opinionId) {
-      const content = req.body?.content;
-      const userId = req.user.id;
-      const comment = await client.comment.create({
-        data: {
-          content,
-          userId,
-          opinionId,
-        },
-        include:{
-          user:true
-        }
-      });
-      const formattedComment = {
-        id: comment.id,
-        username: comment.user.username,
-        avatarInitial: comment.user.username[0].toUpperCase(),
-        commentText: comment.content,
-        userId: comment.userId,
-        createdAt: comment.createdAt,
-        replies: [],
-      };
-      res
-        .status(200)
-        .json({ formattedComment, message: "Comment created successfully" });
     }
-    else if(parentCommentId){
-      const content = req.body?.content;
-      const userId = req.user.id;
-      const comment = await client.comment.create({
-        data: {
-          content,
-          userId,
-          parentCommentId,
-        },
-        include:{
-          user:true
-        }
-      });
-      res
-        .status(200)
-        .json({message: "Comment created successfully" });
-      
+
+    if (!content?.trim()) {
+      return res.status(400).json({ message: "Comment content is required" });
     }
+
+    const userId = req.user.id;
+
+    // Validate that the parent comment exists if parentCommentId is provided
+    if (parentCommentId) {
+      const parentComment = await client.comment.findUnique({
+        where: { id: parentCommentId },
+      });
+
+      if (!parentComment) {
+        return res.status(404).json({ message: "Parent comment not found" });
+      }
+    }
+
+    const comment = await client.comment.create({
+      data: {
+        content: content.trim(),
+        userId,
+        opinionId,
+        postId,
+        parentCommentId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
+    });
+
+    const formattedComment = formatComment(comment);
+
+    res.status(200).json({
+      formattedComment,
+      message: "Comment created successfully",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+export const fetchCommentsWithOpinionId = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const {
+      opinionId,
+      parentCommentId = null,
+      page = 1,
+      limit = 20,
+      loadReplies = false,
+    } = req.body;
+
+    if (!opinionId) {
+      return res.status(400).json({ message: "OpinionId is required" });
+    }
+
+    const offset = (page - 1) * limit;
+
+    if (loadReplies && parentCommentId) {
+      // Load replies for a specific comment (lazy loading)
+      const replies = await client.comment.findMany({
+        where: {
+          parentCommentId: parentCommentId,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
+          },
+          _count: {
+            select: {
+              replies: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+        skip: offset,
+        take: limit,
+      });
+
+      const formattedReplies = replies.map(formatComment);
+
+      const totalReplies = await client.comment.count({
+        where: {
+          parentCommentId: parentCommentId,
+        },
+      });
+
+      return res.status(200).json({
+        comments: formattedReplies,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalReplies / limit),
+          hasMore: offset + replies.length < totalReplies,
+          totalCount: totalReplies,
+        },
+        message: "Replies fetched successfully",
+      });
+    }
+
+    // Load top-level comments with limited depth (first load)
+    const comments = await client.comment.findMany({
+      where: {
+        opinionId: opinionId,
+        parentCommentId: null, // Only top-level comments
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        replies: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+              },
+            },
+            _count: {
+              select: {
+                replies: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+          take: 3, // Only show first 3 replies initially
+        },
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      skip: offset,
+      take: limit,
+    });
+
+    // Format comments with "load more" indicators
+    const formattedComments = comments.map((comment) => ({
+      ...formatComment(comment),
+      replies: comment.replies.map(formatComment),
+      hasMoreReplies: (comment._count?.replies || 0) > 3,
+      totalReplies: comment._count?.replies || 0,
+    }));
+
+    const totalComments = await client.comment.count({
+      where: {
+        opinionId: opinionId,
+        parentCommentId: null,
+      },
+    });
+
+    res.status(200).json({
+      comments: formattedComments,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalComments / limit),
+        hasMore: offset + comments.length < totalComments,
+        totalCount: totalComments,
+      },
+      message: "Comments fetched successfully",
+    });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
   }
 };
 
-export const fetchCommentsWithOpinionId = async (
-  req: Request,
-  res: Response
-) => {
+export const loadMoreReplies = async (req: Request, res: Response) => {
   try {
-    const { opinionId } = req.body;
+    const { parentCommentId, page = 1, limit = 10 } = req.body;
 
-    if (!opinionId) {
-      return res.status(400).json({ message: "OpinionId is required" });
+    if (!parentCommentId) {
+      return res.status(400).json({ message: "Parent comment ID is required" });
     }
 
-    // Fetch top-level comments with recursive replies (up to 5 levels deep)
-    const comments = await client.comment.findMany({
+    const offset = (page - 1) * limit;
+
+    const replies = await client.comment.findMany({
       where: {
-        opinionId: opinionId,
-        parentCommentId: null, // Only top-level comments
+        parentCommentId: parentCommentId,
       },
-      include: getCommentInclude(0, 5), // Support up to 5 levels of nesting
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: "asc",
       },
+      skip: offset,
+      take: limit,
     });
 
-    // Format comments recursively
-    const formattedComments = comments.map(formatComment);
+    const formattedReplies = replies.map(formatComment);
+
+    const totalReplies = await client.comment.count({
+      where: {
+        parentCommentId: parentCommentId,
+      },
+    });
 
     res.status(200).json({
-      comments: formattedComments,
-      message: "Comments fetched successfully",
+      replies: formattedReplies,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalReplies / limit),
+        hasMore: offset + replies.length < totalReplies,
+        totalCount: totalReplies,
+      },
+      parentCommentId,
+      message: "Replies loaded successfully",
     });
   } catch (error: any) {
     console.log(error.message);

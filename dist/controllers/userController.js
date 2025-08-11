@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchCommentsWithOpinionId = exports.handleComment = exports.logoutUser = exports.toggleLike = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = exports.loginUser = exports.registerUser = void 0;
+exports.loadMoreReplies = exports.fetchCommentsWithOpinionId = exports.handleComment = exports.logoutUser = exports.toggleLike = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = exports.loginUser = exports.registerUser = void 0;
 const __1 = __importDefault(require(".."));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -240,55 +240,51 @@ const logoutUser = async (req, res) => {
 exports.logoutUser = logoutUser;
 const handleComment = async (req, res) => {
     try {
-        const opinionId = req.body?.opinionId;
-        const postId = req.body?.postId;
-        const parentCommentId = req.body?.parentCommentId;
+        const { opinionId, postId, parentCommentId, content } = req.body;
         if (!opinionId && !postId && !parentCommentId) {
             return res.status(400).json({ message: "Bad request" });
         }
-        else if (opinionId) {
-            const content = req.body?.content;
-            const userId = req.user.id;
-            const comment = await __1.default.comment.create({
-                data: {
-                    content,
-                    userId,
-                    opinionId,
-                },
-                include: {
-                    user: true
-                }
-            });
-            const formattedComment = {
-                id: comment.id,
-                username: comment.user.username,
-                avatarInitial: comment.user.username[0].toUpperCase(),
-                commentText: comment.content,
-                userId: comment.userId,
-                createdAt: comment.createdAt,
-                replies: [],
-            };
-            res
-                .status(200)
-                .json({ formattedComment, message: "Comment created successfully" });
+        if (!content?.trim()) {
+            return res.status(400).json({ message: "Comment content is required" });
         }
-        else if (parentCommentId) {
-            const content = req.body?.content;
-            const userId = req.user.id;
-            const comment = await __1.default.comment.create({
-                data: {
-                    content,
-                    userId,
-                    parentCommentId,
-                },
-                include: {
-                    user: true
-                }
+        const userId = req.user.id;
+        // Validate that the parent comment exists if parentCommentId is provided
+        if (parentCommentId) {
+            const parentComment = await __1.default.comment.findUnique({
+                where: { id: parentCommentId },
             });
-            res
-                .status(200)
-                .json({ message: "Comment created successfully" });
+            if (!parentComment) {
+                return res.status(404).json({ message: "Parent comment not found" });
+            }
         }
+        const comment = await __1.default.comment.create({
+            data: {
+                content: content.trim(),
+                userId,
+                opinionId,
+                postId,
+                parentCommentId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        email: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        replies: true,
+                    },
+                },
+            },
+        });
+        const formattedComment = (0, commentHelpers_1.formatComment)(comment);
+        res.status(200).json({
+            formattedComment,
+            message: "Comment created successfully",
+        });
     }
     catch (error) {
         console.log(error.message);
@@ -298,25 +294,121 @@ const handleComment = async (req, res) => {
 exports.handleComment = handleComment;
 const fetchCommentsWithOpinionId = async (req, res) => {
     try {
-        const { opinionId } = req.body;
+        const { opinionId, parentCommentId = null, page = 1, limit = 20, loadReplies = false, } = req.body;
         if (!opinionId) {
             return res.status(400).json({ message: "OpinionId is required" });
         }
-        // Fetch top-level comments with recursive replies (up to 5 levels deep)
+        const offset = (page - 1) * limit;
+        if (loadReplies && parentCommentId) {
+            // Load replies for a specific comment (lazy loading)
+            const replies = await __1.default.comment.findMany({
+                where: {
+                    parentCommentId: parentCommentId,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            email: true,
+                        },
+                    },
+                    _count: {
+                        select: {
+                            replies: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    createdAt: "asc",
+                },
+                skip: offset,
+                take: limit,
+            });
+            const formattedReplies = replies.map(commentHelpers_1.formatComment);
+            const totalReplies = await __1.default.comment.count({
+                where: {
+                    parentCommentId: parentCommentId,
+                },
+            });
+            return res.status(200).json({
+                comments: formattedReplies,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(totalReplies / limit),
+                    hasMore: offset + replies.length < totalReplies,
+                    totalCount: totalReplies,
+                },
+                message: "Replies fetched successfully",
+            });
+        }
+        // Load top-level comments with limited depth (first load)
         const comments = await __1.default.comment.findMany({
             where: {
                 opinionId: opinionId,
                 parentCommentId: null, // Only top-level comments
             },
-            include: (0, commentHelpers_1.getCommentInclude)(0, 5), // Support up to 5 levels of nesting
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        email: true,
+                    },
+                },
+                replies: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                username: true,
+                                email: true,
+                            },
+                        },
+                        _count: {
+                            select: {
+                                replies: true,
+                            },
+                        },
+                    },
+                    orderBy: {
+                        createdAt: "asc",
+                    },
+                    take: 3, // Only show first 3 replies initially
+                },
+                _count: {
+                    select: {
+                        replies: true,
+                    },
+                },
+            },
             orderBy: {
                 createdAt: "asc",
             },
+            skip: offset,
+            take: limit,
         });
-        // Format comments recursively
-        const formattedComments = comments.map(commentHelpers_1.formatComment);
+        // Format comments with "load more" indicators
+        const formattedComments = comments.map((comment) => ({
+            ...(0, commentHelpers_1.formatComment)(comment),
+            replies: comment.replies.map(commentHelpers_1.formatComment),
+            hasMoreReplies: (comment._count?.replies || 0) > 3,
+            totalReplies: comment._count?.replies || 0,
+        }));
+        const totalComments = await __1.default.comment.count({
+            where: {
+                opinionId: opinionId,
+                parentCommentId: null,
+            },
+        });
         res.status(200).json({
             comments: formattedComments,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalComments / limit),
+                hasMore: offset + comments.length < totalComments,
+                totalCount: totalComments,
+            },
             message: "Comments fetched successfully",
         });
     }
@@ -326,3 +418,58 @@ const fetchCommentsWithOpinionId = async (req, res) => {
     }
 };
 exports.fetchCommentsWithOpinionId = fetchCommentsWithOpinionId;
+const loadMoreReplies = async (req, res) => {
+    try {
+        const { parentCommentId, page = 1, limit = 10 } = req.body;
+        if (!parentCommentId) {
+            return res.status(400).json({ message: "Parent comment ID is required" });
+        }
+        const offset = (page - 1) * limit;
+        const replies = await __1.default.comment.findMany({
+            where: {
+                parentCommentId: parentCommentId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        email: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        replies: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "asc",
+            },
+            skip: offset,
+            take: limit,
+        });
+        const formattedReplies = replies.map(commentHelpers_1.formatComment);
+        const totalReplies = await __1.default.comment.count({
+            where: {
+                parentCommentId: parentCommentId,
+            },
+        });
+        res.status(200).json({
+            replies: formattedReplies,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalReplies / limit),
+                hasMore: offset + replies.length < totalReplies,
+                totalCount: totalReplies,
+            },
+            parentCommentId,
+            message: "Replies loaded successfully",
+        });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.loadMoreReplies = loadMoreReplies;

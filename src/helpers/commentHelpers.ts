@@ -37,4 +37,6 @@ export const formatComment = (comment: any): any => ({
   userId: comment.userId,
   createdAt: comment.createdAt,
   replies: comment.replies?.map(formatComment) || [],
+  replyCount: comment._count?.replies || 0,
+  hasMoreReplies: (comment._count?.replies || 0) > 0,
 });
