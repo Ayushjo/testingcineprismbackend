@@ -124,6 +124,126 @@ export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const uploadReviewPoster = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (user.role === "ADMIN") {
+      const file = req.file;
+      const { postId } = req.body;
+      const existingPoster = await client.post.findFirst({
+        where: {
+          id: postId,
+        },
+      });
+      if (existingPoster?.reviewPosterImageUrl) {
+        const existingReviewPosterImage = await client.postImage.findFirst({
+          where: {
+            imageUrl: existingPoster?.reviewPosterImageUrl,
+          },
+        });
+        await client.postImage.delete({
+          where: {
+            id: existingReviewPosterImage?.id,
+          },
+        });
+        existingPoster.posterImageUrl = "";
+        if (!file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+        const fileBuffer = getBuffer(file);
+        if (!fileBuffer || !fileBuffer.content) {
+          res.status(500).json({
+            message: "Was not able to convert the file from buffer to base64.",
+          });
+        } else {
+          const cloud = await cloudinary.v2.uploader.upload(
+            fileBuffer.content,
+            {
+              folder: "posters",
+            }
+          );
+          if (!cloud) {
+            res
+              .status(500)
+              .json({ message: "An error occurred while uploading" });
+          }
+          const poster = await client.postImage.create({
+            data: {
+              imageUrl: cloud.url,
+              postId,
+            },
+          });
+          if (poster) {
+            await client.post.update({
+              where: {
+                id: postId,
+              },
+              data: {
+                reviewPosterImageUrl: poster.imageUrl,
+              },
+            });
+            res
+              .status(201)
+              .json({ poster, message: "Poster uploaded successfully" });
+          } else {
+            res.status(500).json({ message: "An error occurred" });
+          }
+        }
+      }
+      else{
+        if (!file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+        const fileBuffer = getBuffer(file);
+        if (!fileBuffer || !fileBuffer.content) {
+          res.status(500).json({
+            message: "Was not able to convert the file from buffer to base64.",
+          });
+        } else {
+          const cloud = await cloudinary.v2.uploader.upload(
+            fileBuffer.content,
+            {
+              folder: "posters",
+            }
+          );
+          if (!cloud) {
+            res
+              .status(500)
+              .json({ message: "An error occurred while uploading" });
+          }
+          const poster = await client.postImage.create({
+            data: {
+              imageUrl: cloud.url,
+              postId,
+            },
+          });
+          if (poster) {
+            await client.post.update({
+              where: {
+                id: postId,
+              },
+              data: {
+                reviewPosterImageUrl: poster.imageUrl,
+              },
+            });
+            res
+              .status(201)
+              .json({ poster, message: "Poster uploaded successfully" });
+          } else {
+            res.status(500).json({ message: "An error occurred" });
+          }
+        }
+
+      }
+      
+    } else {
+      res.status(401).json({ message: "You are not an admin" });
+    }
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 export const createPost = async (req: AuthorizedRequest, res: Response) => {
   try {

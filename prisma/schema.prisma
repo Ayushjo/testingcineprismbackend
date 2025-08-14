@@ -40,7 +40,7 @@ model Post {
   likes         Like[]
   adminId       Int         @default(1)
   year          Int
-  
+  reviewPosterImageUrl String?
   ratingCategory RatingCategory @default(RECOMMENDED)
   posterImageUrl String?     // Reference to the poster image ID
   relatedPostIds String[]   // Array of related post IDs for "You may also like"
