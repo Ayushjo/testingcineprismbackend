@@ -46,15 +46,17 @@ model Post {
   relatedPostIds String[]   // Array of related post IDs for "You may also like"
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  
 }
 
 model PostImage {
   id        String   @id @default(uuid())
   imageUrl  String
   postId    String
-  post      Post     @relation(fields: [postId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id],onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
 }
 
 enum RatingCategory {
@@ -72,7 +74,7 @@ model Comment{
   parentCommentId String?
   replies Comment[] @relation(name: "CommentToComment")
   user User @relation(fields: [userId], references: [id])
-  post Post? @relation(fields: [postId], references: [id])
+  post Post? @relation(fields: [postId], references: [id],onDelete: Cascade)
   opinion UnpopularOpinion? @relation(fields: [opinionId], references: [id])
   parentComment Comment? @relation("CommentToComment",fields: [parentCommentId],references: [id])
   createdAt DateTime @default(now())
@@ -86,7 +88,7 @@ model Like{
   postId String?
   opinionId String?
   user User @relation(fields: [userId], references: [id])
-  post Post? @relation(fields: [postId], references: [id])
+  post Post? @relation(fields: [postId], references: [id],onDelete: Cascade)
   opinion UnpopularOpinion? @relation(fields: [opinionId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
