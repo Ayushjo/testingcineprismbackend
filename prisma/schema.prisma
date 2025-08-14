@@ -28,30 +28,39 @@ enum Role {
   ADMIN
 }
 
-model Post{
-  id String @id @default(uuid())
-  title String
-  content String
-  origin String
-  duration Int
-  genres String[]
-  images PostImage[]
-  comments Comment[]
-  likes Like[]
-  adminId Int @default(1)
-  year Int
-  rating Int
+model Post {
+  id            String      @id @default(uuid())
+  title         String
+  content       String
+  origin        String
+  duration      Int
+  genres        String[]
+  images        PostImage[]
+  comments      Comment[]
+  likes         Like[]
+  adminId       Int         @default(1)
+  year          Int
+  
+  ratingCategory RatingCategory @default(RECOMMENDED)
+  posterImageUrl String?     // Reference to the poster image ID
+  relatedPostIds String[]   // Array of related post IDs for "You may also like"
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model PostImage {
+  id        String   @id @default(uuid())
+  imageUrl  String
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model PostImage{
-  id String @id @default(uuid())
-  imageUrl String
-  postId String
-  post Post @relation(fields: [postId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum RatingCategory {
+  HIGHLY_RECOMMENDED
+  RECOMMENDED
+  LEAST_RECOMMENDED
 }
 
 model Comment{

@@ -6,6 +6,8 @@ import morgan from "morgan";
 import { PrismaClient } from "@prisma/client";
 import { cli } from "winston/lib/winston/config";
 import cookieParser from "cookie-parser";
+import cloudinary from "cloudinary";
+import bcrypt from "bcrypt";
 dotenv.config();
 const app = express();
 const morganFormat = ":method :url :status :response-time ms";
@@ -39,7 +41,7 @@ export default client;
 
 app.use(
   cors({
-    origin: function (origin:any, callback) {
+    origin: function (origin: any, callback) {
       console.log("\n=== CORS DEBUG START ===");
       console.log("Request origin:", origin);
       console.log("Origin type:", typeof origin);
@@ -72,7 +74,11 @@ app.use(
     exposedHeaders: ["Set-Cookie"],
   })
 );
-
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 // Add explicit preflight handler
 app.use((req, res, next) => {
   console.log(`\n=== REQUEST DEBUG ===`);
@@ -106,6 +112,8 @@ const PORT = process.env.PORT || 3000;
 
 import userRouter from "./routes/userRoutes.js";
 app.use("/api/v1/user", userRouter);
+import adminRouter from "./routes/adminRoutes.js";
+app.use("/api/v1/admin", adminRouter);
 
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);

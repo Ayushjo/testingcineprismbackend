@@ -10,6 +10,7 @@ const logger_js_1 = __importDefault(require("./logger.js"));
 const morgan_1 = __importDefault(require("morgan"));
 const client_1 = require("@prisma/client");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const cloudinary_1 = __importDefault(require("cloudinary"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const morganFormat = ":method :url :status :response-time ms";
@@ -68,6 +69,11 @@ app.use((0, cors_1.default)({
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
     exposedHeaders: ["Set-Cookie"],
 }));
+cloudinary_1.default.v2.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 // Add explicit preflight handler
 app.use((req, res, next) => {
     console.log(`\n=== REQUEST DEBUG ===`);
@@ -95,6 +101,8 @@ app.use(express_1.default.json());
 const PORT = process.env.PORT || 3000;
 const userRoutes_js_1 = __importDefault(require("./routes/userRoutes.js"));
 app.use("/api/v1/user", userRoutes_js_1.default);
+const adminRoutes_js_1 = __importDefault(require("./routes/adminRoutes.js"));
+app.use("/api/v1/admin", adminRoutes_js_1.default);
 app.listen(PORT, () => {
     logger_js_1.default.info(`Server is running on port ${PORT}`);
 });
