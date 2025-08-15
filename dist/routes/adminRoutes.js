@@ -12,5 +12,7 @@ router.route("/add-poster").post(extractUser_1.extractUserDetails, multer_1.defa
 router.route("/add-review-poster").post(extractUser_1.extractUserDetails, multer_1.default.single("file"), adminController_1.uploadReviewPoster);
 router.route("/create-post").post(extractUser_1.extractUserDetails, adminController_1.createPost);
 router.route("/upload-images").post(extractUser_1.extractUserDetails, multer_1.default.array("files", 10), adminController_1.uploadImages);
+router.route("/create-top-picks").post(extractUser_1.extractUserDetails, adminController_1.addTopPicks);
+router.route("/fetch-top-picks").post(extractUser_1.extractUserDetails, adminController_1.fetchTopPicks);
 router.route("/fetch-posts").post(adminController_1.fetchAllPost);
 exports.default = router;

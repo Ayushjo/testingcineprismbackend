@@ -69,8 +69,7 @@ export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
             res.status(500).json({ message: "An error occurred" });
           }
         }
-      }
-      else{
+      } else {
         if (!file) {
           return res.status(400).json({ message: "No file uploaded" });
         }
@@ -113,9 +112,7 @@ export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
             res.status(500).json({ message: "An error occurred" });
           }
         }
-
       }
-      
     } else {
       res.status(401).json({ message: "You are not an admin" });
     }
@@ -124,7 +121,10 @@ export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
     res.status(500).json({ message: error.message });
   }
 };
-export const uploadReviewPoster = async (req: AuthorizedRequest, res: Response) => {
+export const uploadReviewPoster = async (
+  req: AuthorizedRequest,
+  res: Response
+) => {
   try {
     const user = req.user;
     if (user.role === "ADMIN") {
@@ -189,8 +189,7 @@ export const uploadReviewPoster = async (req: AuthorizedRequest, res: Response) 
             res.status(500).json({ message: "An error occurred" });
           }
         }
-      }
-      else{
+      } else {
         if (!file) {
           return res.status(400).json({ message: "No file uploaded" });
         }
@@ -233,9 +232,7 @@ export const uploadReviewPoster = async (req: AuthorizedRequest, res: Response) 
             res.status(500).json({ message: "An error occurred" });
           }
         }
-
       }
-      
     } else {
       res.status(401).json({ message: "You are not an admin" });
     }
@@ -348,6 +345,78 @@ export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
     });
 
     res.status(200).json({ posts, message: "Posts fetched successfully" });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (user.role !== "ADMIN") {
+      return res.status(401).json({ message: "You are not an admin" });
+    }
+    const { postId, genre } = req.body;
+    if (!postId || !genre) {
+      return res.status(400).json({ message: "Bad request" });
+    } else {
+      const existingTopPick = await client.topPicks.findFirst({
+        where: {
+          postId,
+        },
+      });
+      if (existingTopPick) {
+        res.status(400).json({ message: "Movie is already ind top picks" });
+      }
+      const topPick = await client.topPicks.create({
+        data: {
+          postId,
+          genre,
+        },
+      });
+      res.status(201).json({ topPick, message: "Top pick added successfully" });
+    }
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (user.role !== "ADMIN") {
+      return res.status(401).json({ message: "You are not an admin" });
+    }
+    const { genre } = req.body;
+    if (genre === "All") {
+      const topPicks = await client.topPicks.findMany({
+        include: {
+          post: true,
+        },
+      });
+      res
+        .status(200)
+        .json({ topPicks, message: "Top picks fetched successfully" });
+    } else {
+      const topPicks = await client.topPicks.findMany({
+        where: {
+          genre,
+        },
+        include: {
+          post: true,
+        },
+      });
+      if (topPicks.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "No top picks found in this genre" });
+      }
+      res
+        .status(200)
+        .json({ topPicks, message: "Top picks fetched successfully" });
+    }
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });

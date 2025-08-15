@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
+exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const __1 = __importDefault(require(".."));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -342,3 +342,79 @@ const fetchAllPost = async (req, res) => {
     }
 };
 exports.fetchAllPost = fetchAllPost;
+const addTopPicks = async (req, res) => {
+    try {
+        const user = req.user;
+        if (user.role !== "ADMIN") {
+            return res.status(401).json({ message: "You are not an admin" });
+        }
+        const { postId, genre } = req.body;
+        if (!postId || !genre) {
+            return res.status(400).json({ message: "Bad request" });
+        }
+        else {
+            const existingTopPick = await __1.default.topPicks.findFirst({
+                where: {
+                    postId,
+                },
+            });
+            if (existingTopPick) {
+                res.status(400).json({ message: "Movie is already ind top picks" });
+            }
+            const topPick = await __1.default.topPicks.create({
+                data: {
+                    postId,
+                    genre,
+                },
+            });
+            res.status(201).json({ topPick, message: "Top pick added successfully" });
+        }
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.addTopPicks = addTopPicks;
+const fetchTopPicks = async (req, res) => {
+    try {
+        const user = req.user;
+        if (user.role !== "ADMIN") {
+            return res.status(401).json({ message: "You are not an admin" });
+        }
+        const { genre } = req.body;
+        if (genre === "All") {
+            const topPicks = await __1.default.topPicks.findMany({
+                include: {
+                    post: true,
+                },
+            });
+            res
+                .status(200)
+                .json({ topPicks, message: "Top picks fetched successfully" });
+        }
+        else {
+            const topPicks = await __1.default.topPicks.findMany({
+                where: {
+                    genre,
+                },
+                include: {
+                    post: true,
+                },
+            });
+            if (topPicks.length === 0) {
+                return res
+                    .status(400)
+                    .json({ message: "No top picks found in this genre" });
+            }
+            res
+                .status(200)
+                .json({ topPicks, message: "Top picks fetched successfully" });
+        }
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.fetchTopPicks = fetchTopPicks;
