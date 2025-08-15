@@ -389,34 +389,12 @@ export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
     if (user.role !== "ADMIN") {
       return res.status(401).json({ message: "You are not an admin" });
     }
-    const { genre } = req.body;
-    if (genre === "All") {
-      const topPicks = await client.topPicks.findMany({
-        include: {
-          post: true,
-        },
-      });
-      res
-        .status(200)
-        .json({ topPicks, message: "Top picks fetched successfully" });
-    } else {
-      const topPicks = await client.topPicks.findMany({
-        where: {
-          genre,
-        },
-        include: {
-          post: true,
-        },
-      });
-      if (topPicks.length === 0) {
-        return res
-          .status(400)
-          .json({ message: "No top picks found in this genre" });
-      }
-      res
-        .status(200)
-        .json({ topPicks, message: "Top picks fetched successfully" });
-    }
+    const topPicks = await client.topPicks.findMany({
+      include: {
+        post: true,
+      },
+    });
+    res.status(200).json({ topPicks, message: "Top picks fetched successfully" });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
