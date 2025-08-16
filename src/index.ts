@@ -115,6 +115,9 @@ app.use("/api/v1/user", userRouter);
 import adminRouter from "./routes/adminRoutes.js";
 app.use("/api/v1/admin", adminRouter);
 
+import postRoutes from "./routes/postRoutes.js"
+app.use("/api/v1/posts",postRoutes)
+
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
 });

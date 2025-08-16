@@ -9,7 +9,7 @@ router.route("/login").post(userController_1.loginUser);
 router.route("/me").get(userController_1.fetchUser);
 router.route("/create-opinion").post(extractUser_1.extractUserDetails, userController_1.postOpinion);
 router.route("/fetch-opinions").get(userController_1.fetchAllOpinions);
-router.route("/like").post(extractUser_1.extractUserDetails, userController_1.toggleLike);
+router.route("/like").post(extractUser_1.extractUserDetails, userController_1.toggleLikess);
 router.route("/logout").post(userController_1.logoutUser);
 router.route("/opinion-comment").post(extractUser_1.extractUserDetails, userController_1.handleComment);
 router.route("/fetch-comments").post(userController_1.fetchCommentsWithOpinionId);

@@ -9,7 +9,7 @@ import {
   logoutUser,
   postOpinion,
   registerUser,
-  toggleLike,
+  toggleLikess,
 } from "../controllers/userController";
 import { extractUserDetails } from "../middlewares/extractUser";
 
@@ -20,7 +20,7 @@ router.route("/login").post(loginUser);
 router.route("/me").get(fetchUser);
 router.route("/create-opinion").post(extractUserDetails, postOpinion);
 router.route("/fetch-opinions").get(fetchAllOpinions);
-router.route("/like").post(extractUserDetails, toggleLike);
+router.route("/like").post(extractUserDetails, toggleLikess);
 router.route("/logout").post(logoutUser);
 router.route("/opinion-comment").post(extractUserDetails, handleComment);
 router.route("/fetch-comments").post(fetchCommentsWithOpinionId);

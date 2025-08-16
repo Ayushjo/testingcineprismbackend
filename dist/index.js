@@ -103,6 +103,8 @@ const userRoutes_js_1 = __importDefault(require("./routes/userRoutes.js"));
 app.use("/api/v1/user", userRoutes_js_1.default);
 const adminRoutes_js_1 = __importDefault(require("./routes/adminRoutes.js"));
 app.use("/api/v1/admin", adminRoutes_js_1.default);
+const postRoutes_js_1 = __importDefault(require("./routes/postRoutes.js"));
+app.use("/api/v1/posts", postRoutes_js_1.default);
 app.listen(PORT, () => {
     logger_js_1.default.info(`Server is running on port ${PORT}`);
 });
