@@ -578,7 +578,6 @@ const fetchRelatedPosts = async (req, res) => {
                     title: true,
                     posterImageUrl: true,
                     year: true,
-                    ratingCategory: true,
                 },
                 take: 3,
             });
@@ -599,7 +598,6 @@ const fetchRelatedPosts = async (req, res) => {
                     title: true,
                     posterImageUrl: true,
                     year: true,
-                    ratingCategory: true,
                 },
                 take: 3 - relatedPosts.length,
                 orderBy: { createdAt: "desc" },

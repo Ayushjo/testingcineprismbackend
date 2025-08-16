@@ -249,11 +249,10 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
       const {
         title,
         content,
-        origin,
-        duration,
         genres,
         year,
-        ratingCategory,
+        directedBy,
+        streamingAt,
         relatedPostIds,
       } = req.body;
 
@@ -261,11 +260,10 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
         data: {
           title,
           content,
-          origin,
-          duration,
           genres,
           year,
-          ratingCategory,
+          directedBy,
+          streamingAt,
           relatedPostIds,
         },
       });

@@ -622,7 +622,6 @@ export const fetchRelatedPosts = async (
           title: true,
           posterImageUrl: true,
           year: true,
-          ratingCategory: true,
         },
         take: 3,
       });
@@ -644,7 +643,6 @@ export const fetchRelatedPosts = async (
           title: true,
           posterImageUrl: true,
           year: true,
-          ratingCategory: true,
         },
         take: 3 - relatedPosts.length,
         orderBy: { createdAt: "desc" },

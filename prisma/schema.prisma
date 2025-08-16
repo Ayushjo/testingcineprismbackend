@@ -32,8 +32,8 @@ model Post {
   id            String      @id @default(uuid())
   title         String
   content       String
-  origin        String
-  duration      Int
+  
+  directedBy    String
   genres        String[]
   images        PostImage[]
   comments      Comment[]
@@ -42,7 +42,7 @@ model Post {
   adminId       Int         @default(1)
   year          Int
   reviewPosterImageUrl String?
-  ratingCategory RatingCategory @default(RECOMMENDED)
+  streamingAt   String
   posterImageUrl String?     // Reference to the poster image ID
   relatedPostIds String[]   // Array of related post IDs for "You may also like"
   createdAt     DateTime    @default(now())
@@ -69,11 +69,6 @@ model PostImage {
   
 }
 
-enum RatingCategory {
-  HIGHLY_RECOMMENDED
-  RECOMMENDED
-  LEAST_RECOMMENDED
-}
 
 model Comment{
   id String @id @default(uuid())

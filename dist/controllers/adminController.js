@@ -249,16 +249,15 @@ const createPost = async (req, res) => {
     try {
         const user = req.user;
         if (user.role === "ADMIN") {
-            const { title, content, origin, duration, genres, year, ratingCategory, relatedPostIds, } = req.body;
+            const { title, content, genres, year, directedBy, streamingAt, relatedPostIds, } = req.body;
             const post = await __1.default.post.create({
                 data: {
                     title,
                     content,
-                    origin,
-                    duration,
                     genres,
                     year,
-                    ratingCategory,
+                    directedBy,
+                    streamingAt,
                     relatedPostIds,
                 },
             });
