@@ -334,6 +334,7 @@ export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
+
 export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
   try {
     const posts = await client.post.findMany({
@@ -342,7 +343,19 @@ export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
       },
     });
 
-    res.status(200).json({ posts, message: "Posts fetched successfully" });
+    // Filter out poster images from the images array for each post
+    const filteredPosts = posts.map((post) => ({
+      ...post,
+      images: post.images.filter(
+        (image) =>
+          image.imageUrl !== post.reviewPosterImageUrl &&
+          image.imageUrl !== post.posterImageUrl
+      ),
+    }));
+
+    res
+      .status(200)
+      .json({ posts: filteredPosts, message: "Posts fetched successfully" });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });

@@ -563,9 +563,17 @@ export const fetchSinglePost = async (
       });
     }
 
+    // Filter out poster images from the images array
+    const filteredImages = post.images.filter(
+      (image) =>
+        image.imageUrl !== post.reviewPosterImageUrl &&
+        image.imageUrl !== post.posterImageUrl
+    );
+
     // Transform data for frontend consumption
     const transformedPost = {
       ...post,
+      images: filteredImages, // Use filtered images
       isLiked: userId ? post.likes.length > 0 : false,
       likeCount: post._count.likes,
       commentCount: post._count.comments,

@@ -333,7 +333,15 @@ const fetchAllPost = async (req, res) => {
                 images: true,
             },
         });
-        res.status(200).json({ posts, message: "Posts fetched successfully" });
+        // Filter out poster images from the images array for each post
+        const filteredPosts = posts.map((post) => ({
+            ...post,
+            images: post.images.filter((image) => image.imageUrl !== post.reviewPosterImageUrl &&
+                image.imageUrl !== post.posterImageUrl),
+        }));
+        res
+            .status(200)
+            .json({ posts: filteredPosts, message: "Posts fetched successfully" });
     }
     catch (error) {
         console.log(error.message);
