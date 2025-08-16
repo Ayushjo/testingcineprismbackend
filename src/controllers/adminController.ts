@@ -385,10 +385,7 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const user = req.user;
-    if (user.role !== "ADMIN") {
-      return res.status(401).json({ message: "You are not an admin" });
-    }
+    
     const topPicks = await client.topPicks.findMany({
       include: {
         post: true,
