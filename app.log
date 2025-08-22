@@ -1507,3 +1507,6 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/52c59885-1c9b-46df-942c-8f253b28cca7/related\",\"status\":\"304\",\"responseTime\":\"2232.954\"}","timestamp":"2025-08-16T10:20:46.817Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"OPTIONS\",\"url\":\"/api/v1/posts/52c59885-1c9b-46df-942c-8f253b28cca7/like\",\"status\":\"204\",\"responseTime\":\"0.514\"}","timestamp":"2025-08-16T10:20:54.166Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/posts/52c59885-1c9b-46df-942c-8f253b28cca7/like\",\"status\":\"401\",\"responseTime\":\"26.206\"}","timestamp":"2025-08-16T10:20:54.194Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T02:49:05.676Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-top-picks\",\"status\":\"401\",\"responseTime\":\"11.355\"}","timestamp":"2025-08-22T02:50:04.469Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-top-picks\",\"status\":\"401\",\"responseTime\":\"2.194\"}","timestamp":"2025-08-22T02:50:13.518Z"}

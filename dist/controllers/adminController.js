@@ -351,31 +351,34 @@ const fetchAllPost = async (req, res) => {
 exports.fetchAllPost = fetchAllPost;
 const addTopPicks = async (req, res) => {
     try {
-        const user = req.user;
-        if (user.role !== "ADMIN") {
-            return res.status(401).json({ message: "You are not an admin" });
+        const { year, title, genre } = req.body;
+        const file = req.file;
+        if (!file) {
+            return res.status(400).json({ message: "No file uploaded" });
         }
-        const { postId, genre } = req.body;
-        if (!postId || !genre) {
-            return res.status(400).json({ message: "Bad request" });
-        }
-        else {
-            const existingTopPick = await __1.default.topPicks.findFirst({
-                where: {
-                    postId,
-                },
+        const fileBuffer = (0, dataUri_1.default)(file);
+        if (!fileBuffer || !fileBuffer.content) {
+            return res.status(500).json({
+                message: "Was not able to convert the file from buffer to base64.",
             });
-            if (existingTopPick) {
-                res.status(400).json({ message: "Movie is already ind top picks" });
-            }
-            const topPick = await __1.default.topPicks.create({
-                data: {
-                    postId,
-                    genre,
-                },
-            });
-            res.status(201).json({ topPick, message: "Top pick added successfully" });
         }
+        const cloud = await cloudinary_1.default.v2.uploader.upload(fileBuffer.content, {
+            folder: "posters",
+        });
+        if (!cloud) {
+            return res.status(500).json({
+                message: "An error occurred while uploading to cloudinary",
+            });
+        }
+        const topPick = await __1.default.topPicks.create({
+            data: {
+                title,
+                genre,
+                year,
+                posterImageUrl: cloud.url,
+            },
+        });
+        res.status(200).json({ topPick, message: "Top pick added successfully" });
     }
     catch (error) {
         console.log(error.message);
@@ -385,12 +388,10 @@ const addTopPicks = async (req, res) => {
 exports.addTopPicks = addTopPicks;
 const fetchTopPicks = async (req, res) => {
     try {
-        const topPicks = await __1.default.topPicks.findMany({
-            include: {
-                post: true,
-            },
-        });
-        res.status(200).json({ topPicks, message: "Top picks fetched successfully" });
+        const topPicks = await __1.default.topPicks.findMany({});
+        res
+            .status(200)
+            .json({ topPicks, message: "Top picks fetched successfully" });
     }
     catch (error) {
         console.log(error.message);

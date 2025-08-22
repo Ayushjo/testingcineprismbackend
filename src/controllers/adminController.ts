@@ -3,6 +3,7 @@ import { AuthorizedRequest } from "../middlewares/extractUser";
 import getBuffer from "../config/dataUri";
 import client from "..";
 import cloudinary from "cloudinary";
+import { Multer } from "multer";
 
 export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
   try {
@@ -334,7 +335,6 @@ export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
-
 export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
   try {
     const posts = await client.post.findMany({
@@ -364,30 +364,35 @@ export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
 
 export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const user = req.user;
-    if (user.role !== "ADMIN") {
-      return res.status(401).json({ message: "You are not an admin" });
+    const { year, title, genre } = req.body;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ message: "No file uploaded" });
     }
-    const { postId, genre } = req.body;
-    if (!postId || !genre) {
-      return res.status(400).json({ message: "Bad request" });
-    } else {
-      const existingTopPick = await client.topPicks.findFirst({
-        where: {
-          postId,
-        },
+    const fileBuffer = getBuffer(file);
+    if (!fileBuffer || !fileBuffer.content) {
+      return res.status(500).json({
+        message: "Was not able to convert the file from buffer to base64.",
       });
-      if (existingTopPick) {
-        res.status(400).json({ message: "Movie is already ind top picks" });
-      }
-      const topPick = await client.topPicks.create({
-        data: {
-          postId,
-          genre,
-        },
-      });
-      res.status(201).json({ topPick, message: "Top pick added successfully" });
     }
+    const cloud = await cloudinary.v2.uploader.upload(fileBuffer.content, {
+      folder: "posters",
+    });
+    if (!cloud) {
+      return res.status(500).json({
+        message: "An error occurred while uploading to cloudinary",
+      });
+    }
+    const topPick = await client.topPicks.create({
+      data: {
+        title,
+        genre,
+        year,
+        posterImageUrl: cloud.url,
+      },
+    });
+    res.status(200).json({ topPick, message: "Top pick added successfully" });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -396,13 +401,10 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
-    
-    const topPicks = await client.topPicks.findMany({
-      include: {
-        post: true,
-      },
-    });
-    res.status(200).json({ topPicks, message: "Top picks fetched successfully" });
+    const topPicks = await client.topPicks.findMany({});
+    res
+      .status(200)
+      .json({ topPicks, message: "Top picks fetched successfully" });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
