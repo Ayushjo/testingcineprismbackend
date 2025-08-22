@@ -366,6 +366,7 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
     const { year, title, genre } = req.body;
     const file = req.file;
+    const yearInt = parseInt(year);
 
     if (!file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -388,7 +389,7 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
       data: {
         title,
         genre,
-        year,
+        year:yearInt,
         posterImageUrl: cloud.url,
       },
     });
@@ -401,7 +402,7 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const topPicks = await client.topPicks.findMany({});
+    const topPicks = await client.topPicks.findMany({})
     res
       .status(200)
       .json({ topPicks, message: "Top picks fetched successfully" });

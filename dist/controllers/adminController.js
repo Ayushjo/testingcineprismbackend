@@ -353,6 +353,7 @@ const addTopPicks = async (req, res) => {
     try {
         const { year, title, genre } = req.body;
         const file = req.file;
+        const yearInt = parseInt(year);
         if (!file) {
             return res.status(400).json({ message: "No file uploaded" });
         }
@@ -374,7 +375,7 @@ const addTopPicks = async (req, res) => {
             data: {
                 title,
                 genre,
-                year,
+                year: yearInt,
                 posterImageUrl: cloud.url,
             },
         });

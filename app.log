@@ -1510,3 +1510,20 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T02:49:05.676Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-top-picks\",\"status\":\"401\",\"responseTime\":\"11.355\"}","timestamp":"2025-08-22T02:50:04.469Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-top-picks\",\"status\":\"401\",\"responseTime\":\"2.194\"}","timestamp":"2025-08-22T02:50:13.518Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T02:50:34.247Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/fetch-top-picks\",\"status\":\"401\",\"responseTime\":\"338.235\"}","timestamp":"2025-08-22T03:09:34.539Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/fetch-top-picks\",\"status\":\"401\",\"responseTime\":\"2.244\"}","timestamp":"2025-08-22T03:09:41.926Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:10:29.763Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:10:32.375Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:10:43.032Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:10:45.283Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"OPTIONS\",\"url\":\"/api/v1/admin/fetch-top-picks\",\"status\":\"204\",\"responseTime\":\"1.850\"}","timestamp":"2025-08-22T03:12:22.005Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/fetch-top-picks\",\"status\":\"401\",\"responseTime\":\"11.081\"}","timestamp":"2025-08-22T03:12:22.019Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"OPTIONS\",\"url\":\"/api/v1/admin/fetch-top-picks\",\"status\":\"204\",\"responseTime\":\"0.326\"}","timestamp":"2025-08-22T03:12:25.907Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/fetch-top-picks\",\"status\":\"401\",\"responseTime\":\"2.024\"}","timestamp":"2025-08-22T03:12:25.911Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:33:31.190Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:33:32.855Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:33:34.665Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:33:39.636Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:33:42.313Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:34:11.780Z"}
