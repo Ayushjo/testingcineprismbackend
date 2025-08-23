@@ -3,6 +3,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+if (typeof globalThis.File === "undefined") {
+    class FilePolyfill {
+        constructor(chunks, filename, options = {}) {
+            this.name = filename;
+            this.type = options.type || "";
+            this.lastModified = options.lastModified || Date.now();
+            this.size = chunks.reduce((acc, chunk) => acc + (chunk.length || 0), 0);
+            this.webkitRelativePath = "";
+            this._chunks = chunks;
+        }
+        async arrayBuffer() {
+            const buffer = Buffer.concat(this._chunks.map((chunk) => Buffer.from(chunk)));
+            return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+        }
+        async bytes() {
+            const buffer = Buffer.concat(this._chunks.map((chunk) => Buffer.from(chunk)));
+            return new Uint8Array(buffer);
+        }
+        slice(start, end, contentType) {
+            // Return a minimal blob-like object
+            return new FilePolyfill(this._chunks, this.name, {
+                type: contentType || this.type,
+            });
+        }
+        stream() {
+            throw new Error("ReadableStream not implemented in polyfill");
+        }
+        async text() {
+            const buffer = Buffer.concat(this._chunks.map((chunk) => Buffer.from(chunk)));
+            return buffer.toString("utf8");
+        }
+    }
+    globalThis.File = FilePolyfill;
+}
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));

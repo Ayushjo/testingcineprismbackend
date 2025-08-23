@@ -1,3 +1,61 @@
+
+if (typeof globalThis.File === "undefined") {
+  class FilePolyfill {
+    name: string;
+    type: string;
+    lastModified: number;
+    size: number;
+    webkitRelativePath: string;
+    private _chunks: any[];
+
+    constructor(chunks: any[], filename: string, options: any = {}) {
+      this.name = filename;
+      this.type = options.type || "";
+      this.lastModified = options.lastModified || Date.now();
+      this.size = chunks.reduce((acc, chunk) => acc + (chunk.length || 0), 0);
+      this.webkitRelativePath = "";
+      this._chunks = chunks;
+    }
+
+    async arrayBuffer(): Promise<ArrayBuffer> {
+      const buffer = Buffer.concat(
+        this._chunks.map((chunk) => Buffer.from(chunk))
+      );
+      return buffer.buffer.slice(
+        buffer.byteOffset,
+        buffer.byteOffset + buffer.byteLength
+      );
+    }
+
+    async bytes(): Promise<Uint8Array> {
+      const buffer = Buffer.concat(
+        this._chunks.map((chunk) => Buffer.from(chunk))
+      );
+      return new Uint8Array(buffer);
+    }
+
+    slice(start?: number, end?: number, contentType?: string): Blob {
+      // Return a minimal blob-like object
+      return new (FilePolyfill as any)(this._chunks, this.name, {
+        type: contentType || this.type,
+      });
+    }
+
+    stream(): ReadableStream {
+      throw new Error("ReadableStream not implemented in polyfill");
+    }
+
+    async text(): Promise<string> {
+      const buffer = Buffer.concat(
+        this._chunks.map((chunk) => Buffer.from(chunk))
+      );
+      return buffer.toString("utf8");
+    }
+  }
+
+  (globalThis as any).File = FilePolyfill;
+}
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";

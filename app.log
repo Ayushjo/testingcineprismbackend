@@ -1651,3 +1651,9 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news\",\"status\":\"304\",\"responseTime\":\"133.654\"}","timestamp":"2025-08-23T14:25:28.201Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"299.207\"}","timestamp":"2025-08-23T14:25:34.708Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news\",\"status\":\"304\",\"responseTime\":\"270.480\"}","timestamp":"2025-08-23T14:25:41.084Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T14:26:50.948Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T14:35:33.075Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T14:35:45.664Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T14:35:53.293Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T14:36:29.822Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T14:36:33.037Z"}
