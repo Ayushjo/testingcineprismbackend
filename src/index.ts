@@ -115,9 +115,14 @@ app.use("/api/v1/user", userRouter);
 import adminRouter from "./routes/adminRoutes.js";
 app.use("/api/v1/admin", adminRouter);
 
-import postRoutes from "./routes/postRoutes.js"
-app.use("/api/v1/posts",postRoutes)
+import postRoutes from "./routes/postRoutes.js";
+app.use("/api/v1/posts", postRoutes);
 
+import movieRoutes from "./routes/moviesRouter.js";
+app.use("/api/v1/movies", movieRoutes);
+
+import aiNewsRoutes from "./routes/ainewsRoutes.js";
+app.use("/api/v1/news", aiNewsRoutes);
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
 });

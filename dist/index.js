@@ -105,6 +105,10 @@ const adminRoutes_js_1 = __importDefault(require("./routes/adminRoutes.js"));
 app.use("/api/v1/admin", adminRoutes_js_1.default);
 const postRoutes_js_1 = __importDefault(require("./routes/postRoutes.js"));
 app.use("/api/v1/posts", postRoutes_js_1.default);
+const moviesRouter_js_1 = __importDefault(require("./routes/moviesRouter.js"));
+app.use("/api/v1/movies", moviesRouter_js_1.default);
+const ainewsRoutes_js_1 = __importDefault(require("./routes/ainewsRoutes.js"));
+app.use("/api/v1/news", ainewsRoutes_js_1.default);
 app.listen(PORT, () => {
     logger_js_1.default.info(`Server is running on port ${PORT}`);
 });

@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const trendingMovieController_1 = require("../controllers/trendingMovieController");
+const router = (0, express_1.Router)();
+router.get("/", trendingMovieController_1.getTrendingMovies);
+router.get("/:id", trendingMovieController_1.getMovieById);
+router.post("/refresh", trendingMovieController_1.refreshTrendingMovies);
+router.get("/status/refresh", trendingMovieController_1.getRefreshStatus);
+exports.default = router;

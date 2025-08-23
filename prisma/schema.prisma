@@ -115,3 +115,106 @@ model UnpopularOpinion{
   updatedAt DateTime @updatedAt
   
 }
+
+model TrendingMovie {
+  id               Int      @id @default(autoincrement())
+  tmdbId           Int      @map("tmdb_id")
+  title            String
+  posterPath       String?  @map("poster_path")
+  backdropPath     String?  @map("backdrop_path")
+  overview         String?  @db.Text
+  releaseDate      DateTime @map("release_date") @db.Date
+  voteAverage      Decimal  @map("vote_average") @db.Decimal(3, 1)
+  voteCount        Int      @map("vote_count")
+  popularityScore  Decimal  @map("popularity_score") @db.Decimal(10, 2)
+  trendingRank     Int      @map("trending_rank")
+  genreIds         String   @map("genre_ids") // JSON as string - you can use Json type for PostgreSQL
+  lastUpdated      DateTime @map("last_updated") @default(now())
+  createdAt        DateTime @map("created_at") @default(now())
+
+  @@index([tmdbId])
+  @@index([trendingRank])
+  @@index([lastUpdated])
+  @@map("trending_movies")
+}
+
+model TrendingNews {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String   @db.Text
+  content       String?  @db.Text
+  url           String   @unique
+  sourceName    String   @map("source_name")
+  author        String?
+  publishedAt   DateTime @map("published_at")
+  imageUrl      String?  @map("image_url")
+  category      String
+  trendingScore Int?     @map("trending_score")
+  lastUpdated   DateTime @map("last_updated") @default(now())
+  createdAt     DateTime @map("created_at") @default(now())
+
+  @@index([publishedAt])
+  @@index([lastUpdated])
+  @@index([category])
+  @@map("trending_news")
+}
+
+enum ContentType {
+  discussion
+  recommendation
+  analysis
+  matchup
+}
+
+enum ContentStatus {
+  active
+  archived
+  draft
+}
+
+model AITrendingContent {
+  id              Int           @id @default(autoincrement())
+  title           String
+  content         String        @db.Text
+  contentType     ContentType   @map("content_type")
+  promptUsed      String?       @map("prompt_used") @db.Text
+  status          ContentStatus @default(active)
+  viewCount       Int           @map("view_count") @default(0)
+  engagementScore Decimal?      @map("engagement_score") @db.Decimal(5, 2)
+  expiresAt       DateTime?     @map("expires_at")
+  createdAt       DateTime      @map("created_at") @default(now())
+  updatedAt       DateTime      @map("updated_at") @updatedAt
+
+  @@index([contentType])
+  @@index([status])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("ai_trending_content")
+}
+
+enum SectionType {
+  movies
+  news
+  ai
+}
+
+enum RefreshStatus {
+  success
+  failed
+  in_progress
+}
+
+model ContentRefreshLog {
+  id                    Int           @id @default(autoincrement())
+  sectionType           SectionType   @map("section_type")
+  lastRefreshAttempt    DateTime      @map("last_refresh_attempt") @default(now())
+  lastSuccessfulRefresh DateTime?     @map("last_successful_refresh")
+  status                RefreshStatus
+  errorMessage          String?       @map("error_message") @db.Text
+  recordsUpdated        Int?          @map("records_updated")
+
+  @@index([sectionType])
+  @@index([lastSuccessfulRefresh])
+  @@index([status])
+  @@map("content_refresh_log")
+}

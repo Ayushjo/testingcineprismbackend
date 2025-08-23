@@ -1527,3 +1527,127 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:33:39.636Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:33:42.313Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:34:11.780Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T03:34:39.533Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/fetch-top-picks\",\"status\":\"401\",\"responseTime\":\"8.075\"}","timestamp":"2025-08-22T03:44:05.938Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-22T04:05:17.416Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T01:43:37.351Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/movies/refresh\",\"status\":\"200\",\"responseTime\":\"13910.819\"}","timestamp":"2025-08-23T01:45:02.189Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"200\",\"responseTime\":\"564.389\"}","timestamp":"2025-08-23T01:45:31.088Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"200\",\"responseTime\":\"1113.308\"}","timestamp":"2025-08-23T01:51:23.702Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"1269.193\"}","timestamp":"2025-08-23T01:59:36.088Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"1169.265\"}","timestamp":"2025-08-23T02:04:24.756Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"272.965\"}","timestamp":"2025-08-23T02:07:10.736Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"1474.003\"}","timestamp":"2025-08-23T07:18:13.126Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"251.328\"}","timestamp":"2025-08-23T07:19:45.274Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"140.939\"}","timestamp":"2025-08-23T07:19:50.943Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"293.540\"}","timestamp":"2025-08-23T07:19:53.726Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"263.281\"}","timestamp":"2025-08-23T07:21:50.636Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"288.622\"}","timestamp":"2025-08-23T07:22:18.702Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"1174.363\"}","timestamp":"2025-08-23T07:26:05.363Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:29:18.943Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:29:54.906Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:30:00.264Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:30:04.496Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:30:07.286Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:30:13.363Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:30:19.257Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:30:43.947Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:31:42.409Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:31:47.033Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:31:48.900Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:31:53.503Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:31:55.877Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:31:57.300Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:10.409Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:13.891Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:17.430Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:29.345Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:31.790Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:35.109Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:36.417Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:42.197Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:45.880Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:52.933Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:34:56.766Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:01.601Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:05.063Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:07.060Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:16.567Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:19.333Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:24.419Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:30.574Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:32.796Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:35.301Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:40.451Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:44.456Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:51.079Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:35:52.445Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:36:00.242Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:36:03.680Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:36:07.016Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:36:13.672Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:36:24.632Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:36:30.831Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:36:32.800Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:36:35.178Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:36:52.827Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/news/refresh\",\"status\":\"200\",\"responseTime\":\"11805.803\"}","timestamp":"2025-08-23T07:37:45.652Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"200\",\"responseTime\":\"458.312\"}","timestamp":"2025-08-23T07:38:04.313Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:41:54.285Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:42:09.117Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:42:10.523Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/news/refresh\",\"status\":\"500\",\"responseTime\":\"9818.125\"}","timestamp":"2025-08-23T07:42:32.880Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T07:42:43.404Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"200\",\"responseTime\":\"981.617\"}","timestamp":"2025-08-23T07:42:53.412Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/news/refresh\",\"status\":\"200\",\"responseTime\":\"9713.449\"}","timestamp":"2025-08-23T07:43:06.779Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"200\",\"responseTime\":\"176.778\"}","timestamp":"2025-08-23T07:43:10.954Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"372.931\"}","timestamp":"2025-08-23T07:46:51.190Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"200\",\"responseTime\":\"1330.139\"}","timestamp":"2025-08-23T07:54:27.766Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"192.603\"}","timestamp":"2025-08-23T07:54:39.499Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"298.000\"}","timestamp":"2025-08-23T07:54:53.952Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"358.612\"}","timestamp":"2025-08-23T07:56:14.086Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"292.710\"}","timestamp":"2025-08-23T07:56:32.889Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"211.832\"}","timestamp":"2025-08-23T07:56:34.454Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"168.541\"}","timestamp":"2025-08-23T07:56:40.086Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"145.449\"}","timestamp":"2025-08-23T07:56:44.255Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T08:00:39.615Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/news/refresh\",\"status\":\"200\",\"responseTime\":\"10305.542\"}","timestamp":"2025-08-23T08:00:54.023Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"200\",\"responseTime\":\"312.855\"}","timestamp":"2025-08-23T08:00:57.519Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T08:01:22.080Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/news/refresh\",\"status\":\"200\",\"responseTime\":\"10340.001\"}","timestamp":"2025-08-23T08:02:14.869Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"200\",\"responseTime\":\"208.847\"}","timestamp":"2025-08-23T08:02:17.593Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T08:02:52.607Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-08-23T08:08:16.455Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/news/refresh\",\"status\":\"200\",\"responseTime\":\"10722.591\"}","timestamp":"2025-08-23T08:08:30.881Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"200\",\"responseTime\":\"299.795\"}","timestamp":"2025-08-23T08:08:35.417Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"512.576\"}","timestamp":"2025-08-23T08:08:56.599Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"200\",\"responseTime\":\"119.246\"}","timestamp":"2025-08-23T08:08:57.917Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"271.721\"}","timestamp":"2025-08-23T08:09:12.622Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"146.389\"}","timestamp":"2025-08-23T08:09:14.640Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"93.636\"}","timestamp":"2025-08-23T08:09:21.019Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"121.137\"}","timestamp":"2025-08-23T08:09:22.767Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"1323.813\"}","timestamp":"2025-08-23T08:19:10.477Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"219.915\"}","timestamp":"2025-08-23T08:19:12.903Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"184.354\"}","timestamp":"2025-08-23T08:19:17.542Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"196.588\"}","timestamp":"2025-08-23T08:19:21.415Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"272.752\"}","timestamp":"2025-08-23T08:22:31.283Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"1122.577\"}","timestamp":"2025-08-23T08:24:21.708Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"213.384\"}","timestamp":"2025-08-23T08:24:23.324Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"250.968\"}","timestamp":"2025-08-23T08:24:31.444Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news/\",\"status\":\"304\",\"responseTime\":\"130.543\"}","timestamp":"2025-08-23T08:24:33.169Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"200\",\"responseTime\":\"236.366\"}","timestamp":"2025-08-23T13:57:09.541Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"200\",\"responseTime\":\"146.197\"}","timestamp":"2025-08-23T13:57:13.938Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news\",\"status\":\"200\",\"responseTime\":\"332.909\"}","timestamp":"2025-08-23T13:57:39.082Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"200\",\"responseTime\":\"280.639\"}","timestamp":"2025-08-23T13:57:55.011Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"342.192\"}","timestamp":"2025-08-23T13:58:19.491Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news\",\"status\":\"304\",\"responseTime\":\"132.028\"}","timestamp":"2025-08-23T13:58:24.286Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"1454.697\"}","timestamp":"2025-08-23T14:24:36.328Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news\",\"status\":\"304\",\"responseTime\":\"261.692\"}","timestamp":"2025-08-23T14:24:38.515Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"140.170\"}","timestamp":"2025-08-23T14:24:44.766Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news\",\"status\":\"304\",\"responseTime\":\"227.854\"}","timestamp":"2025-08-23T14:24:57.975Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"150.936\"}","timestamp":"2025-08-23T14:25:12.620Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news\",\"status\":\"304\",\"responseTime\":\"201.962\"}","timestamp":"2025-08-23T14:25:15.091Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"136.563\"}","timestamp":"2025-08-23T14:25:26.098Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news\",\"status\":\"304\",\"responseTime\":\"133.654\"}","timestamp":"2025-08-23T14:25:28.201Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/movies\",\"status\":\"304\",\"responseTime\":\"299.207\"}","timestamp":"2025-08-23T14:25:34.708Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/news\",\"status\":\"304\",\"responseTime\":\"270.480\"}","timestamp":"2025-08-23T14:25:41.084Z"}
