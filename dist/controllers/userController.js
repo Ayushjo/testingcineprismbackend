@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLikeStatus = exports.toggleLike = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.fetchReplies = exports.fetchComments = exports.fetchRelatedPosts = exports.fetchSinglePost = exports.loadMoreReplies = exports.fetchCommentsWithOpinionId = exports.handleComment = exports.logoutUser = exports.toggleLikess = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = exports.loginUser = exports.registerUser = void 0;
+exports.getLikeStatus = exports.toggleLike = exports.fetchCommentThread = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.fetchReplies = exports.fetchComments = exports.fetchRelatedPosts = exports.fetchSinglePost = exports.loadMoreReplies = exports.fetchCommentsWithOpinionId = exports.handleComment = exports.logoutUser = exports.toggleLikess = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = exports.loginUser = exports.registerUser = void 0;
 const __1 = __importDefault(require(".."));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -680,45 +680,67 @@ const fetchComments = async (req, res) => {
     }
 };
 exports.fetchComments = fetchComments;
+// Enhanced fetchReplies to handle nested replies with thread structure
 const fetchReplies = async (req, res) => {
     try {
         const { commentId } = req.params;
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 5;
+        const limit = parseInt(req.query.limit) || 10;
+        const nested = req.query.nested === "true"; // Flag to fetch nested structure
         const skip = (page - 1) * limit;
-        const replies = await __1.default.comment.findMany({
-            where: {
-                parentCommentId: commentId,
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        username: true,
-                        email: true,
+        if (nested) {
+            // Fetch replies with their nested replies (recursive structure)
+            const replies = await fetchNestedReplies(commentId, skip, limit);
+            const totalReplies = await __1.default.comment.count({
+                where: { parentCommentId: commentId },
+            });
+            res.status(200).json({
+                success: true,
+                replies,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(totalReplies / limit),
+                    totalReplies,
+                    hasMore: skip + replies.length < totalReplies,
+                },
+            });
+        }
+        else {
+            // Original flat structure for backward compatibility
+            const replies = await __1.default.comment.findMany({
+                where: {
+                    parentCommentId: commentId,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            email: true,
+                        },
+                    },
+                    _count: {
+                        select: { replies: true },
                     },
                 },
-                _count: {
-                    select: { replies: true },
+                orderBy: { createdAt: "asc" },
+                skip,
+                take: limit,
+            });
+            const totalReplies = await __1.default.comment.count({
+                where: { parentCommentId: commentId },
+            });
+            res.status(200).json({
+                success: true,
+                replies,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(totalReplies / limit),
+                    totalReplies,
+                    hasMore: skip + replies.length < totalReplies,
                 },
-            },
-            orderBy: { createdAt: "asc" }, // Replies in chronological order
-            skip,
-            take: limit,
-        });
-        const totalReplies = await __1.default.comment.count({
-            where: { parentCommentId: commentId },
-        });
-        res.status(200).json({
-            success: true,
-            replies,
-            pagination: {
-                currentPage: page,
-                totalPages: Math.ceil(totalReplies / limit),
-                totalReplies,
-                hasMore: skip + replies.length < totalReplies,
-            },
-        });
+            });
+        }
     }
     catch (error) {
         console.error("Error fetching replies:", error.message);
@@ -729,6 +751,47 @@ const fetchReplies = async (req, res) => {
     }
 };
 exports.fetchReplies = fetchReplies;
+// Helper function to fetch nested replies recursively
+async function fetchNestedReplies(commentId, skip = 0, limit = 10, depth = 0) {
+    // Optional: Add max depth limit to prevent infinite recursion
+    const MAX_DEPTH = 50; // Adjust as needed
+    if (depth > MAX_DEPTH) {
+        return [];
+    }
+    const replies = await __1.default.comment.findMany({
+        where: {
+            parentCommentId: commentId,
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                },
+            },
+            _count: {
+                select: { replies: true },
+            },
+        },
+        orderBy: { createdAt: "asc" },
+        skip: depth === 0 ? skip : 0, // Only apply pagination to first level
+        take: depth === 0 ? limit : undefined, // Only limit first level
+    });
+    // Recursively fetch nested replies for each reply
+    const repliesWithNested = await Promise.all(replies.map(async (reply) => {
+        const nestedReplies = reply._count.replies > 0
+            ? await fetchNestedReplies(reply.id, 0, undefined, depth + 1)
+            : [];
+        return {
+            ...reply,
+            replyCount: reply._count.replies,
+            replies: nestedReplies,
+            depth: depth + 1, // Add depth information
+        };
+    }));
+    return repliesWithNested;
+}
 const createComment = async (req, res) => {
     try {
         const { postId } = req.params;
@@ -800,6 +863,7 @@ const createComment = async (req, res) => {
     }
 };
 exports.createComment = createComment;
+// Enhanced createReply to allow unlimited nesting
 const createReply = async (req, res) => {
     try {
         const { commentId } = req.params;
@@ -826,7 +890,15 @@ const createReply = async (req, res) => {
         // Verify parent comment exists and get postId
         const parentComment = await __1.default.comment.findUnique({
             where: { id: commentId },
-            select: { id: true, postId: true, parentCommentId: true },
+            select: {
+                id: true,
+                postId: true,
+                parentCommentId: true,
+                // Optional: Add depth tracking
+                user: {
+                    select: { username: true },
+                },
+            },
         });
         if (!parentComment) {
             return res.status(404).json({
@@ -834,13 +906,18 @@ const createReply = async (req, res) => {
                 message: "Parent comment not found",
             });
         }
-        // Prevent deeply nested replies (max 2 levels)
-        if (parentComment.parentCommentId) {
-            return res.status(400).json({
-                success: false,
-                message: "Cannot reply to a reply. Please reply to the main comment.",
-            });
+        // Optional: Add maximum nesting depth limit (uncomment if needed)
+        /*
+        const depth = await getCommentDepth(commentId);
+        const MAX_NESTING_DEPTH = 10; // Adjust as needed
+        
+        if (depth >= MAX_NESTING_DEPTH) {
+          return res.status(400).json({
+            success: false,
+            message: `Maximum nesting depth (${MAX_NESTING_DEPTH}) reached. Please start a new thread.`,
+          });
         }
+        */
         const newReply = await __1.default.comment.create({
             data: {
                 content: content.trim(),
@@ -859,11 +936,24 @@ const createReply = async (req, res) => {
                 _count: {
                     select: { replies: true },
                 },
+                // Include parent comment info for context
+                parentComment: {
+                    select: {
+                        id: true,
+                        user: {
+                            select: { username: true },
+                        },
+                    },
+                },
             },
         });
         res.status(201).json({
             success: true,
-            reply: newReply,
+            reply: {
+                ...newReply,
+                replyCount: 0,
+                replies: [],
+            },
         });
     }
     catch (error) {
@@ -875,6 +965,23 @@ const createReply = async (req, res) => {
     }
 };
 exports.createReply = createReply;
+// Helper function to calculate comment depth (optional)
+async function getCommentDepth(commentId) {
+    let depth = 0;
+    let currentCommentId = commentId;
+    while (currentCommentId) {
+        const comment = await __1.default.comment.findUnique({
+            where: { id: currentCommentId },
+            select: { parentCommentId: true },
+        });
+        if (!comment?.parentCommentId) {
+            break;
+        }
+        depth++;
+        currentCommentId = comment.parentCommentId;
+    }
+    return depth;
+}
 const updateComment = async (req, res) => {
     try {
         const { commentId } = req.params;
@@ -1014,6 +1121,78 @@ const deleteComment = async (req, res) => {
     }
 };
 exports.deleteComment = deleteComment;
+// Additional utility function to get comment thread (optional)
+const fetchCommentThread = async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        // Get the full thread starting from root comment
+        const rootComment = await findRootComment(commentId);
+        if (!rootComment) {
+            return res.status(404).json({
+                success: false,
+                message: "Comment not found",
+            });
+        }
+        const thread = await fetchNestedReplies(rootComment.id);
+        res.status(200).json({
+            success: true,
+            thread: {
+                ...rootComment,
+                replies: thread,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Error fetching comment thread:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+exports.fetchCommentThread = fetchCommentThread;
+// Helper to find root comment
+async function findRootComment(commentId) {
+    let currentComment = await __1.default.comment.findUnique({
+        where: { id: commentId },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                },
+            },
+            _count: {
+                select: { replies: true },
+            },
+        },
+    });
+    if (!currentComment)
+        return null;
+    // Traverse up to find root comment
+    while (currentComment && currentComment.parentCommentId) {
+        const parentComment = await __1.default.comment.findUnique({
+            where: { id: currentComment.parentCommentId },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        email: true,
+                    },
+                },
+                _count: {
+                    select: { replies: true },
+                },
+            },
+        });
+        if (!parentComment)
+            break;
+        currentComment = parentComment;
+    }
+    return currentComment;
+}
 const toggleLike = async (req, res) => {
     try {
         const { postId } = req.params;
