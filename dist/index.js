@@ -83,10 +83,15 @@ app.use((0, cors_1.default)({
             "https://testingcineprism.vercel.app",
             "http://localhost:3000",
             "http://localhost:5173",
+            // Add capacitor/ionic origins if using mobile app
+            "capacitor://localhost",
+            "ionic://localhost",
+            "http://localhost",
         ];
         console.log("Allowed origins:", allowedOrigins);
         console.log("Origin in allowed list:", allowedOrigins.includes(origin));
         console.log("No origin (server-to-server):", !origin);
+        // Allow requests with no origin (mobile apps, etc.)
         if (!origin || allowedOrigins.includes(origin)) {
             console.log("✅ CORS: Origin allowed");
             console.log("=== CORS DEBUG END ===\n");
@@ -99,10 +104,22 @@ app.use((0, cors_1.default)({
         }
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-    exposedHeaders: ["Set-Cookie"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+    allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "Cookie",
+        "X-Requested-With",
+        "Accept",
+        "Origin",
+    ],
+    exposedHeaders: ["Set-Cookie", "Date", "ETag"],
+    maxAge: 86400, // 24 hours
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
 }));
+// Add trust proxy setting if behind a proxy (Vercel, Heroku, etc.)
+app.set("trust proxy", 1);
 cloudinary_1.default.v2.config({
     cloud_name: process.env.CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,

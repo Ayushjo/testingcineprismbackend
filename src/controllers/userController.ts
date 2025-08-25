@@ -37,6 +37,11 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
+    // Log headers for debugging
+    console.log("User-Agent:", req.headers["user-agent"]);
+    console.log("Origin:", req.headers.origin);
+    console.log("Referer:", req.headers.referer);
+
     const user = await client.user.findFirst({
       where: { email },
     });
@@ -50,25 +55,73 @@ export const loginUser = async (req: Request, res: Response) => {
     if (isPasswordValid) {
       const token = jwt.sign(
         { id: user.id, email: user.email },
-        process.env.ACCESS_TOKEN_SECRET as any,
+        process.env.ACCESS_TOKEN_SECRET as string,
         { expiresIn: "7d" }
       );
 
-      res.cookie("token", token, {
+      // Detect iOS devices
+      const userAgent = req.headers["user-agent"] || "";
+      const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+      const isSafari = /Safari/i.test(userAgent) && !/Chrome/i.test(userAgent);
+
+      console.log("Is iOS:", isIOS);
+      console.log("Is Safari:", isSafari);
+
+      // Cookie options
+      const cookieOptions: any = {
         httpOnly: true,
-        secure: true,
-        //@ts-ignore
-        sameSite: "None",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: "/",
+        // Domain setting - be careful with this
+        // domain: '.yourdomain.com', // Uncomment and set if needed
+      };
+
+      // Check if request is HTTPS
+      const isSecure =
+        req.secure || req.headers["x-forwarded-proto"] === "https";
+      console.log("Is Secure:", isSecure);
+
+      if (isSecure) {
+        cookieOptions.secure = true;
+        // Use SameSite=None for cross-origin, but Lax for iOS Safari
+        if (isIOS && isSafari) {
+          // iOS Safari has issues with SameSite=None
+          cookieOptions.sameSite = "lax";
+        } else {
+          cookieOptions.sameSite = "none";
+        }
+      } else {
+        // Development/HTTP
+        cookieOptions.sameSite = "lax";
+        cookieOptions.secure = false;
+      }
+
+      console.log("Cookie options:", cookieOptions);
+
+      // Set multiple cookie variations for testing
+      res.cookie("token", token, cookieOptions);
+
+      // Also try setting a test cookie to debug
+      res.cookie("test_cookie", "test_value", {
+        ...cookieOptions,
+        httpOnly: false, // Make it accessible to JS for testing
       });
 
+      // Send token in response body as fallback
       res.status(200).json({
         message: "Login successful",
-        token,
+        token, // Include token for localStorage fallback
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+        },
         debug: {
-          cookieVariations: 4,
-          checkDevTools:
-            "Look in Application > Cookies to see which ones were accepted",
+          isIOS,
+          isSafari,
+          isSecure,
+          cookieOptions,
+          userAgent: userAgent.substring(0, 100),
         },
       });
     } else {
