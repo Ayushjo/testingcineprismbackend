@@ -3,125 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLikeStatus = exports.toggleLike = exports.fetchCommentThread = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.fetchReplies = exports.fetchComments = exports.fetchRelatedPosts = exports.fetchSinglePost = exports.loadMoreReplies = exports.fetchCommentsWithOpinionId = exports.handleComment = exports.logoutUser = exports.toggleLikess = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = exports.loginUser = exports.registerUser = void 0;
+exports.getLikeStatus = exports.toggleLike = exports.fetchCommentThread = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.fetchReplies = exports.fetchComments = exports.fetchRelatedPosts = exports.fetchSinglePost = exports.loadMoreReplies = exports.fetchCommentsWithOpinionId = exports.handleComment = exports.logoutUser = exports.toggleLikess = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = void 0;
 const __1 = __importDefault(require(".."));
-const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const commentHelpers_1 = require("../helpers/commentHelpers");
 dotenv_1.default.config();
-const registerUser = async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
-        const existingUser = await __1.default.user.findFirst({
-            where: {
-                email,
-            },
-        });
-        if (existingUser) {
-            return res.status(400).json({ message: "User already exists" });
-        }
-        const hashedPassword = await bcrypt_1.default.hash(password, 10);
-        const user = await __1.default.user.create({
-            data: {
-                username,
-                email,
-                password: hashedPassword,
-            },
-        });
-        res.status(200).json({ user, message: "User registered successfully" });
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "An error occurred" });
-    }
-};
-exports.registerUser = registerUser;
-const loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        // Log headers for debugging
-        console.log("User-Agent:", req.headers["user-agent"]);
-        console.log("Origin:", req.headers.origin);
-        console.log("Referer:", req.headers.referer);
-        const user = await __1.default.user.findFirst({
-            where: { email },
-        });
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        const isPasswordValid = await bcrypt_1.default.compare(password, user.password);
-        if (isPasswordValid) {
-            const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "7d" });
-            // Detect iOS devices
-            const userAgent = req.headers["user-agent"] || "";
-            const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
-            const isSafari = /Safari/i.test(userAgent) && !/Chrome/i.test(userAgent);
-            console.log("Is iOS:", isIOS);
-            console.log("Is Safari:", isSafari);
-            // Cookie options
-            const cookieOptions = {
-                httpOnly: true,
-                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-                path: "/",
-                // Domain setting - be careful with this
-                // domain: '.yourdomain.com', // Uncomment and set if needed
-            };
-            // Check if request is HTTPS
-            const isSecure = req.secure || req.headers["x-forwarded-proto"] === "https";
-            console.log("Is Secure:", isSecure);
-            if (isSecure) {
-                cookieOptions.secure = true;
-                // Use SameSite=None for cross-origin, but Lax for iOS Safari
-                if (isIOS && isSafari) {
-                    // iOS Safari has issues with SameSite=None
-                    cookieOptions.sameSite = "lax";
-                }
-                else {
-                    cookieOptions.sameSite = "none";
-                }
-            }
-            else {
-                // Development/HTTP
-                cookieOptions.sameSite = "lax";
-                cookieOptions.secure = false;
-            }
-            console.log("Cookie options:", cookieOptions);
-            // Set multiple cookie variations for testing
-            res.cookie("token", token, cookieOptions);
-            // Also try setting a test cookie to debug
-            res.cookie("test_cookie", "test_value", {
-                ...cookieOptions,
-                httpOnly: false, // Make it accessible to JS for testing
-            });
-            // Send token in response body as fallback
-            res.status(200).json({
-                message: "Login successful",
-                token, // Include token for localStorage fallback
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    username: user.username,
-                },
-                debug: {
-                    isIOS,
-                    isSafari,
-                    isSecure,
-                    cookieOptions,
-                    userAgent: userAgent.substring(0, 100),
-                },
-            });
-        }
-        else {
-            res.status(401).json({ message: "Invalid credentials" });
-        }
-    }
-    catch (error) {
-        console.log("Login error:", error.message);
-        res.status(500).json({ message: error.message });
-    }
-};
-exports.loginUser = loginUser;
 const fetchUser = async (req, res) => {
     try {
         const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
