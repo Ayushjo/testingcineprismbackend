@@ -1,8 +1,23 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import client from "..";
 
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  console.error("Missing Google OAuth environment variables:");
+  console.error(
+    "GOOGLE_CLIENT_ID:",
+    process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing"
+  );
+  console.error(
+    "GOOGLE_CLIENT_SECRET:",
+    process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing"
+  );
+  throw new Error("Google OAuth environment variables are required");
+}
 // Google OAuth Strategy
 passport.use(
   new GoogleStrategy(
