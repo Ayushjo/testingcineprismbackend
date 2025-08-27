@@ -4,6 +4,8 @@ import { extractUserDetails } from "../middlewares/extractUser";
 import {
   addTopPicks,
   createPost,
+  deleteImage,
+  deletePost,
   editPost,
   fetchAllPost,
   fetchTopPicks,
@@ -30,4 +32,6 @@ router
 router.route("/fetch-top-picks").post(extractUserDetails, fetchTopPicks);
 router.route("/fetch-posts").post(fetchAllPost);
 router.route("/edit-post").post(extractUserDetails, editPost);
+router.route("/delete-post").post(extractUserDetails, deletePost);
+router.route("/delete-image").post(extractUserDetails, deleteImage);
 export default router;

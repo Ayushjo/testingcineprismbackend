@@ -459,3 +459,56 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const deletePost = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const { user } = req.user;
+    if (user.role === "ADMIN") {
+      const { postId } = req.body;
+      const post = await client.post.findFirst({
+        where: {
+          id: postId,
+        },
+      });
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      } else {
+        await client.post.delete({
+          where: {
+            id: postId,
+          },
+        });
+        return res.status(200).json({ message: "Post deleted successfully" });
+      }
+    }
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+export const deleteImage = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const { user } = req.user;
+    if (user.role === "ADMIN") {
+      const { imageId } = req.body;
+      const image = await client.postImage.findFirst({
+        where: {
+          id: imageId,
+        },
+      });
+      if (!image) {
+        return res.status(404).json({ message: "Image not found" });
+      } else {
+        await client.postImage.delete({
+          where: {
+            id: imageId,
+          },
+        });
+        return res.status(200).json({ message: "Image deleted successfully" });
+      }
+    }
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};

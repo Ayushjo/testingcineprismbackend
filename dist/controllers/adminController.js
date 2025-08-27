@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
+exports.deleteImage = exports.deletePost = exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const __1 = __importDefault(require(".."));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -441,3 +441,61 @@ const editPost = async (req, res) => {
     }
 };
 exports.editPost = editPost;
+const deletePost = async (req, res) => {
+    try {
+        const { user } = req.user;
+        if (user.role === "ADMIN") {
+            const { postId } = req.body;
+            const post = await __1.default.post.findFirst({
+                where: {
+                    id: postId,
+                },
+            });
+            if (!post) {
+                return res.status(404).json({ message: "Post not found" });
+            }
+            else {
+                await __1.default.post.delete({
+                    where: {
+                        id: postId,
+                    },
+                });
+                return res.status(200).json({ message: "Post deleted successfully" });
+            }
+        }
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.deletePost = deletePost;
+const deleteImage = async (req, res) => {
+    try {
+        const { user } = req.user;
+        if (user.role === "ADMIN") {
+            const { imageId } = req.body;
+            const image = await __1.default.postImage.findFirst({
+                where: {
+                    id: imageId,
+                },
+            });
+            if (!image) {
+                return res.status(404).json({ message: "Image not found" });
+            }
+            else {
+                await __1.default.postImage.delete({
+                    where: {
+                        id: imageId,
+                    },
+                });
+                return res.status(200).json({ message: "Image deleted successfully" });
+            }
+        }
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.deleteImage = deleteImage;

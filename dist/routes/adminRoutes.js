@@ -24,4 +24,6 @@ router
 router.route("/fetch-top-picks").post(extractUser_1.extractUserDetails, adminController_1.fetchTopPicks);
 router.route("/fetch-posts").post(adminController_1.fetchAllPost);
 router.route("/edit-post").post(extractUser_1.extractUserDetails, adminController_1.editPost);
+router.route("/delete-post").post(extractUser_1.extractUserDetails, adminController_1.deletePost);
+router.route("/delete-image").post(extractUser_1.extractUserDetails, adminController_1.deleteImage);
 exports.default = router;
