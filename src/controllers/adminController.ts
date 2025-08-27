@@ -389,7 +389,7 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
       data: {
         title,
         genre,
-        year:yearInt,
+        year: yearInt,
         posterImageUrl: cloud.url,
       },
     });
@@ -402,10 +402,58 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const topPicks = await client.topPicks.findMany({})
+    const topPicks = await client.topPicks.findMany({});
     res
       .status(200)
       .json({ topPicks, message: "Top picks fetched successfully" });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const editPost = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const { user } = req.user;
+    if (user.role === "USER") {
+      res.status(400).json("You are not authorized");
+    } else {
+      const {
+        postId,
+        title,
+        content,
+        genres,
+        year,
+        directedBy,
+        streamingAt,
+        relatedPostIds,
+      } = req.body;
+
+      const post = await client.post.findFirst({
+        where: {
+          id: postId,
+        },
+      });
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      } else {
+        await client.post.update({
+          where: {
+            id: postId,
+          },
+          data: {
+            title,
+            content,
+            genres,
+            year,
+            directedBy,
+            streamingAt,
+            relatedPostIds,
+          },
+        });
+        return res.status(200).json({ message: "Post updated successfully" });
+      }
+    }
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
