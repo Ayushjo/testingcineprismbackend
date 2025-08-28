@@ -466,7 +466,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
 
 export const deletePost = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const { user } = req.user;
+    const  user  = req.user;
     if (user.role === "ADMIN") {
       const { postId } = req.body;
       const post = await client.post.findFirst({
@@ -492,7 +492,7 @@ export const deletePost = async (req: AuthorizedRequest, res: Response) => {
 };
 export const deleteImage = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const { user } = req.user;
+    const  user  = req.user;
     if (user.role === "ADMIN") {
       const { imageId } = req.body;
       const image = await client.postImage.findFirst({
