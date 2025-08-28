@@ -445,7 +445,7 @@ const editPost = async (req, res) => {
 exports.editPost = editPost;
 const deletePost = async (req, res) => {
     try {
-        const { user } = req.user;
+        const user = req.user;
         if (user.role === "ADMIN") {
             const { postId } = req.body;
             const post = await __1.default.post.findFirst({
@@ -474,7 +474,7 @@ const deletePost = async (req, res) => {
 exports.deletePost = deletePost;
 const deleteImage = async (req, res) => {
     try {
-        const { user } = req.user;
+        const user = req.user;
         if (user.role === "ADMIN") {
             const { imageId } = req.body;
             const image = await __1.default.postImage.findFirst({
