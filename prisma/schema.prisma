@@ -43,6 +43,7 @@ model Post {
   
   adminId       Int         @default(1)
   year          Int
+  ratingCategories Json
   reviewPosterImageUrl String?
   streamingAt   String
   posterImageUrl String?     // Reference to the poster image ID

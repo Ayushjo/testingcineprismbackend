@@ -249,7 +249,7 @@ const createPost = async (req, res) => {
     try {
         const user = req.user;
         if (user.role === "ADMIN") {
-            const { title, content, genres, year, directedBy, streamingAt, relatedPostIds, } = req.body;
+            const { title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, } = req.body;
             const post = await __1.default.post.create({
                 data: {
                     title,
@@ -259,6 +259,7 @@ const createPost = async (req, res) => {
                     directedBy,
                     streamingAt,
                     relatedPostIds,
+                    ratingCategories,
                 },
             });
             res.status(201).json({ post, message: "Post created successfully" });
@@ -407,7 +408,7 @@ const editPost = async (req, res) => {
             res.status(400).json("You are not authorized");
         }
         else {
-            const { postId, title, content, genres, year, directedBy, streamingAt, relatedPostIds, } = req.body;
+            const { postId, title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories } = req.body;
             const post = await __1.default.post.findFirst({
                 where: {
                     id: postId,
@@ -429,6 +430,7 @@ const editPost = async (req, res) => {
                         directedBy,
                         streamingAt,
                         relatedPostIds,
+                        ratingCategories
                     },
                 });
                 return res.status(200).json({ message: "Post updated successfully" });

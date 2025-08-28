@@ -255,6 +255,7 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
         directedBy,
         streamingAt,
         relatedPostIds,
+        ratingCategories,
       } = req.body;
 
       const post = await client.post.create({
@@ -266,6 +267,7 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
           directedBy,
           streamingAt,
           relatedPostIds,
+          ratingCategories,
         },
       });
 
@@ -427,6 +429,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
         directedBy,
         streamingAt,
         relatedPostIds,
+        ratingCategories
       } = req.body;
 
       const post = await client.post.findFirst({
@@ -449,6 +452,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
             directedBy,
             streamingAt,
             relatedPostIds,
+            ratingCategories
           },
         });
         return res.status(200).json({ message: "Post updated successfully" });

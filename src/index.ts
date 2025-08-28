@@ -1,4 +1,3 @@
-
 if (typeof globalThis.File === "undefined") {
   class FilePolyfill {
     name: string;
@@ -200,8 +199,8 @@ app.use("/api/v1/movies", movieRoutes);
 import aiNewsRoutes from "./routes/ainewsRoutes.js";
 app.use("/api/v1/news", aiNewsRoutes);
 
-import authRoutes from "./routes/authRoutes.js"
-app.use("/api/v1/auth", authRoutes)
+import authRoutes from "./routes/authRoutes.js";
+app.use("/api/v1/auth", authRoutes);
 
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
