@@ -238,7 +238,7 @@ const getTrendingNews = async (req, res) => {
         console.log("Fetching trending news from database...");
         const news = await __1.default.trendingNews.findMany({
             orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
-            take: 20,
+            take: 50,
         });
         const formattedNews = news.map((article, index) => ({
             id: article.id,

@@ -263,7 +263,7 @@ export const getTrendingNews = async (req: Request, res: Response) => {
 
     const news = await client.trendingNews.findMany({
       orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
-      take: 20,
+      take: 50,
     });
 
     const formattedNews = news.map((article, index) => ({
