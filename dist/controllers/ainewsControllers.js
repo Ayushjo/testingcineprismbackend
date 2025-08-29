@@ -310,7 +310,7 @@ const refreshTrendingNews = async (req, res) => {
             score: calculateTrendingScore(article),
         }))
             .sort((a, b) => b.score - a.score);
-        const topNews = scoredNews.slice(0, 25);
+        const topNews = scoredNews;
         // Update database
         await __1.default.trendingNews.deleteMany({});
         console.log("Cleared existing trending news");
@@ -507,7 +507,7 @@ const searchNews = async (req, res) => {
                 ],
             },
             orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
-            take: 20,
+            take: 50,
         });
         res.status(200).json({
             success: true,

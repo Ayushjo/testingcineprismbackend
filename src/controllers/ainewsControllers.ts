@@ -347,7 +347,7 @@ export const refreshTrendingNews = async (req: Request, res: Response) => {
       }))
       .sort((a, b) => b.score - a.score);
 
-    const topNews = scoredNews.slice(0, 25);
+    const topNews = scoredNews;
 
     // Update database
     await client.trendingNews.deleteMany({});
@@ -563,7 +563,7 @@ export const searchNews = async (req: Request, res: Response) => {
         ],
       },
       orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
-      take: 20,
+      take: 50,
     });
 
     res.status(200).json({
