@@ -408,7 +408,7 @@ const editPost = async (req, res) => {
             res.status(400).json("You are not authorized");
         }
         else {
-            const { postId, title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories } = req.body.submitData;
+            const { postId, title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, } = req.body.finalSubmitData;
             const post = await __1.default.post.findFirst({
                 where: {
                     id: postId,
@@ -430,7 +430,7 @@ const editPost = async (req, res) => {
                         directedBy,
                         streamingAt,
                         relatedPostIds,
-                        ratingCategories
+                        ratingCategories,
                     },
                 });
                 return res.status(200).json({ message: "Post updated successfully" });

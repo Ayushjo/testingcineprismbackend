@@ -429,8 +429,9 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
         directedBy,
         streamingAt,
         relatedPostIds,
-        ratingCategories
-      } = req.body.submitData;
+        ratingCategories,
+      } = req.body.finalSubmitData;
+      
 
       const post = await client.post.findFirst({
         where: {
@@ -452,7 +453,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
             directedBy,
             streamingAt,
             relatedPostIds,
-            ratingCategories
+            ratingCategories,
           },
         });
         return res.status(200).json({ message: "Post updated successfully" });
@@ -466,7 +467,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
 
 export const deletePost = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const  user  = req.user;
+    const user = req.user;
     if (user.role === "ADMIN") {
       const { postId } = req.body;
       const post = await client.post.findFirst({
@@ -492,7 +493,7 @@ export const deletePost = async (req: AuthorizedRequest, res: Response) => {
 };
 export const deleteImage = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const  user  = req.user;
+    const user = req.user;
     if (user.role === "ADMIN") {
       const { imageId } = req.body;
       const image = await client.postImage.findFirst({
