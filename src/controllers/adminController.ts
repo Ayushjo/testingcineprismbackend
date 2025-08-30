@@ -430,7 +430,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
         streamingAt,
         relatedPostIds,
         ratingCategories,
-      } = req.body.finalSubmitData;
+      } = req.body;
       
 
       const post = await client.post.findFirst({
