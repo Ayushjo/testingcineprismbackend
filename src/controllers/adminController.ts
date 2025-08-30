@@ -416,7 +416,7 @@ export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
 
 export const editPost = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const { user } = req.user;
+    const user = req.user;
     if (user.role === "USER") {
       res.status(400).json("You are not authorized");
     } else {
