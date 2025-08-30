@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMovieById = exports.getRefreshStatus = exports.refreshTrendingMovies = exports.getTrendingMovies = void 0;
+exports.editTrendingMoviesRank = exports.getMovieById = exports.getRefreshStatus = exports.refreshTrendingMovies = exports.getTrendingMovies = void 0;
 const __1 = __importDefault(require(".."));
 const axios_1 = __importDefault(require("axios"));
 // Get all trending movies (for frontend consumption)
@@ -244,3 +244,27 @@ const getMovieById = async (req, res) => {
     }
 };
 exports.getMovieById = getMovieById;
+const editTrendingMoviesRank = async (req, res) => {
+    try {
+        const { movieData } = req.body;
+        for (const movie of movieData) {
+            await __1.default.trendingMovie.update({
+                where: { id: movie.id },
+                data: { trendingRank: movie.trendingRank },
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Movie rank updated successfully",
+        });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to update movie rank",
+            error: error.message,
+        });
+    }
+};
+exports.editTrendingMoviesRank = editTrendingMoviesRank;

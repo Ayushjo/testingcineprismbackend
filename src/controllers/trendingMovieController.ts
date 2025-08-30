@@ -307,3 +307,27 @@ export const getMovieById = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const editTrendingMoviesRank = async (req: Request, res: Response) => {
+  try {
+    const {movieData} = req.body;
+    for(const movie of movieData){
+      await client.trendingMovie.update({
+        where: { id: movie.id },
+        data: { trendingRank: movie.trendingRank },
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Movie rank updated successfully",
+    });
+
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update movie rank",
+      error: error.message,
+    });
+  }
+};
