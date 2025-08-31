@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteImage = exports.deletePost = exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
+exports.hasLiked = exports.deleteImage = exports.deletePost = exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const __1 = __importDefault(require(".."));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -501,3 +501,26 @@ const deleteImage = async (req, res) => {
     }
 };
 exports.deleteImage = deleteImage;
+const hasLiked = async (req, res) => {
+    try {
+        const user = req.user;
+        const { postId } = req.body;
+        const hasLiked = await __1.default.like.findFirst({
+            where: {
+                userId: user.id,
+                postId: postId,
+            },
+        });
+        if (hasLiked) {
+            return res.status(200).json({ hasLiked: true });
+        }
+        else {
+            return res.status(200).json({ hasLiked: false });
+        }
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.hasLiked = hasLiked;

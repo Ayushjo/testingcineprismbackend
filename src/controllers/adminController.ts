@@ -431,7 +431,6 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
         relatedPostIds,
         ratingCategories,
       } = req.body;
-      
 
       const post = await client.post.findFirst({
         where: {
@@ -511,6 +510,27 @@ export const deleteImage = async (req: AuthorizedRequest, res: Response) => {
         });
         return res.status(200).json({ message: "Image deleted successfully" });
       }
+    }
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const hasLiked = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    const { postId } = req.body;
+    const hasLiked = await client.like.findFirst({
+      where: {
+        userId: user.id,
+        postId: postId,
+      },
+    });
+    if (hasLiked) {
+      return res.status(200).json({ hasLiked: true });
+    } else {
+      return res.status(200).json({ hasLiked: false });
     }
   } catch (error: any) {
     console.log(error.message);
