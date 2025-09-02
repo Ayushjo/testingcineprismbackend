@@ -7,6 +7,7 @@ exports.hasLiked = exports.deleteImage = exports.deletePost = exports.editPost =
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const __1 = __importDefault(require(".."));
 const cloudinary_1 = __importDefault(require("cloudinary"));
+const redis_1 = require("../config/redis");
 const uploadPoster = async (req, res) => {
     try {
         const user = req.user;
@@ -262,6 +263,9 @@ const createPost = async (req, res) => {
                     ratingCategories,
                 },
             });
+            // Clear cache so next fetch gets fresh data
+            await (0, redis_1.deleteCache)("all_posts");
+            console.log("🗑️ Cleared posts cache");
             res.status(201).json({ post, message: "Post created successfully" });
         }
         else {
@@ -329,20 +333,36 @@ const uploadImages = async (req, res) => {
 exports.uploadImages = uploadImages;
 const fetchAllPost = async (req, res) => {
     try {
+        const cacheKey = "all_posts";
+        // Try cache first
+        const cachedPosts = await (0, redis_1.getFromCache)(cacheKey);
+        if (cachedPosts) {
+            console.log("📦 Cache HIT - returning cached posts");
+            return res.status(200).json({
+                posts: JSON.parse(cachedPosts),
+                message: "Posts fetched successfully (from cache)",
+            });
+        }
+        console.log("🔍 Cache MISS - fetching from database");
+        // Get from database
         const posts = await __1.default.post.findMany({
             include: {
                 images: true,
             },
         });
-        // Filter out poster images from the images array for each post
+        // Filter out poster images
         const filteredPosts = posts.map((post) => ({
             ...post,
             images: post.images.filter((image) => image.imageUrl !== post.reviewPosterImageUrl &&
                 image.imageUrl !== post.posterImageUrl),
         }));
-        res
-            .status(200)
-            .json({ posts: filteredPosts, message: "Posts fetched successfully" });
+        // Cache for 5 minutes
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(filteredPosts), 300);
+        console.log("💾 Data cached for 5 minutes");
+        res.status(200).json({
+            posts: filteredPosts,
+            message: "Posts fetched successfully",
+        });
     }
     catch (error) {
         console.log(error.message);
@@ -380,6 +400,8 @@ const addTopPicks = async (req, res) => {
                 posterImageUrl: cloud.url,
             },
         });
+        await (0, redis_1.deleteCache)("top_picks");
+        console.log("🗑️ Cleared top picks cache");
         res.status(200).json({ topPick, message: "Top pick added successfully" });
     }
     catch (error) {
@@ -390,10 +412,24 @@ const addTopPicks = async (req, res) => {
 exports.addTopPicks = addTopPicks;
 const fetchTopPicks = async (req, res) => {
     try {
+        const cacheKey = "top_picks";
+        const cachedTopPicks = await (0, redis_1.getFromCache)(cacheKey);
+        if (cachedTopPicks) {
+            console.log("📦 Cache HIT - returning cached top picks");
+            return res.status(200).json({
+                topPicks: JSON.parse(cachedTopPicks),
+                message: "Top picks fetched successfully (from cache)",
+            });
+        }
+        console.log("🔍 Cache MISS - fetching from database");
         const topPicks = await __1.default.topPicks.findMany({});
-        res
-            .status(200)
-            .json({ topPicks, message: "Top picks fetched successfully" });
+        // Cache for 10 minutes
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(topPicks), 600);
+        console.log("💾 Top picks cached for 10 minutes");
+        res.status(200).json({
+            topPicks,
+            message: "Top picks fetched successfully",
+        });
     }
     catch (error) {
         console.log(error.message);

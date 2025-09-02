@@ -4,6 +4,7 @@ import getBuffer from "../config/dataUri";
 import client from "..";
 import cloudinary from "cloudinary";
 import { Multer } from "multer";
+import { getFromCache, setCache, deleteCache } from "../config/redis";
 
 export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
   try {
@@ -271,6 +272,10 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
         },
       });
 
+      // Clear cache so next fetch gets fresh data
+      await deleteCache("all_posts");
+      console.log("🗑️ Cleared posts cache");
+
       res.status(201).json({ post, message: "Post created successfully" });
     } else {
       res.status(401).json({ message: "You are not an admin" });
@@ -339,13 +344,29 @@ export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
   try {
+    const cacheKey = "all_posts";
+
+    // Try cache first
+    const cachedPosts = await getFromCache(cacheKey);
+
+    if (cachedPosts) {
+      console.log("📦 Cache HIT - returning cached posts");
+      return res.status(200).json({
+        posts: JSON.parse(cachedPosts),
+        message: "Posts fetched successfully (from cache)",
+      });
+    }
+
+    console.log("🔍 Cache MISS - fetching from database");
+
+    // Get from database
     const posts = await client.post.findMany({
       include: {
         images: true,
       },
     });
 
-    // Filter out poster images from the images array for each post
+    // Filter out poster images
     const filteredPosts = posts.map((post) => ({
       ...post,
       images: post.images.filter(
@@ -355,9 +376,14 @@ export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
       ),
     }));
 
-    res
-      .status(200)
-      .json({ posts: filteredPosts, message: "Posts fetched successfully" });
+    // Cache for 5 minutes
+    await setCache(cacheKey, JSON.stringify(filteredPosts), 300);
+    console.log("💾 Data cached for 5 minutes");
+
+    res.status(200).json({
+      posts: filteredPosts,
+      message: "Posts fetched successfully",
+    });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -395,6 +421,8 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
         posterImageUrl: cloud.url,
       },
     });
+    await deleteCache("top_picks");
+    console.log("🗑️ Cleared top picks cache");
     res.status(200).json({ topPick, message: "Top pick added successfully" });
   } catch (error: any) {
     console.log(error.message);
@@ -404,10 +432,30 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
+    const cacheKey = "top_picks";
+
+    const cachedTopPicks = await getFromCache(cacheKey);
+
+    if (cachedTopPicks) {
+      console.log("📦 Cache HIT - returning cached top picks");
+      return res.status(200).json({
+        topPicks: JSON.parse(cachedTopPicks),
+        message: "Top picks fetched successfully (from cache)",
+      });
+    }
+
+    console.log("🔍 Cache MISS - fetching from database");
+
     const topPicks = await client.topPicks.findMany({});
-    res
-      .status(200)
-      .json({ topPicks, message: "Top picks fetched successfully" });
+
+    // Cache for 10 minutes
+    await setCache(cacheKey, JSON.stringify(topPicks), 600);
+    console.log("💾 Top picks cached for 10 minutes");
+
+    res.status(200).json({
+      topPicks,
+      message: "Top picks fetched successfully",
+    });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
