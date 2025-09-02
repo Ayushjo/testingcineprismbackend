@@ -1,6 +1,7 @@
 import client from "..";
 import { Request, Response } from "express";
 import axios from "axios";
+import { getFromCache, setCache, deleteCache } from "../config/redis";
 interface TrendingMovie {
   id: number;
   tmdb_id: number;
@@ -33,12 +34,23 @@ interface TMDBMovie {
 // Get all trending movies (for frontend consumption)
 export const getTrendingMovies = async (req: Request, res: Response) => {
   try {
+    const cacheKey = "trending_movies";
+
+    // Try cache first
+    const cachedMovies = await getFromCache(cacheKey);
+
+    if (cachedMovies) {
+      console.log("📦 Cache HIT - returning cached trending movies");
+      return res.status(200).json(JSON.parse(cachedMovies));
+    }
+
+    console.log("🔍 Cache MISS - fetching trending movies from database");
+
     const movies = await client.trendingMovie.findMany({
       orderBy: { trendingRank: "asc" },
-      take: 20, // Limit to top 20 trending movies
+      take: 20,
     });
 
-    // Transform data for frontend
     const formattedMovies: TrendingMovie[] = movies.map((movie) => ({
       id: movie.id,
       tmdb_id: movie.tmdbId,
@@ -55,12 +67,18 @@ export const getTrendingMovies = async (req: Request, res: Response) => {
       last_updated: movie.lastUpdated,
     }));
 
-    res.status(200).json({
+    const response = {
       success: true,
       data: formattedMovies,
       count: formattedMovies.length,
       last_updated: movies[0]?.lastUpdated || null,
-    });
+    };
+
+    // Cache for 10 minutes
+    await setCache(cacheKey, JSON.stringify(response), 600);
+    console.log("💾 Trending movies cached for 10 minutes");
+
+    res.status(200).json(response);
   } catch (error: any) {
     console.error("Error fetching trending movies:", error.message);
     res.status(500).json({
@@ -70,7 +88,6 @@ export const getTrendingMovies = async (req: Request, res: Response) => {
     });
   }
 };
-
 // Manual refresh endpoint - fetches latest data from TMDB
 export const refreshTrendingMovies = async (req: Request, res: Response) => {
   const startTime = Date.now();
@@ -141,6 +158,9 @@ export const refreshTrendingMovies = async (req: Request, res: Response) => {
     console.log(
       `✅ Successfully refreshed ${insertedMovies.length} trending movies in ${processingTime}ms`
     );
+    // Add this after successful database insertion
+    await deleteCache("trending_movies");
+    console.log("🗑️ Cleared trending movies cache");
 
     res.status(200).json({
       success: true,
@@ -310,18 +330,20 @@ export const getMovieById = async (req: Request, res: Response) => {
 
 export const editTrendingMoviesRank = async (req: Request, res: Response) => {
   try {
-    const {movieData} = req.body;
-    for(const movie of movieData){
+    const { movieData } = req.body;
+    for (const movie of movieData) {
       await client.trendingMovie.update({
         where: { id: movie.id },
         data: { trendingRank: movie.trendingRank },
       });
     }
+    // Add this after the rank update loop
+    await deleteCache("trending_movies");
+    console.log("🗑️ Cleared trending movies cache after rank update");
     res.status(200).json({
       success: true,
       message: "Movie rank updated successfully",
     });
-
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({

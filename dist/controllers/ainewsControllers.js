@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchNews = exports.getNewsByCategory = exports.getNewsById = exports.getRefreshStatus = exports.refreshTrendingNews = exports.getTrendingNews = void 0;
 const axios_1 = __importDefault(require("axios"));
 const __1 = __importDefault(require(".."));
+const redis_1 = require("../config/redis");
 // NewsAPI Integration
 const fetchFromNewsAPI = async () => {
     if (!process.env.NEWS_API_KEY) {
@@ -235,7 +236,14 @@ const removeDuplicateArticles = (articles) => {
 // Controllers
 const getTrendingNews = async (req, res) => {
     try {
-        console.log("Fetching trending news from database...");
+        const cacheKey = "trending_news";
+        // Try cache first
+        const cachedNews = await (0, redis_1.getFromCache)(cacheKey);
+        if (cachedNews) {
+            console.log("📦 Cache HIT - returning cached trending news");
+            return res.status(200).json(JSON.parse(cachedNews));
+        }
+        console.log("🔍 Cache MISS - fetching trending news from database");
         const news = await __1.default.trendingNews.findMany({
             orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
             take: 50,
@@ -254,7 +262,7 @@ const getTrendingNews = async (req, res) => {
             trending_score: article.trendingScore,
             trending_rank: index + 1,
         }));
-        res.status(200).json({
+        const response = {
             success: true,
             data: formattedNews,
             meta: {
@@ -262,7 +270,11 @@ const getTrendingNews = async (req, res) => {
                 last_updated: news[0]?.lastUpdated || null,
                 sources: [...new Set(news.map((n) => n.sourceName))],
             },
-        });
+        };
+        // Cache for 8 minutes
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(response), 480);
+        console.log("💾 Trending news cached for 8 minutes");
+        res.status(200).json(response);
     }
     catch (error) {
         console.error("Error fetching trending news:", error.message);
@@ -349,6 +361,9 @@ const refreshTrendingNews = async (req, res) => {
             },
         });
         console.log(`Successfully refreshed ${insertedNews.length} articles in ${processingTime}ms`);
+        // Add this after successful database insertion
+        await (0, redis_1.deleteCache)("trending_news");
+        console.log("🗑️ Cleared trending news cache");
         res.status(200).json({
             success: true,
             message: "Trending news refreshed successfully",
