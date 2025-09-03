@@ -585,3 +585,35 @@ export const hasLiked = async (req: AuthorizedRequest, res: Response) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const latestReviews = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const cacheKey = "latest_reviews";
+
+    const cachedTopPicks = await getFromCache(cacheKey);
+
+    if (cachedTopPicks) {
+      console.log("📦 Cache HIT - returning cached top picks");
+      return res.status(200).json({
+        latestReviews: JSON.parse(cachedTopPicks),
+        message: "Latest reviews fetched successfully (from cache)",
+      });
+    }
+
+    console.log("🔍 Cache MISS - fetching from database");
+    const latestRewviews = await client.post.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 7,
+    });
+    await setCache(cacheKey, JSON.stringify(latestReviews), 600);
+    res.status(200).json({
+      latestReviews:latestReviews,
+      message: "Latest reviews fetched successfully",
+    });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};

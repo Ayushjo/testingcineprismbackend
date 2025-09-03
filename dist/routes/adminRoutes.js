@@ -27,4 +27,5 @@ router.route("/edit-post").post(extractUser_1.extractUserDetails, adminControlle
 router.route("/delete-post").post(extractUser_1.extractUserDetails, adminController_1.deletePost);
 router.route("/delete-image").post(extractUser_1.extractUserDetails, adminController_1.deleteImage);
 router.route("/has-liked").post(extractUser_1.extractUserDetails, adminController_1.hasLiked);
+router.route("/latest-reviews").get(adminController_1.latestReviews);
 exports.default = router;

@@ -10,6 +10,7 @@ import {
   fetchAllPost,
   fetchTopPicks,
   hasLiked,
+  latestReviews,
   uploadImages,
   uploadPoster,
   uploadReviewPoster,
@@ -36,4 +37,5 @@ router.route("/edit-post").post(extractUserDetails, editPost);
 router.route("/delete-post").post(extractUserDetails, deletePost);
 router.route("/delete-image").post(extractUserDetails, deleteImage);
 router.route("/has-liked").post(extractUserDetails, hasLiked);
+router.route("/latest-reviews").get(latestReviews);
 export default router;

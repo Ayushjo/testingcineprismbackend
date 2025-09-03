@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.hasLiked = exports.deleteImage = exports.deletePost = exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
+exports.latestReviews = exports.hasLiked = exports.deleteImage = exports.deletePost = exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const __1 = __importDefault(require(".."));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -560,3 +560,33 @@ const hasLiked = async (req, res) => {
     }
 };
 exports.hasLiked = hasLiked;
+const latestReviews = async (req, res) => {
+    try {
+        const cacheKey = "latest_reviews";
+        const cachedTopPicks = await (0, redis_1.getFromCache)(cacheKey);
+        if (cachedTopPicks) {
+            console.log("📦 Cache HIT - returning cached top picks");
+            return res.status(200).json({
+                latestReviews: JSON.parse(cachedTopPicks),
+                message: "Latest reviews fetched successfully (from cache)",
+            });
+        }
+        console.log("🔍 Cache MISS - fetching from database");
+        const latestRewviews = await __1.default.post.findMany({
+            orderBy: {
+                createdAt: "desc",
+            },
+            take: 7,
+        });
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(exports.latestReviews), 600);
+        res.status(200).json({
+            latestReviews: exports.latestReviews,
+            message: "Latest reviews fetched successfully",
+        });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.latestReviews = latestReviews;
