@@ -572,7 +572,7 @@ const latestReviews = async (req, res) => {
             });
         }
         console.log("🔍 Cache MISS - fetching from database");
-        const latestRewviews = await __1.default.post.findMany({
+        const latestReveiews = await __1.default.post.findMany({
             orderBy: {
                 createdAt: "desc",
             },

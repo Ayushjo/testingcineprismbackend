@@ -601,7 +601,7 @@ export const latestReviews = async (req: AuthorizedRequest, res: Response) => {
     }
 
     console.log("🔍 Cache MISS - fetching from database");
-    const latestRewviews = await client.post.findMany({
+    const latestReviews = await client.post.findMany({
       orderBy: {
         createdAt: "desc",
       },
@@ -609,7 +609,7 @@ export const latestReviews = async (req: AuthorizedRequest, res: Response) => {
     });
     await setCache(cacheKey, JSON.stringify(latestReviews), 600);
     res.status(200).json({
-      latestReviews:latestReviews,
+     latestReviews,
       message: "Latest reviews fetched successfully",
     });
   } catch (error: any) {
