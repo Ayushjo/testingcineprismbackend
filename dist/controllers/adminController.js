@@ -572,15 +572,17 @@ const latestReviews = async (req, res) => {
             });
         }
         console.log("🔍 Cache MISS - fetching from database");
-        const latestReveiews = await __1.default.post.findMany({
+        const latestReviews = await __1.default.post.findMany({
             orderBy: {
                 createdAt: "desc",
             },
             take: 7,
         });
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(exports.latestReviews), 600);
+        if (latestReviews && latestReviews.length > 0) {
+            await (0, redis_1.setCache)(cacheKey, JSON.stringify(latestReviews), 600);
+        }
         res.status(200).json({
-            latestReviews: exports.latestReviews,
+            latestReviews,
             message: "Latest reviews fetched successfully",
         });
     }

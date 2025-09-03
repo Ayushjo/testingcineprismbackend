@@ -607,7 +607,10 @@ export const latestReviews = async (req: AuthorizedRequest, res: Response) => {
       },
       take: 7,
     });
-    await setCache(cacheKey, JSON.stringify(latestReviews), 600);
+
+    if(latestReviews && latestReviews.length > 0) {
+      await setCache(cacheKey, JSON.stringify(latestReviews), 600);
+    }
     res.status(200).json({
      latestReviews,
       message: "Latest reviews fetched successfully",
