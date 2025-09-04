@@ -21,6 +21,7 @@ const postHtml = async (req, res) => {
                 streamingAt: true,
                 genres: true,
                 createdAt: true,
+                reviewPosterImageUrl: true,
             },
         });
         if (!post) {
@@ -54,16 +55,16 @@ const postHtml = async (req, res) => {
         const postUrl = `${frontendUrl}/post/${post.id}`;
         const currentUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         // IMPORTANT: Convert HTTP to HTTPS and validate image URL
-        let posterImageUrl = "";
-        if (post.posterImageUrl) {
-            posterImageUrl = post.posterImageUrl.replace("http://", "https://");
+        let reviewPosterImageUrl = "";
+        if (post.reviewPosterImageUrl) {
+            reviewPosterImageUrl = post.reviewPosterImageUrl.replace("http://", "https://");
             // Ensure it's a valid URL
             try {
-                new URL(posterImageUrl);
+                new URL(reviewPosterImageUrl);
             }
             catch (error) {
-                console.error("Invalid image URL:", posterImageUrl);
-                posterImageUrl = "";
+                console.error("Invalid image URL:", reviewPosterImageUrl);
+                reviewPosterImageUrl = "";
             }
         }
         // Set proper content type header
@@ -87,11 +88,11 @@ const postHtml = async (req, res) => {
     <meta property="og:url" content="${currentUrl}">
     <meta property="og:title" content="${sanitizedTitle}">
     <meta property="og:description" content="${sanitizedDescription}">
-    ${posterImageUrl
-            ? `<meta property="og:image" content="${posterImageUrl}">`
+    ${reviewPosterImageUrl
+            ? `<meta property="og:image" content="${reviewPosterImageUrl}">`
             : ""}
-    ${posterImageUrl
-            ? `<meta property="og:image:secure_url" content="${posterImageUrl}">`
+    ${reviewPosterImageUrl
+            ? `<meta property="og:image:secure_url" content="${reviewPosterImageUrl}">`
             : ""}
     <meta property="og:image:width" content="400">
     <meta property="og:image:height" content="600">
@@ -102,8 +103,8 @@ const postHtml = async (req, res) => {
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${sanitizedTitle}">
     <meta name="twitter:description" content="${sanitizedDescription}">
-    ${posterImageUrl
-            ? `<meta name="twitter:image" content="${posterImageUrl}">`
+    ${reviewPosterImageUrl
+            ? `<meta name="twitter:image" content="${reviewPosterImageUrl}">`
             : ""}
     <meta name="twitter:image:alt" content="${sanitizedTitle} Movie Poster">
 
@@ -218,8 +219,8 @@ const postHtml = async (req, res) => {
     <div class="container">
         <h1>${sanitizedTitle}</h1>
         
-        ${posterImageUrl
-            ? `<img src="${posterImageUrl}" alt="${sanitizedTitle} Poster" class="poster">`
+        ${reviewPosterImageUrl
+            ? `<img src="${reviewPosterImageUrl}" alt="${sanitizedTitle} Poster" class="poster">`
             : ""}
         
         <div class="movie-info">

@@ -18,6 +18,7 @@ export const postHtml = async (req: Request, res: Response) => {
         streamingAt: true,
         genres: true,
         createdAt: true,
+        reviewPosterImageUrl: true,
       },
     });
 
@@ -57,15 +58,15 @@ export const postHtml = async (req: Request, res: Response) => {
     const currentUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
 
     // IMPORTANT: Convert HTTP to HTTPS and validate image URL
-    let posterImageUrl = "";
-    if (post.posterImageUrl) {
-      posterImageUrl = post.posterImageUrl.replace("http://", "https://");
+    let reviewPosterImageUrl = "";
+    if (post.reviewPosterImageUrl) {
+      reviewPosterImageUrl = post.reviewPosterImageUrl.replace("http://", "https://");
       // Ensure it's a valid URL
       try {
-        new URL(posterImageUrl);
+        new URL(reviewPosterImageUrl);
       } catch (error) {
-        console.error("Invalid image URL:", posterImageUrl);
-        posterImageUrl = "";
+        console.error("Invalid image URL:", reviewPosterImageUrl);
+        reviewPosterImageUrl = "";
       }
     }
 
@@ -93,13 +94,13 @@ export const postHtml = async (req: Request, res: Response) => {
     <meta property="og:title" content="${sanitizedTitle}">
     <meta property="og:description" content="${sanitizedDescription}">
     ${
-      posterImageUrl
-        ? `<meta property="og:image" content="${posterImageUrl}">`
+      reviewPosterImageUrl
+        ? `<meta property="og:image" content="${reviewPosterImageUrl}">`
         : ""
     }
     ${
-      posterImageUrl
-        ? `<meta property="og:image:secure_url" content="${posterImageUrl}">`
+      reviewPosterImageUrl
+        ? `<meta property="og:image:secure_url" content="${reviewPosterImageUrl}">`
         : ""
     }
     <meta property="og:image:width" content="400">
@@ -112,8 +113,8 @@ export const postHtml = async (req: Request, res: Response) => {
     <meta name="twitter:title" content="${sanitizedTitle}">
     <meta name="twitter:description" content="${sanitizedDescription}">
     ${
-      posterImageUrl
-        ? `<meta name="twitter:image" content="${posterImageUrl}">`
+      reviewPosterImageUrl
+        ? `<meta name="twitter:image" content="${reviewPosterImageUrl}">`
         : ""
     }
     <meta name="twitter:image:alt" content="${sanitizedTitle} Movie Poster">
@@ -232,8 +233,8 @@ export const postHtml = async (req: Request, res: Response) => {
         <h1>${sanitizedTitle}</h1>
         
         ${
-          posterImageUrl
-            ? `<img src="${posterImageUrl}" alt="${sanitizedTitle} Poster" class="poster">`
+          reviewPosterImageUrl
+            ? `<img src="${reviewPosterImageUrl}" alt="${sanitizedTitle} Poster" class="poster">`
             : ""
         }
         
