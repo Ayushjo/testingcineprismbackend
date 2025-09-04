@@ -1704,3 +1704,6 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-04T06:49:23.434Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-04T06:49:26.480Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-04T06:49:56.654Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-04T07:16:42.814Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-04T07:16:45.967Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/post/a2150ea8-61b7-4322-992c-cd1d07882c8d\",\"status\":\"200\",\"responseTime\":\"2619.761\"}","timestamp":"2025-09-04T07:16:49.388Z"}
