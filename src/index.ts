@@ -65,7 +65,7 @@ import { cli } from "winston/lib/winston/config";
 import cookieParser from "cookie-parser";
 import cloudinary from "cloudinary";
 import bcrypt from "bcrypt";
-import htmlRoutes from "./routes/htmlRoutes.js";
+
 dotenv.config();
 const app = express();
 const morganFormat = ":method :url :status :response-time ms";
@@ -187,24 +187,31 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 import userRouter from "./routes/userRoutes.js";
+console.log("userRouter:", userRouter, typeof userRouter);
 app.use("/api/v1/user", userRouter);
 import adminRouter from "./routes/adminRoutes.js";
+console.log("adminRouter:", adminRouter, typeof adminRouter);
 app.use("/api/v1/admin", adminRouter);
 
 import postRoutes from "./routes/postRoutes.js";
+console.log("postRoutes:", postRoutes, typeof postRoutes);
 app.use("/api/v1/posts", postRoutes);
 
 import movieRoutes from "./routes/moviesRouter.js";
+console.log("movieRoutes:", movieRoutes, typeof movieRoutes);
 app.use("/api/v1/movies", movieRoutes);
 
 import aiNewsRoutes from "./routes/ainewsRoutes.js";
+console.log("aiNewsRoutes:", aiNewsRoutes, typeof aiNewsRoutes);
 app.use("/api/v1/news", aiNewsRoutes);
 
 import authRoutes from "./routes/authRoutes.js";
+
 app.use("/api/v1/auth", authRoutes);
 
-app.use("/html", htmlRoutes);
-app.use("");
+import htmlRoutes from "./routes/htmlRoutes.js"
+app.use("/",htmlRoutes)
+
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
 });

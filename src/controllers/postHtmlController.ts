@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import client from "..";
+import { Response,Request } from "express";
 
+import client from "..";
 export const postHtml = async (req: Request, res: Response) => {
   try {
     const postId = req.params.id;

@@ -1,4 +1,4 @@
-import Router from "express";
+import { Router } from "express";
 import { extractUserDetails } from "../middlewares/extractUser";
 import { optionalAuth } from "../middlewares/optionalAuth";
 import { rateLimiter } from "../middlewares/rateLimiter";

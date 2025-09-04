@@ -6,6 +6,7 @@ import {
   handleComment,
   loadMoreReplies,
   logoutUser,
+
   postOpinion,
   toggleLikess,
 } from "../controllers/userController";
@@ -22,4 +23,5 @@ router.route("/logout").post(logoutUser);
 router.route("/opinion-comment").post(extractUserDetails, handleComment);
 router.route("/fetch-comments").post(fetchCommentsWithOpinionId);
 router.route("/load-more-replies").post(extractUserDetails, loadMoreReplies);
+
 export default router;
