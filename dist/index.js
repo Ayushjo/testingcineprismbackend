@@ -162,6 +162,9 @@ const ainewsRoutes_js_1 = __importDefault(require("./routes/ainewsRoutes.js"));
 app.use("/api/v1/news", ainewsRoutes_js_1.default);
 const authRoutes_js_1 = __importDefault(require("./routes/authRoutes.js"));
 app.use("/api/v1/auth", authRoutes_js_1.default);
+const htmlRoutes_js_1 = __importDefault(require("./routes/htmlRoutes.js"));
+app.use("/html", htmlRoutes_js_1.default);
+app.use("");
 app.listen(PORT, () => {
     logger_js_1.default.info(`Server is running on port ${PORT}`);
 });

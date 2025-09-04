@@ -202,6 +202,9 @@ app.use("/api/v1/news", aiNewsRoutes);
 import authRoutes from "./routes/authRoutes.js";
 app.use("/api/v1/auth", authRoutes);
 
+import htmlRoutes from "./routes/htmlRoutes.js";
+app.use("/html", htmlRoutes);
+app.use("");
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
 });
