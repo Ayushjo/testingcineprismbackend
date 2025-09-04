@@ -65,6 +65,7 @@ import { cli } from "winston/lib/winston/config";
 import cookieParser from "cookie-parser";
 import cloudinary from "cloudinary";
 import bcrypt from "bcrypt";
+import htmlRoutes from "./routes/htmlRoutes.js";
 dotenv.config();
 const app = express();
 const morganFormat = ":method :url :status :response-time ms";
@@ -202,7 +203,6 @@ app.use("/api/v1/news", aiNewsRoutes);
 import authRoutes from "./routes/authRoutes.js";
 app.use("/api/v1/auth", authRoutes);
 
-import htmlRoutes from "./routes/htmlRoutes.js";
 app.use("/html", htmlRoutes);
 app.use("");
 app.listen(PORT, () => {

@@ -1,9 +1,8 @@
 import { Router } from "express";
-import { postHtml } from "../controllers/postHtmlController";
+import { postHtml } from "../controllers/postHtmlController.js";
 
-const router = Router()
+const router = Router();
 
+router.route("/post/:id").get(postHtml);
 
-router.route("/post/:id").get(postHtml)
-
-export default router
+export default router;

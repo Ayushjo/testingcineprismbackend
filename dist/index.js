@@ -45,6 +45,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const client_1 = require("@prisma/client");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
+const htmlRoutes_js_1 = __importDefault(require("./routes/htmlRoutes.js"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const morganFormat = ":method :url :status :response-time ms";
@@ -162,7 +163,6 @@ const ainewsRoutes_js_1 = __importDefault(require("./routes/ainewsRoutes.js"));
 app.use("/api/v1/news", ainewsRoutes_js_1.default);
 const authRoutes_js_1 = __importDefault(require("./routes/authRoutes.js"));
 app.use("/api/v1/auth", authRoutes_js_1.default);
-const htmlRoutes_js_1 = __importDefault(require("./routes/htmlRoutes.js"));
 app.use("/html", htmlRoutes_js_1.default);
 app.use("");
 app.listen(PORT, () => {
