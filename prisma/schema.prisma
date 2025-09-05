@@ -52,6 +52,46 @@ model Post {
   updatedAt     DateTime    @updatedAt
   
 }
+model Article{
+  id String @id @default(uuid())
+  title String
+  shortDescription String
+  slug String
+  author String
+  mainImageUrl String
+  published Boolean @default(true)
+  publishedAt DateTime?
+  viewCount Int @default(0)
+  images ArticleImage[]
+  comments Comment[]
+  likes Like[]
+  blocks ContentBlock[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContentBlock{
+  id String @id @default(uuid())
+  articleId String
+  type BlockType
+  content Json
+  order Int
+
+  article Article @relation(fields: [articleId], references: [id],onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([articleId, order])
+}
+
+enum BlockType{
+  PARAGRAPH
+  HEADING
+  IMAGE
+  LIST
+  QUOTE
+  DIVIDER
+}
 
 model TopPicks{
   id String @id @default(uuid())
@@ -72,6 +112,14 @@ model PostImage {
   updatedAt DateTime @updatedAt
   
 }
+model ArticleImage {
+  id String    @id @default(uuid())
+  imageUrl String
+  articleId String
+  article Article @relation(fields: [articleId], references: [id],onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 
 model Comment{
@@ -81,9 +129,11 @@ model Comment{
   postId String?
   opinionId String?
   parentCommentId String?
+  articleId String?
   replies Comment[] @relation(name: "CommentToComment")
   user User @relation(fields: [userId], references: [id])
   post Post? @relation(fields: [postId], references: [id],onDelete: Cascade)
+  article Article? @relation(fields: [articleId], references: [id],onDelete: Cascade)
   opinion UnpopularOpinion? @relation(fields: [opinionId], references: [id])
   parentComment Comment? @relation("CommentToComment",fields: [parentCommentId],references: [id])
   createdAt DateTime @default(now())
@@ -96,8 +146,10 @@ model Like{
   userId String
   postId String?
   opinionId String?
+  articleId String?
   user User @relation(fields: [userId], references: [id])
   post Post? @relation(fields: [postId], references: [id],onDelete: Cascade)
+  article Article? @relation(fields: [articleId], references: [id],onDelete: Cascade)
   opinion UnpopularOpinion? @relation(fields: [opinionId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
