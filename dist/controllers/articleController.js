@@ -21,93 +21,83 @@ const createArticle = async (req, res) => {
         if (user.role === "USER") {
             return res.status(400).json({ message: "You are not authorized" });
         }
-        else {
-            const { title, shortDescription, author, published, blocks } = req.body;
-            const slug = generateSlug(title);
-            const parsedBlocks = await JSON.parse(blocks);
-            const files = req.files;
-            let mainImageUrl = "";
-            const mainImageFile = files.find((file) => file.fieldname === "mainImage");
-            if (mainImageFile) {
-                const fileBuffer = (0, dataUri_1.default)(mainImageFile);
-                if (!fileBuffer || !fileBuffer.content) {
-                    return res
-                        .status(500)
-                        .json({
-                        message: "Was not able to convert the file from buffer to base64.",
-                    });
-                }
-                const cloud = await cloudinary_1.default.v2.uploader.upload(fileBuffer.content, {
-                    folder: "articles",
+        const { title, shortDescription, author, published, blocks } = req.body;
+        const slug = generateSlug(title);
+        const parsedBlocks = JSON.parse(blocks);
+        // Fix: Add safety check for files
+        const files = req.files || [];
+        let mainImageUrl = "";
+        // Fix: Use optional chaining
+        const mainImageFile = files?.find?.((file) => file.fieldname === "mainImage");
+        if (mainImageFile) {
+            const fileBuffer = (0, dataUri_1.default)(mainImageFile);
+            if (!fileBuffer || !fileBuffer.content) {
+                return res
+                    .status(500)
+                    .json({
+                    message: "Was not able to convert the file from buffer to base64.",
                 });
-                if (!cloud) {
-                    return res
-                        .status(500)
-                        .json({
-                        message: "An error occurred while uploading to cloudinary",
-                    });
-                }
-                mainImageUrl = cloud.url;
             }
-            const processedBlocks = await Promise.all(parsedBlocks.map(async (block, index) => {
-                if (block.type === "IMAGE") {
-                    const blockImageFile = files.find((file) => file.fieldname === `blockImage_${index}`);
-                    if (!blockImageFile) {
-                        return block;
-                    }
-                    const fileBuffer = (0, dataUri_1.default)(blockImageFile);
-                    if (!fileBuffer || !fileBuffer.content) {
-                        return res
-                            .status(500)
-                            .json({
-                            message: "Was not able to convert the file from buffer to base64.",
-                        });
-                    }
-                    const cloud = await cloudinary_1.default.v2.uploader.upload(fileBuffer.content, { folder: "articles" });
-                    if (!cloud) {
-                        return res
-                            .status(500)
-                            .json({
-                            message: "An error occurred while uploading to cloudinary",
-                        });
-                    }
-                    return {
-                        ...block,
-                        content: {
-                            ...block.content,
-                            url: cloud.url,
-                            publicId: cloud.public_id,
-                        },
-                    };
-                }
-                return block;
-            }));
-            const article = await __1.default.article.create({
-                data: {
-                    title,
-                    slug,
-                    shortDescription,
-                    author,
-                    published,
-                    mainImageUrl,
-                    blocks: {
-                        create: processedBlocks.map((block, index) => ({
-                            type: block.type,
-                            content: JSON.stringify(block.content),
-                            order: index,
-                        })),
-                    },
-                },
-                include: {
-                    blocks: {
-                        orderBy: {
-                            order: "asc",
-                        },
-                    },
-                },
+            const cloud = await cloudinary_1.default.v2.uploader.upload(fileBuffer.content, {
+                folder: "articles",
             });
-            res.status(200).json({ article });
+            if (!cloud) {
+                return res
+                    .status(500)
+                    .json({ message: "An error occurred while uploading to cloudinary" });
+            }
+            mainImageUrl = cloud.url;
         }
+        const processedBlocks = await Promise.all(parsedBlocks.map(async (block, index) => {
+            if (block.type === "IMAGE") {
+                // Fix: Use optional chaining and safe find
+                const blockImageFile = files?.find?.((file) => file.fieldname === `blockImage_${index}`);
+                if (!blockImageFile) {
+                    return block;
+                }
+                const fileBuffer = (0, dataUri_1.default)(blockImageFile);
+                if (!fileBuffer || !fileBuffer.content) {
+                    throw new Error("Was not able to convert the file from buffer to base64.");
+                }
+                const cloud = await cloudinary_1.default.v2.uploader.upload(fileBuffer.content, { folder: "articles" });
+                if (!cloud) {
+                    throw new Error("An error occurred while uploading to cloudinary");
+                }
+                return {
+                    ...block,
+                    content: {
+                        ...block.content,
+                        url: cloud.url,
+                        publicId: cloud.public_id,
+                    },
+                };
+            }
+            return block;
+        }));
+        const article = await __1.default.article.create({
+            data: {
+                title,
+                slug,
+                shortDescription,
+                author,
+                published: published === "true",
+                publishedAt: published === "true" ? new Date() : null,
+                mainImageUrl,
+                blocks: {
+                    create: processedBlocks.map((block, index) => ({
+                        type: block.type,
+                        content: block.content,
+                        order: index,
+                    })),
+                },
+            },
+            include: {
+                blocks: {
+                    orderBy: { order: "asc" },
+                },
+            },
+        });
+        res.status(200).json({ article });
     }
     catch (error) {
         console.log(error.message);
