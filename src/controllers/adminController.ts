@@ -64,6 +64,7 @@ export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
                 posterImageUrl: poster.imageUrl,
               },
             });
+            await deleteCache("all_posts");
             res
               .status(201)
               .json({ poster, message: "Poster uploaded successfully" });
@@ -227,6 +228,7 @@ export const uploadReviewPoster = async (
                 reviewPosterImageUrl: poster.imageUrl,
               },
             });
+            await deleteCache("all_posts");
             res
               .status(201)
               .json({ poster, message: "Poster uploaded successfully" });
@@ -328,7 +330,7 @@ export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
 
         uploadedImages.push(image);
       }
-
+      await deleteCache("all_posts");
       res.status(201).json({
         images: uploadedImages,
         message: `${uploadedImages.length} images uploaded successfully`,
@@ -503,6 +505,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
             ratingCategories,
           },
         });
+        await deleteCache("all_posts");
         return res.status(200).json({ message: "Post updated successfully" });
       }
     }
@@ -530,6 +533,7 @@ export const deletePost = async (req: AuthorizedRequest, res: Response) => {
             id: postId,
           },
         });
+        await deleteCache("all_posts");
         return res.status(200).json({ message: "Post deleted successfully" });
       }
     }
@@ -556,6 +560,7 @@ export const deleteImage = async (req: AuthorizedRequest, res: Response) => {
             id: imageId,
           },
         });
+        await deleteCache("all_posts");
         return res.status(200).json({ message: "Image deleted successfully" });
       }
     }

@@ -64,6 +64,7 @@ const uploadPoster = async (req, res) => {
                                 posterImageUrl: poster.imageUrl,
                             },
                         });
+                        await (0, redis_1.deleteCache)("all_posts");
                         res
                             .status(201)
                             .json({ poster, message: "Poster uploaded successfully" });
@@ -226,6 +227,7 @@ const uploadReviewPoster = async (req, res) => {
                                 reviewPosterImageUrl: poster.imageUrl,
                             },
                         });
+                        await (0, redis_1.deleteCache)("all_posts");
                         res
                             .status(201)
                             .json({ poster, message: "Poster uploaded successfully" });
@@ -316,6 +318,7 @@ const uploadImages = async (req, res) => {
                 }
                 uploadedImages.push(image);
             }
+            await (0, redis_1.deleteCache)("all_posts");
             res.status(201).json({
                 images: uploadedImages,
                 message: `${uploadedImages.length} images uploaded successfully`,
@@ -469,6 +472,7 @@ const editPost = async (req, res) => {
                         ratingCategories,
                     },
                 });
+                await (0, redis_1.deleteCache)("all_posts");
                 return res.status(200).json({ message: "Post updated successfully" });
             }
         }
@@ -498,6 +502,7 @@ const deletePost = async (req, res) => {
                         id: postId,
                     },
                 });
+                await (0, redis_1.deleteCache)("all_posts");
                 return res.status(200).json({ message: "Post deleted successfully" });
             }
         }
@@ -527,6 +532,7 @@ const deleteImage = async (req, res) => {
                         id: imageId,
                     },
                 });
+                await (0, redis_1.deleteCache)("all_posts");
                 return res.status(200).json({ message: "Image deleted successfully" });
             }
         }
