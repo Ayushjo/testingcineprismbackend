@@ -120,18 +120,16 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
 export const getArticles = async (req: Request, res: Response) => {
   try {
     const cacheKey = "all_articles";
-
     // Try cache first
-    // const cachedArticles = await getFromCache(cacheKey);
+    const cachedArticles = await getFromCache(cacheKey);
 
-    // if (cachedArticles) {
-    //   console.log("📦 Cache HIT - returning cached posts");
-    //   return res.status(200).json({
-    //     articles: JSON.parse(cachedArticles),
-    //     message: "Articles fetched successfully (from cache)",
-    //   });
-    // }
-    await deleteCache("all_articles");
+    if (cachedArticles) {
+      console.log("📦 Cache HIT - returning cached posts");
+      return res.status(200).json({
+        articles: JSON.parse(cachedArticles),
+        message: "Articles fetched successfully (from cache)",
+      });
+    }
     console.log("🔍 Cache MISS - fetching from database");
     const articles = await client.article.findMany();
     await setCache(cacheKey, JSON.stringify(articles), 300);
@@ -144,9 +142,8 @@ export const getArticles = async (req: Request, res: Response) => {
 
 export const getSingleArticle = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const user = req.user;
     const { slug } = req.params;
-    const cacheKey = `article:${slug}:${user.id}`;
+    const cacheKey = `article:${slug}`;
 
     const cachedArticle = await getFromCache(cacheKey);
     if (cachedArticle) {
