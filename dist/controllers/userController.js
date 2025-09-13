@@ -8,6 +8,7 @@ const __1 = __importDefault(require(".."));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const commentHelpers_1 = require("../helpers/commentHelpers");
+const redis_1 = require("../config/redis");
 dotenv_1.default.config();
 const fetchUser = async (req, res) => {
     try {
@@ -411,8 +412,21 @@ const fetchSinglePost = async (req, res) => {
     try {
         const postId = req.params.id;
         const userId = req.user?.id;
+        const cacheKey = `post:${postId}`;
+        const posts = await (0, redis_1.getFromCache)(cacheKey);
+        const parsedPosts = JSON.parse(posts);
+        if (parsedPosts) {
+            await __1.default.post.update({
+                where: { id: postId },
+                data: {
+                    viewCount: parsedPosts.viewCount + 1,
+                },
+            });
+            parsedPosts.viewCount += 1;
+            res.status(200).json({ success: true, post: parsedPosts });
+        }
         // Optimized query with selective loading for performance
-        const post = await __1.default.post.findFirst({
+        const firstPost = await __1.default.post.findFirst({
             where: { id: postId },
             include: {
                 images: {
@@ -454,12 +468,20 @@ const fetchSinglePost = async (req, res) => {
                 },
             },
         });
-        if (!post) {
+        if (!firstPost) {
             return res.status(404).json({
                 success: false,
                 message: "Post not found",
             });
         }
+        await __1.default.post.update({
+            where: { id: postId },
+            data: {
+                viewCount: firstPost.viewCount + 1,
+            },
+        });
+        const post = firstPost;
+        post.viewCount += 1;
         // Filter out poster images from the images array
         const filteredImages = post.images.filter((image) => image.imageUrl !== post.reviewPosterImageUrl &&
             image.imageUrl !== post.posterImageUrl);
@@ -476,6 +498,7 @@ const fetchSinglePost = async (req, res) => {
                 replies: [], // Replies loaded separately
             })),
         };
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(transformedPost), 3600);
         res.status(200).json({
             success: true,
             post: transformedPost,

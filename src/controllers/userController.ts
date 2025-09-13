@@ -6,8 +6,8 @@ import dotenv from "dotenv";
 import { AuthorizedRequest } from "../middlewares/extractUser";
 import Cookies from "js-cookie";
 import { formatComment, getCommentInclude } from "../helpers/commentHelpers";
+import { getFromCache, setCache } from "../config/redis";
 dotenv.config();
-
 
 export const fetchUser = async (req: Request, res: Response) => {
   try {
@@ -441,8 +441,22 @@ export const fetchSinglePost = async (
     const postId = req.params.id;
     const userId = req.user?.id;
 
+    const cacheKey = `post:${postId}`;
+    const posts: any = await getFromCache(cacheKey);
+    const parsedPosts = JSON.parse(posts);
+    if (parsedPosts) {
+      await client.post.update({
+        where: { id: postId },
+        data: {
+          viewCount: parsedPosts.viewCount + 1,
+        },
+      });
+      parsedPosts.viewCount += 1;
+      res.status(200).json({ success: true, post: parsedPosts });
+    }
+
     // Optimized query with selective loading for performance
-    const post = await client.post.findFirst({
+    const firstPost = await client.post.findFirst({
       where: { id: postId },
       include: {
         images: {
@@ -485,13 +499,21 @@ export const fetchSinglePost = async (
       },
     });
 
-    if (!post) {
+    if (!firstPost) {
       return res.status(404).json({
         success: false,
         message: "Post not found",
       });
     }
+    await client.post.update({
+      where: { id: postId },
+      data: {
+        viewCount: firstPost.viewCount + 1,
+      },
+    });
 
+    const post = firstPost;
+    post.viewCount += 1;
     // Filter out poster images from the images array
     const filteredImages = post.images.filter(
       (image) =>
@@ -512,6 +534,7 @@ export const fetchSinglePost = async (
         replies: [], // Replies loaded separately
       })),
     };
+    await setCache(cacheKey, JSON.stringify(transformedPost), 3600);
 
     res.status(200).json({
       success: true,
@@ -545,7 +568,7 @@ export const fetchRelatedPosts = async (
       });
     }
 
-    let relatedPosts:any = [];
+    let relatedPosts: any = [];
 
     // First try to get explicitly related posts
     if (currentPost.relatedPostIds.length > 0) {
@@ -571,7 +594,7 @@ export const fetchRelatedPosts = async (
           genres: { hasSome: currentPost.genres },
           NOT: {
             id: {
-              in: [...relatedPosts.map((p:any) => p.id), postId],
+              in: [...relatedPosts.map((p: any) => p.id), postId],
             },
           },
         },
@@ -1206,7 +1229,7 @@ async function findRootComment(commentId: string): Promise<any> {
 
   // Traverse up to find root comment
   while (currentComment && currentComment.parentCommentId) {
-    const parentComment:any = await client.comment.findUnique({
+    const parentComment: any = await client.comment.findUnique({
       where: { id: currentComment.parentCommentId },
       include: {
         user: {
@@ -1234,7 +1257,7 @@ export const toggleLike = async (req: AuthorizedRequest, res: Response) => {
     const { postId } = req.params;
     const userId = req.user?.id;
     console.log(userId);
-    
+
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -1339,5 +1362,3 @@ export const getLikeStatus = async (req: AuthorizedRequest, res: Response) => {
     });
   }
 };
-
-

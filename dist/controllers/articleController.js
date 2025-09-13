@@ -7,6 +7,7 @@ exports.getSingleArticle = exports.getArticles = exports.createArticle = void 0;
 const __1 = __importDefault(require(".."));
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
+const redis_1 = require("../config/redis");
 const generateSlug = (title) => {
     return title
         .toLowerCase() // "Top 25..." → "top 25..."
@@ -32,9 +33,7 @@ const createArticle = async (req, res) => {
         if (mainImageFile) {
             const fileBuffer = (0, dataUri_1.default)(mainImageFile);
             if (!fileBuffer || !fileBuffer.content) {
-                return res
-                    .status(500)
-                    .json({
+                return res.status(500).json({
                     message: "Was not able to convert the file from buffer to base64.",
                 });
             }
@@ -97,6 +96,7 @@ const createArticle = async (req, res) => {
                 },
             },
         });
+        await (0, redis_1.deleteCache)("all_articles");
         res.status(200).json({ article });
     }
     catch (error) {
@@ -107,7 +107,19 @@ const createArticle = async (req, res) => {
 exports.createArticle = createArticle;
 const getArticles = async (req, res) => {
     try {
+        const cacheKey = "all_articles";
+        // Try cache first
+        const cachedArticles = await (0, redis_1.getFromCache)(cacheKey);
+        if (cachedArticles) {
+            console.log("📦 Cache HIT - returning cached posts");
+            return res.status(200).json({
+                posts: JSON.parse(cachedArticles),
+                message: "Articles fetched successfully (from cache)",
+            });
+        }
+        console.log("🔍 Cache MISS - fetching from database");
         const articles = await __1.default.article.findMany();
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(articles), 3600);
         res.status(200).json({ articles });
     }
     catch (error) {
@@ -119,6 +131,25 @@ exports.getArticles = getArticles;
 const getSingleArticle = async (req, res) => {
     try {
         const { slug } = req.params;
+        const cacheKey = `article:${slug}`;
+        const cachedArticle = await (0, redis_1.getFromCache)(cacheKey);
+        if (cachedArticle) {
+            const parsedArticle = JSON.parse(cachedArticle);
+            // Still increment view count for cached articles
+            if (parsedArticle.viewCount !== undefined) {
+                await __1.default.article.update({
+                    where: { id: parsedArticle.id },
+                    data: {
+                        viewCount: parsedArticle.viewCount + 1,
+                    },
+                });
+                // Update the cached article's view count
+                parsedArticle.viewCount += 1;
+                await (0, redis_1.setCache)(cacheKey, JSON.stringify(parsedArticle), 300); // 5 minutes
+            }
+            return res.status(200).json({ article: parsedArticle });
+        }
+        // If not in cache, fetch from database
         const article = await __1.default.article.findFirst({
             where: { slug },
             include: {
@@ -127,9 +158,31 @@ const getSingleArticle = async (req, res) => {
                         order: "asc",
                     },
                 },
-            }
+            },
         });
-        res.status(200).json({ article });
+        if (!article) {
+            return res.status(404).json({ message: "Article not found" });
+        }
+        // Increment view count
+        let updatedArticle = article;
+        if (article.viewCount !== undefined) {
+            updatedArticle = await __1.default.article.update({
+                where: { id: article.id },
+                data: {
+                    viewCount: article.viewCount + 1,
+                },
+                include: {
+                    blocks: {
+                        orderBy: {
+                            order: "asc",
+                        },
+                    },
+                },
+            });
+        }
+        // Cache the article for 5 minutes (300 seconds)
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(updatedArticle), 300);
+        res.status(200).json({ article: updatedArticle });
     }
     catch (error) {
         console.log(error.message);

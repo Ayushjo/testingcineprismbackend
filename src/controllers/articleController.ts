@@ -3,6 +3,7 @@ import client from "..";
 import { AuthorizedRequest } from "../middlewares/extractUser";
 import getBuffer from "../config/dataUri";
 import cloudinary from "cloudinary";
+import { deleteCache, getFromCache, setCache } from "../config/redis";
 const generateSlug = (title: string) => {
   return title
     .toLowerCase() // "Top 25..." → "top 25..."
@@ -33,11 +34,9 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
     if (mainImageFile) {
       const fileBuffer = getBuffer(mainImageFile);
       if (!fileBuffer || !fileBuffer.content) {
-        return res
-          .status(500)
-          .json({
-            message: "Was not able to convert the file from buffer to base64.",
-          });
+        return res.status(500).json({
+          message: "Was not able to convert the file from buffer to base64.",
+        });
       }
       const cloud = await cloudinary.v2.uploader.upload(fileBuffer.content, {
         folder: "articles",
@@ -110,6 +109,7 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
         },
       },
     });
+    await deleteCache("all_articles");
 
     res.status(200).json({ article });
   } catch (error: any) {
@@ -119,7 +119,22 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
 };
 export const getArticles = async (req: Request, res: Response) => {
   try {
+    const cacheKey = "all_articles";
+
+    // Try cache first
+    const cachedArticles = await getFromCache(cacheKey);
+
+    if (cachedArticles) {
+      console.log("📦 Cache HIT - returning cached posts");
+      return res.status(200).json({
+        posts: JSON.parse(cachedArticles),
+        message: "Articles fetched successfully (from cache)",
+      });
+    }
+
+    console.log("🔍 Cache MISS - fetching from database");
     const articles = await client.article.findMany();
+    await setCache(cacheKey, JSON.stringify(articles), 3600);
     res.status(200).json({ articles });
   } catch (error: any) {
     console.log(error.message);
@@ -130,17 +145,67 @@ export const getArticles = async (req: Request, res: Response) => {
 export const getSingleArticle = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
+    const cacheKey = `article:${slug}`;
+
+    const cachedArticle = await getFromCache(cacheKey);
+    if (cachedArticle) {
+      const parsedArticle = JSON.parse(cachedArticle);
+
+      // Still increment view count for cached articles
+      if (parsedArticle.viewCount !== undefined) {
+        await client.article.update({
+          where: { id: parsedArticle.id },
+          data: {
+            viewCount: parsedArticle.viewCount + 1,
+          },
+        });
+
+        // Update the cached article's view count
+        parsedArticle.viewCount += 1;
+        await setCache(cacheKey, JSON.stringify(parsedArticle), 300); // 5 minutes
+      }
+
+      return res.status(200).json({ article: parsedArticle });
+    }
+
+    // If not in cache, fetch from database
     const article = await client.article.findFirst({
       where: { slug },
-      include:{
+      include: {
         blocks: {
           orderBy: {
             order: "asc",
           },
         },
-      }
+      },
     });
-    res.status(200).json({ article });
+
+    if (!article) {
+      return res.status(404).json({ message: "Article not found" });
+    }
+
+    // Increment view count
+    let updatedArticle = article;
+    if (article.viewCount !== undefined) {
+      updatedArticle = await client.article.update({
+        where: { id: article.id },
+        data: {
+          viewCount: article.viewCount + 1,
+        },
+        include: {
+          blocks: {
+            orderBy: {
+              order: "asc",
+            },
+          },
+        },
+      });
+    }
+
+    // Cache the article for 5 minutes (300 seconds)
+    await setCache(cacheKey, JSON.stringify(updatedArticle), 300);
+
+    res.status(200).json({ article: updatedArticle });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
