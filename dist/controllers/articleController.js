@@ -109,17 +109,18 @@ const getArticles = async (req, res) => {
     try {
         const cacheKey = "all_articles";
         // Try cache first
-        const cachedArticles = await (0, redis_1.getFromCache)(cacheKey);
-        if (cachedArticles) {
-            console.log("📦 Cache HIT - returning cached posts");
-            return res.status(200).json({
-                articles: JSON.parse(cachedArticles),
-                message: "Articles fetched successfully (from cache)",
-            });
-        }
+        // const cachedArticles = await getFromCache(cacheKey);
+        // if (cachedArticles) {
+        //   console.log("📦 Cache HIT - returning cached posts");
+        //   return res.status(200).json({
+        //     articles: JSON.parse(cachedArticles),
+        //     message: "Articles fetched successfully (from cache)",
+        //   });
+        // }
+        await (0, redis_1.deleteCache)("all_articles");
         console.log("🔍 Cache MISS - fetching from database");
         const articles = await __1.default.article.findMany();
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(articles), 3600);
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(articles), 300);
         res.status(200).json({ articles });
     }
     catch (error) {
