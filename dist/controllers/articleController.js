@@ -113,7 +113,7 @@ const getArticles = async (req, res) => {
         if (cachedArticles) {
             console.log("📦 Cache HIT - returning cached posts");
             return res.status(200).json({
-                posts: JSON.parse(cachedArticles),
+                articles: JSON.parse(cachedArticles),
                 message: "Articles fetched successfully (from cache)",
             });
         }
