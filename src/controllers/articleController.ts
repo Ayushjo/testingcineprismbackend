@@ -142,10 +142,11 @@ export const getArticles = async (req: Request, res: Response) => {
   }
 };
 
-export const getSingleArticle = async (req: Request, res: Response) => {
+export const getSingleArticle = async (req: AuthorizedRequest, res: Response) => {
   try {
+    const user = req.user;
     const { slug } = req.params;
-    const cacheKey = `article:${slug}`;
+    const cacheKey = `article:${slug}:${user.id}`;
 
     const cachedArticle = await getFromCache(cacheKey);
     if (cachedArticle) {

@@ -423,6 +423,7 @@ const fetchSinglePost = async (req, res) => {
                 },
             });
             parsedPosts.viewCount += 1;
+            await (0, redis_1.setCache)(cacheKey, JSON.stringify(parsedPosts), 300);
             res.status(200).json({ success: true, post: parsedPosts });
         }
         // Optimized query with selective loading for performance

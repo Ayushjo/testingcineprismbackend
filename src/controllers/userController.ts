@@ -452,6 +452,7 @@ export const fetchSinglePost = async (
         },
       });
       parsedPosts.viewCount += 1;
+      await setCache(cacheKey, JSON.stringify(parsedPosts), 300);
       res.status(200).json({ success: true, post: parsedPosts });
     }
 

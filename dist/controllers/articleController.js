@@ -130,8 +130,9 @@ const getArticles = async (req, res) => {
 exports.getArticles = getArticles;
 const getSingleArticle = async (req, res) => {
     try {
+        const user = req.user;
         const { slug } = req.params;
-        const cacheKey = `article:${slug}`;
+        const cacheKey = `article:${slug}:${user.id}`;
         const cachedArticle = await (0, redis_1.getFromCache)(cacheKey);
         if (cachedArticle) {
             const parsedArticle = JSON.parse(cachedArticle);
