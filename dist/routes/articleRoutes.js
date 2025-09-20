@@ -7,8 +7,27 @@ const express_1 = require("express");
 const articleController_1 = require("../controllers/articleController");
 const extractUser_1 = require("../middlewares/extractUser");
 const multer_1 = __importDefault(require("../middlewares/multer"));
+const rateLimiter_1 = require("../middlewares/rateLimiter");
+const optionalAuth_1 = require("../middlewares/optionalAuth");
 const router = (0, express_1.Router)();
-router.route("/create-article").post(extractUser_1.extractUserDetails, multer_1.default.any(), articleController_1.createArticle);
+router
+    .route("/create-article")
+    .post(extractUser_1.extractUserDetails, multer_1.default.any(), articleController_1.createArticle);
 router.route("/get-articles").get(articleController_1.getArticles);
 router.route("/get-article/:slug").get(articleController_1.getSingleArticle);
+router
+    .route("/:articleId/comments")
+    .post(extractUser_1.extractUserDetails, rateLimiter_1.rateLimiter.createComment, articleController_1.createComment);
+router
+    .route("/comments/:commentId/replies")
+    .post(extractUser_1.extractUserDetails, rateLimiter_1.rateLimiter.createReply, articleController_1.createReply);
+router.route("/comments/:commentId").put(extractUser_1.extractUserDetails, articleController_1.updateComment);
+router.route("/comments/:commentId").delete(extractUser_1.extractUserDetails, articleController_1.deleteComment);
+router.route("/:postId/comments").get(articleController_1.fetchComments);
+router.route("/comments/:commentId/replies").get(articleController_1.fetchReplies);
+router.route("/comments/:commentId/thread").get(articleController_1.fetchCommentThread);
+router
+    .route("/:articleId/like")
+    .post(extractUser_1.extractUserDetails, rateLimiter_1.rateLimiter.toggleLike, articleController_1.toggleLike);
+router.route("/:articleId/like").get(optionalAuth_1.optionalAuth, articleController_1.getLikeStatus);
 exports.default = router;
