@@ -34,7 +34,7 @@ router
   .post(extractUserDetails, rateLimiter.createReply, createReply);
 router.route("/comments/:commentId").put(extractUserDetails, updateComment);
 router.route("/comments/:commentId").delete(extractUserDetails, deleteComment);
-router.route("/:postId/comments").get(fetchComments);
+router.route("/:articleId/comments").get(fetchComments);
 router.route("/comments/:commentId/replies").get(fetchReplies);
 router.route("/comments/:commentId/thread").get(fetchCommentThread);
 router

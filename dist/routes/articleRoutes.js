@@ -23,7 +23,7 @@ router
     .post(extractUser_1.extractUserDetails, rateLimiter_1.rateLimiter.createReply, articleController_1.createReply);
 router.route("/comments/:commentId").put(extractUser_1.extractUserDetails, articleController_1.updateComment);
 router.route("/comments/:commentId").delete(extractUser_1.extractUserDetails, articleController_1.deleteComment);
-router.route("/:postId/comments").get(articleController_1.fetchComments);
+router.route("/:articleId/comments").get(articleController_1.fetchComments);
 router.route("/comments/:commentId/replies").get(articleController_1.fetchReplies);
 router.route("/comments/:commentId/thread").get(articleController_1.fetchCommentThread);
 router
