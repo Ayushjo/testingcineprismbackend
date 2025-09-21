@@ -17,6 +17,7 @@ import { extractUserDetails } from "../middlewares/extractUser";
 import uploadFile from "../middlewares/multer";
 import { rateLimiter } from "../middlewares/rateLimiter";
 import { optionalAuth } from "../middlewares/optionalAuth";
+import { articleHtml } from "../controllers/articleHtmlController";
 
 
 const router = Router();
@@ -41,4 +42,5 @@ router
   .route("/:articleId/like")
   .post(extractUserDetails, rateLimiter.toggleLike, toggleLike);
 router.route("/:articleId/like").get(optionalAuth, getLikeStatus);
+router.route("/:slug").get(articleHtml)
 export default router;

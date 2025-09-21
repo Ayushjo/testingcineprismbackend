@@ -9,6 +9,7 @@ const extractUser_1 = require("../middlewares/extractUser");
 const multer_1 = __importDefault(require("../middlewares/multer"));
 const rateLimiter_1 = require("../middlewares/rateLimiter");
 const optionalAuth_1 = require("../middlewares/optionalAuth");
+const articleHtmlController_1 = require("../controllers/articleHtmlController");
 const router = (0, express_1.Router)();
 router
     .route("/create-article")
@@ -30,4 +31,5 @@ router
     .route("/:articleId/like")
     .post(extractUser_1.extractUserDetails, rateLimiter_1.rateLimiter.toggleLike, articleController_1.toggleLike);
 router.route("/:articleId/like").get(optionalAuth_1.optionalAuth, articleController_1.getLikeStatus);
+router.route("/:slug").get(articleHtmlController_1.articleHtml);
 exports.default = router;
