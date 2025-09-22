@@ -252,7 +252,7 @@ const createPost = async (req, res) => {
     try {
         const user = req.user;
         if (user.role === "ADMIN") {
-            const { title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, } = req.body;
+            const { title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, language } = req.body;
             const post = await __1.default.post.create({
                 data: {
                     title,
@@ -263,6 +263,7 @@ const createPost = async (req, res) => {
                     streamingAt,
                     relatedPostIds,
                     ratingCategories,
+                    language
                 },
             });
             // Clear cache so next fetch gets fresh data
@@ -447,7 +448,7 @@ const editPost = async (req, res) => {
             res.status(400).json("You are not authorized");
         }
         else {
-            const { postId, title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, } = req.body;
+            const { postId, title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, language } = req.body;
             const post = await __1.default.post.findFirst({
                 where: {
                     id: postId,
@@ -470,6 +471,7 @@ const editPost = async (req, res) => {
                         streamingAt,
                         relatedPostIds,
                         ratingCategories,
+                        language
                     },
                 });
                 await (0, redis_1.deleteCache)("all_posts");

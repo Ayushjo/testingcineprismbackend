@@ -37,6 +37,9 @@ model Post {
   
   directedBy    String
   genres        String[]
+  
+  language      String @default("English")
+
   images        PostImage[]
   comments      Comment[]
   likes         Like[]
