@@ -1759,3 +1759,71 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-05T20:49:16.633Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-05T20:49:24.694Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-05T20:49:27.630Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T04:58:02.093Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Wea\",\"status\":\"404\",\"responseTime\":\"3922.615\"}","timestamp":"2025-09-27T04:58:44.895Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Weapons\",\"status\":\"404\",\"responseTime\":\"766.734\"}","timestamp":"2025-09-27T04:59:12.622Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T04:59:26.197Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T04:59:29.346Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Weapons\",\"status\":\"404\",\"responseTime\":\"2970.555\"}","timestamp":"2025-09-27T04:59:35.010Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=horr\",\"status\":\"404\",\"responseTime\":\"703.964\"}","timestamp":"2025-09-27T05:00:09.109Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Hor\",\"status\":\"404\",\"responseTime\":\"518.141\"}","timestamp":"2025-09-27T05:00:15.312Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=2025\",\"status\":\"404\",\"responseTime\":\"805.179\"}","timestamp":"2025-09-27T05:00:58.563Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Weapons\",\"status\":\"404\",\"responseTime\":\"747.342\"}","timestamp":"2025-09-27T05:02:42.139Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:04:08.019Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:04:10.763Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Weapons\",\"status\":\"404\",\"responseTime\":\"3678.974\"}","timestamp":"2025-09-27T05:04:17.314Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:07:01.916Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:07:10.403Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Weapons\",\"status\":\"404\",\"responseTime\":\"2937.833\"}","timestamp":"2025-09-27T05:07:15.590Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:07:41.826Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:07:46.729Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=%22Weapons%22\",\"status\":\"404\",\"responseTime\":\"3088.153\"}","timestamp":"2025-09-27T05:08:49.315Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:11:44.777Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:11:47.079Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Weapons\",\"status\":\"200\",\"responseTime\":\"3431.067\"}","timestamp":"2025-09-27T05:11:52.666Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Wea\",\"status\":\"200\",\"responseTime\":\"409.437\"}","timestamp":"2025-09-27T05:11:59.947Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=wea\",\"status\":\"200\",\"responseTime\":\"429.851\"}","timestamp":"2025-09-27T05:12:05.271Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=hor\",\"status\":\"400\",\"responseTime\":\"740.675\"}","timestamp":"2025-09-27T05:12:12.438Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Horr\",\"status\":\"400\",\"responseTime\":\"342.984\"}","timestamp":"2025-09-27T05:12:17.793Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Horror\",\"status\":\"200\",\"responseTime\":\"331.038\"}","timestamp":"2025-09-27T05:12:20.899Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=2025\",\"status\":\"200\",\"responseTime\":\"1177.213\"}","timestamp":"2025-09-27T05:12:28.821Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:14:23.381Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:14:41.968Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:14:44.678Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:15:08.862Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:15:12.934Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:15:52.896Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:16:09.004Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:16:12.207Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:16:17.499Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:16:25.481Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search/Action\",\"status\":\"401\",\"responseTime\":\"7.000\"}","timestamp":"2025-09-27T05:16:59.884Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:17:12.468Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search/Action\",\"status\":\"400\",\"responseTime\":\"3544.392\"}","timestamp":"2025-09-27T05:17:17.995Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Action\",\"status\":\"401\",\"responseTime\":\"1.026\"}","timestamp":"2025-09-27T05:17:37.479Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:17:49.011Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=Action\",\"status\":\"400\",\"responseTime\":\"3036.102\"}","timestamp":"2025-09-27T05:17:53.079Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search/Horror\",\"status\":\"200\",\"responseTime\":\"679.493\"}","timestamp":"2025-09-27T05:18:01.946Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:18:13.548Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:18:16.628Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=ion\",\"status\":\"401\",\"responseTime\":\"16.203\"}","timestamp":"2025-09-27T05:26:49.427Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:27:01.967Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=ion\",\"status\":\"400\",\"responseTime\":\"3148.426\"}","timestamp":"2025-09-27T05:31:32.226Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:32:11.550Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:32:30.155Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:32:43.484Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:32:52.778Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:33:06.869Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:33:11.834Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:33:22.752Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=or\",\"status\":\"400\",\"responseTime\":\"2991.694\"}","timestamp":"2025-09-27T05:33:40.838Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=hor\",\"status\":\"400\",\"responseTime\":\"337.711\"}","timestamp":"2025-09-27T05:33:45.945Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/posts/search?filter=ons\",\"status\":\"200\",\"responseTime\":\"649.399\"}","timestamp":"2025-09-27T05:33:56.601Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:34:37.786Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:34:40.856Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:34:46.471Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/articles/search?filter=12\",\"status\":\"200\",\"responseTime\":\"3829.470\"}","timestamp":"2025-09-27T05:35:15.858Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/articles/search?filter=ana\",\"status\":\"200\",\"responseTime\":\"401.795\"}","timestamp":"2025-09-27T05:35:24.551Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/articles/search?filter=rs\",\"status\":\"200\",\"responseTime\":\"734.674\"}","timestamp":"2025-09-27T05:35:32.232Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/articles/search?filter=r\",\"status\":\"200\",\"responseTime\":\"341.577\"}","timestamp":"2025-09-27T05:35:35.165Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:35:54.397Z"}

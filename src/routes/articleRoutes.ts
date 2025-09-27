@@ -10,6 +10,7 @@ import {
   getArticles,
   getLikeStatus,
   getSingleArticle,
+  searchArticles,
   toggleLike,
   updateComment,
 } from "../controllers/articleController";
@@ -21,7 +22,7 @@ import { articleHtml } from "../controllers/articleHtmlController";
 
 
 const router = Router();
-
+router.route("/search").get(extractUserDetails,searchArticles)
 router
   .route("/create-article")
   .post(extractUserDetails, uploadFile.any(), createArticle);

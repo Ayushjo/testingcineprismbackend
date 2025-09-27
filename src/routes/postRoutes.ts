@@ -13,13 +13,17 @@ import {
   getLikeStatus,
   toggleLike,
   updateComment,
-  fetchCommentThread, // New function
+  fetchCommentThread,
+  searchPosts,
+  getPostByGenre, // New function
 } from "../controllers/userController";
 import { getPostStats } from "../utils/postUtils";
 
 const router = Router();
 
 // Post routes
+router.route("/search").get(searchPosts);
+router.route("/search/:genre").get(extractUserDetails,getPostByGenre);
 router.route("/:id").get(optionalAuth, fetchSinglePost);
 router.route("/:id/related").get(fetchRelatedPosts);
 router.route("/:id/stats").get(optionalAuth, getPostStats);
@@ -48,5 +52,8 @@ router
   .route("/:postId/like")
   .post(extractUserDetails, rateLimiter.toggleLike, toggleLike);
 router.route("/:postId/like").get(optionalAuth, getLikeStatus);
+
+//Search routes
+
 
 export default router;

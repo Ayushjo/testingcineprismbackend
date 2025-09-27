@@ -8,6 +8,8 @@ const userController_1 = require("../controllers/userController");
 const postUtils_1 = require("../utils/postUtils");
 const router = (0, express_1.Router)();
 // Post routes
+router.route("/search").get(userController_1.searchPosts);
+router.route("/search/:genre").get(extractUser_1.extractUserDetails, userController_1.getPostByGenre);
 router.route("/:id").get(optionalAuth_1.optionalAuth, userController_1.fetchSinglePost);
 router.route("/:id/related").get(userController_1.fetchRelatedPosts);
 router.route("/:id/stats").get(optionalAuth_1.optionalAuth, postUtils_1.getPostStats);
@@ -31,4 +33,5 @@ router
     .route("/:postId/like")
     .post(extractUser_1.extractUserDetails, rateLimiter_1.rateLimiter.toggleLike, userController_1.toggleLike);
 router.route("/:postId/like").get(optionalAuth_1.optionalAuth, userController_1.getLikeStatus);
+//Search routes
 exports.default = router;

@@ -11,6 +11,7 @@ const rateLimiter_1 = require("../middlewares/rateLimiter");
 const optionalAuth_1 = require("../middlewares/optionalAuth");
 const articleHtmlController_1 = require("../controllers/articleHtmlController");
 const router = (0, express_1.Router)();
+router.route("/search").get(extractUser_1.extractUserDetails, articleController_1.searchArticles);
 router
     .route("/create-article")
     .post(extractUser_1.extractUserDetails, multer_1.default.any(), articleController_1.createArticle);

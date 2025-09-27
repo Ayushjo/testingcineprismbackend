@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLikeStatus = exports.toggleLike = exports.fetchCommentThread = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.fetchReplies = exports.fetchComments = exports.fetchRelatedPosts = exports.fetchSinglePost = exports.loadMoreReplies = exports.fetchCommentsWithOpinionId = exports.handleComment = exports.logoutUser = exports.toggleLikess = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = void 0;
+exports.getPostByGenre = exports.searchPosts = exports.getLikeStatus = exports.toggleLike = exports.fetchCommentThread = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.fetchReplies = exports.fetchComments = exports.fetchRelatedPosts = exports.fetchSinglePost = exports.loadMoreReplies = exports.fetchCommentsWithOpinionId = exports.handleComment = exports.logoutUser = exports.toggleLikess = exports.fetchAllOpinions = exports.postOpinion = exports.fetchUser = void 0;
 const __1 = __importDefault(require(".."));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -1254,3 +1254,53 @@ const getLikeStatus = async (req, res) => {
     }
 };
 exports.getLikeStatus = getLikeStatus;
+const searchPosts = async (req, res) => {
+    try {
+        const filter = req.query.filter;
+        const year = Number(filter);
+        const isNumber = !isNaN(year);
+        const posts = await __1.default.post.findMany({
+            where: {
+                OR: [
+                    { title: { contains: filter, mode: "insensitive" } },
+                    { genres: { has: filter } },
+                    ...(isNumber ? [{ year: { equals: year } }] : []),
+                ],
+            },
+        });
+        if (posts.length === 0) {
+            return res
+                .status(400)
+                .json({ success: false, message: "No posts found" });
+        }
+        res.status(200).json({ success: true, posts });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.searchPosts = searchPosts;
+const getPostByGenre = async (req, res) => {
+    try {
+        const { genre } = req.params;
+        const posts = await __1.default.post.findMany({
+            where: {
+                genres: {
+                    has: genre,
+                },
+            },
+        });
+        if (posts.length === 0) {
+            return res
+                .status(400)
+                .json({ success: false, message: "No posts found" });
+        }
+        return res.status(200).json({ success: true, posts });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.getPostByGenre = getPostByGenre;

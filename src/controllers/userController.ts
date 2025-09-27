@@ -1363,3 +1363,53 @@ export const getLikeStatus = async (req: AuthorizedRequest, res: Response) => {
     });
   }
 };
+
+export const searchPosts = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const filter = req.query.filter as string;
+
+    const year = Number(filter);
+    const isNumber = !isNaN(year);
+    const posts = await client.post.findMany({
+      where: {
+        OR: [
+          { title: { contains: filter, mode: "insensitive" } },
+          { genres: { has: filter } },
+          ...(isNumber ? [{ year: { equals: year } }] : []),
+        ],
+      },
+    });
+    if (posts.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No posts found" });
+    }
+
+    res.status(200).json({ success: true, posts });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getPostByGenre = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const {genre} = req.params;
+    const posts = await client.post.findMany({
+      where: {
+        genres: {
+          has: genre,
+        },
+      },
+    });
+    if (posts.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No posts found" });
+    }
+    return res.status(200).json({ success: true, posts });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLikeStatus = exports.toggleLike = exports.fetchCommentThread = exports.fetchReplies = exports.fetchComments = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.getSingleArticle = exports.getArticles = exports.createArticle = void 0;
+exports.searchArticles = exports.getLikeStatus = exports.toggleLike = exports.fetchCommentThread = exports.fetchReplies = exports.fetchComments = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.getSingleArticle = exports.getArticles = exports.createArticle = void 0;
 const __1 = __importDefault(require(".."));
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -684,7 +684,7 @@ const toggleLike = async (req, res) => {
         const existingLike = await __1.default.like.findFirst({
             where: {
                 userId: userId,
-                articleId: articleId
+                articleId: articleId,
             },
         });
         let isLiked;
@@ -737,7 +737,7 @@ const getLikeStatus = async (req, res) => {
             const userLike = await __1.default.like.findFirst({
                 where: {
                     userId: userId,
-                    articleId: articleId
+                    articleId: articleId,
                 },
             });
             isLiked = !!userLike;
@@ -757,6 +757,28 @@ const getLikeStatus = async (req, res) => {
     }
 };
 exports.getLikeStatus = getLikeStatus;
+const searchArticles = async (req, res) => {
+    try {
+        const filter = req.query.filter;
+        const articles = await __1.default.article.findMany({
+            where: {
+                title: {
+                    contains: filter,
+                    mode: "insensitive"
+                }
+            }
+        });
+        res.status(200).json({
+            success: true,
+            articles
+        });
+    }
+    catch (error) {
+        console.log(error.meesage);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+exports.searchArticles = searchArticles;
 async function fetchNestedReplies(commentId, skip = 0, limit = 10, depth = 0) {
     // Optional: Add max depth limit to prevent infinite recursion
     const MAX_DEPTH = 50; // Adjust as needed

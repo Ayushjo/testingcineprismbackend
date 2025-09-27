@@ -140,7 +140,10 @@ export const getArticles = async (req: Request, res: Response) => {
   }
 };
 
-export const getSingleArticle = async (req: AuthorizedRequest, res: Response) => {
+export const getSingleArticle = async (
+  req: AuthorizedRequest,
+  res: Response
+) => {
   try {
     const { slug } = req.params;
     const cacheKey = `article:${slug}`;
@@ -212,7 +215,7 @@ export const getSingleArticle = async (req: AuthorizedRequest, res: Response) =>
 
 export const createComment = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const { articleId} = req.params;
+    const { articleId } = req.params;
     const { content } = req.body;
     const userId = req.user?.id;
 
@@ -239,7 +242,7 @@ export const createComment = async (req: AuthorizedRequest, res: Response) => {
 
     // Verify post exists
     const postExists = await client.article.findUnique({
-      where: { id:articleId },
+      where: { id: articleId },
       select: { id: true },
     });
 
@@ -742,8 +745,8 @@ export const toggleLike = async (req: AuthorizedRequest, res: Response) => {
     // Check if like already exists
     const existingLike = await client.like.findFirst({
       where: {
-        userId:userId,
-        articleId:articleId
+        userId: userId,
+        articleId: articleId,
       },
     });
 
@@ -800,7 +803,7 @@ export const getLikeStatus = async (req: AuthorizedRequest, res: Response) => {
       const userLike = await client.like.findFirst({
         where: {
           userId: userId,
-          articleId:articleId
+          articleId: articleId,
         },
       });
       isLiked = !!userLike;
@@ -820,9 +823,27 @@ export const getLikeStatus = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
+export const searchArticles = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const filter = req.query.filter as any
 
-
-
+    const articles = await client.article.findMany({
+      where: {
+        title: {
+          contains: filter,
+          mode: "insensitive"
+        }
+      }
+    })
+    res.status(200).json({
+      success: true,
+      articles
+    })
+  } catch (error: any) {
+    console.log(error.meesage);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 async function fetchNestedReplies(
   commentId: string,
