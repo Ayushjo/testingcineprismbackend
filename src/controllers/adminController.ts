@@ -691,18 +691,18 @@ export const editQutoe = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
-export const fetchQuotes = async(req: AuthorizedRequest, res: Response) => {
+export const fetchQuotes = async (req: AuthorizedRequest, res: Response) => {
   try {
     const quotes = await client.quotes.findMany({
       orderBy: {
         rank: "asc",
       },
-      where:{
-        rank:{
+      where: {
+        rank: {
           gt: 0,
-          lt:11
-        }
-      }
+          lt: 11,
+        },
+      },
     });
     return res.status(200).json({
       quotes,
@@ -712,5 +712,79 @@ export const fetchQuotes = async(req: AuthorizedRequest, res: Response) => {
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const addByGenre = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (user.role === "USER") {
+      return res.status(400).json("You are not authorized");
+    }
+    const { title, directedBy, synopsis } = req.body;
+    let { year } = req.body;
+    let { genre } = req.body;
+    genre = JSON.parse(genre);
+
+    year = parseInt(year);
+    const file = req.file;
+    const fileBuffer = getBuffer(file);
+    if (!fileBuffer || !fileBuffer.content) {
+      return res.status(500).json({
+        message: "Was not able to convert the file from buffer to base64.",
+      });
+    }
+    const cloud = await cloudinary.v2.uploader.upload(fileBuffer.content, {
+      folder: "posters",
+    });
+    if (!cloud) {
+      return res.status(500).json({
+        message: "An error occurred while uploading to cloudinary",
+      });
+    }
+    const newByGenre = await client.byGenres.create({
+      data: {
+        genre,
+        title,
+        directedBy,
+        year,
+        synopsis,
+        posterImageUrl: cloud.url,
+      },
+    });
+    return res.status(200).json({
+      newByGenre,
+    });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const fetchGenre = async(req:AuthorizedRequest,res:Response)=>{
+  try {
+    const user = req.user;
+    if (user.role === "USER") {
+      return res.status(400).json("You are not authorized");
+    }
+    const {genre} = req.params
+    const genrePosts = await client.byGenres.findMany({
+      where: {
+        genre: {
+          has: genre,
+        },
+      },
+    });
+    if (genrePosts.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No posts found" });
+    }
+    return res.status(200).json({genrePosts});
+    
+  } catch (error:any) {
+    console.log(error.message);
+    res.status(500).json({message:error.message});
+    
   }
 }

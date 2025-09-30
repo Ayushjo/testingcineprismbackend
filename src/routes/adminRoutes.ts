@@ -2,6 +2,7 @@ import { Router } from "express";
 import uploadFile from "../middlewares/multer";
 import { extractUserDetails } from "../middlewares/extractUser";
 import {
+  addByGenre,
   addQuotes,
   addTopPicks,
   createPost,
@@ -10,6 +11,7 @@ import {
   editPost,
   editQutoe,
   fetchAllPost,
+  fetchGenre,
   fetchQuotes,
   fetchTopPicks,
   hasLiked,
@@ -21,6 +23,8 @@ import {
 
 const router = Router();
 
+router.route("/add-byGenres").post(extractUserDetails,uploadFile.single("file"),addByGenre);
+router.route("/fetch-byGenre/:genre").get(extractUserDetails,fetchGenre)
 router
   .route("/add-poster")
   .post(extractUserDetails, uploadFile.single("file"), uploadPoster);

@@ -64,6 +64,19 @@ model Post {
   updatedAt     DateTime    @updatedAt
   
 }
+
+model byGenres{
+  id String @id @default(uuid())
+  genre String[]
+  directedBy String
+  year Int
+  posterImageUrl String
+  title String
+  synopsis String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Article{
   id String @id @default(uuid())
   title String
