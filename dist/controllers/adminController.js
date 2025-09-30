@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.latestReviews = exports.hasLiked = exports.deleteImage = exports.deletePost = exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
+exports.fetchQuotes = exports.editQutoe = exports.addQuotes = exports.latestReviews = exports.hasLiked = exports.deleteImage = exports.deletePost = exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const __1 = __importDefault(require(".."));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -252,7 +252,7 @@ const createPost = async (req, res) => {
     try {
         const user = req.user;
         if (user.role === "ADMIN") {
-            const { title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, language } = req.body;
+            const { title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, language, } = req.body;
             const post = await __1.default.post.create({
                 data: {
                     title,
@@ -263,7 +263,7 @@ const createPost = async (req, res) => {
                     streamingAt,
                     relatedPostIds,
                     ratingCategories,
-                    language
+                    language,
                 },
             });
             // Clear cache so next fetch gets fresh data
@@ -448,7 +448,7 @@ const editPost = async (req, res) => {
             res.status(400).json("You are not authorized");
         }
         else {
-            const { postId, title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, language } = req.body;
+            const { postId, title, content, genres, year, directedBy, streamingAt, relatedPostIds, ratingCategories, language, } = req.body;
             const post = await __1.default.post.findFirst({
                 where: {
                     id: postId,
@@ -471,7 +471,7 @@ const editPost = async (req, res) => {
                         streamingAt,
                         relatedPostIds,
                         ratingCategories,
-                        language
+                        language,
                     },
                 });
                 await (0, redis_1.deleteCache)("all_posts");
@@ -600,3 +600,92 @@ const latestReviews = async (req, res) => {
     }
 };
 exports.latestReviews = latestReviews;
+const addQuotes = async (req, res) => {
+    try {
+        const user = req.user;
+        if (user.role === "USER") {
+            return res.status(400).json("You are not authorized");
+        }
+        const { quote, author } = req.body;
+        const newestQuote = await __1.default.quotes.findFirst({
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+        const newQuote = await __1.default.quotes.create({
+            data: {
+                author,
+                quote,
+                rank: newestQuote ? newestQuote.rank + 1 : 1,
+            },
+        });
+        return res.status(200).json({
+            newQuote,
+            message: "Quote added successfully",
+            success: true,
+        });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.addQuotes = addQuotes;
+const editQutoe = async (req, res) => {
+    try {
+        const user = req.user;
+        if (user.role === "USER") {
+            return res.status(400).json("You are not authorized");
+        }
+        const { quote, author, id } = req.body;
+        const editedQuote = await __1.default.quotes.update({
+            where: {
+                id,
+            },
+            data: {
+                author,
+                quote,
+            },
+        });
+        if (editedQuote) {
+            return res.status(200).json({
+                editedQuote,
+                message: "Quote edited successfully",
+                success: true,
+            });
+        }
+        else {
+            return res.status(400).json("Quote not found");
+        }
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.editQutoe = editQutoe;
+const fetchQuotes = async (req, res) => {
+    try {
+        const quotes = await __1.default.quotes.findMany({
+            orderBy: {
+                rank: "asc",
+            },
+            where: {
+                rank: {
+                    gt: 0,
+                    lt: 11
+                }
+            }
+        });
+        return res.status(200).json({
+            quotes,
+            message: "Quotes fetched successfully",
+            success: true,
+        });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.fetchQuotes = fetchQuotes;

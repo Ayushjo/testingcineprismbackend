@@ -1296,7 +1296,7 @@ const getPostByGenre = async (req, res) => {
                 .status(400)
                 .json({ success: false, message: "No posts found" });
         }
-        return res.status(200).json({ success: true, posts });
+        return res.status(200).json;
     }
     catch (error) {
         console.log(error.message);

@@ -259,7 +259,7 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
         streamingAt,
         relatedPostIds,
         ratingCategories,
-        language
+        language,
       } = req.body;
 
       const post = await client.post.create({
@@ -272,7 +272,7 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
           streamingAt,
           relatedPostIds,
           ratingCategories,
-          language
+          language,
         },
       });
 
@@ -482,7 +482,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
         streamingAt,
         relatedPostIds,
         ratingCategories,
-        language
+        language,
       } = req.body;
 
       const post = await client.post.findFirst({
@@ -506,7 +506,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
             streamingAt,
             relatedPostIds,
             ratingCategories,
-            language
+            language,
           },
         });
         await deleteCache("all_posts");
@@ -617,11 +617,11 @@ export const latestReviews = async (req: AuthorizedRequest, res: Response) => {
       take: 7,
     });
 
-    if(latestReviews && latestReviews.length > 0) {
+    if (latestReviews && latestReviews.length > 0) {
       await setCache(cacheKey, JSON.stringify(latestReviews), 600);
     }
     res.status(200).json({
-     latestReviews,
+      latestReviews,
       message: "Latest reviews fetched successfully",
     });
   } catch (error: any) {
@@ -629,3 +629,88 @@ export const latestReviews = async (req: AuthorizedRequest, res: Response) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const addQuotes = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (user.role === "USER") {
+      return res.status(400).json("You are not authorized");
+    }
+    const { quote, author } = req.body;
+    const newestQuote = await client.quotes.findFirst({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    const newQuote = await client.quotes.create({
+      data: {
+        author,
+        quote,
+        rank: newestQuote ? newestQuote.rank + 1 : 1,
+      },
+    });
+    return res.status(200).json({
+      newQuote,
+      message: "Quote added successfully",
+      success: true,
+    });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const editQutoe = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (user.role === "USER") {
+      return res.status(400).json("You are not authorized");
+    }
+    const { quote, author, id } = req.body;
+    const editedQuote = await client.quotes.update({
+      where: {
+        id,
+      },
+      data: {
+        author,
+        quote,
+      },
+    });
+    if (editedQuote) {
+      return res.status(200).json({
+        editedQuote,
+        message: "Quote edited successfully",
+        success: true,
+      });
+    } else {
+      return res.status(400).json("Quote not found");
+    }
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const fetchQuotes = async(req: AuthorizedRequest, res: Response) => {
+  try {
+    const quotes = await client.quotes.findMany({
+      orderBy: {
+        rank: "asc",
+      },
+      where:{
+        rank:{
+          gt: 0,
+          lt:11
+        }
+      }
+    });
+    return res.status(200).json({
+      quotes,
+      message: "Quotes fetched successfully",
+      success: true,
+    });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+}

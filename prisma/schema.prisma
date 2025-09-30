@@ -30,6 +30,15 @@ enum Role {
   ADMIN
 }
 
+model Quotes{
+  id String @id @default(uuid())
+  quote String
+  author String
+  rank Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Post {
   id            String      @id @default(uuid())
   title         String

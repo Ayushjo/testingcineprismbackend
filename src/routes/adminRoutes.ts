@@ -2,12 +2,15 @@ import { Router } from "express";
 import uploadFile from "../middlewares/multer";
 import { extractUserDetails } from "../middlewares/extractUser";
 import {
+  addQuotes,
   addTopPicks,
   createPost,
   deleteImage,
   deletePost,
   editPost,
+  editQutoe,
   fetchAllPost,
+  fetchQuotes,
   fetchTopPicks,
   hasLiked,
   latestReviews,
@@ -38,4 +41,7 @@ router.route("/delete-post").post(extractUserDetails, deletePost);
 router.route("/delete-image").post(extractUserDetails, deleteImage);
 router.route("/has-liked").post(extractUserDetails, hasLiked);
 router.route("/latest-reviews").get(latestReviews);
+router.route("/add-quotes").post(extractUserDetails,addQuotes)
+router.route("/edit-quote").post(extractUserDetails,editQutoe)
+router.route("/fetch-quotes").get(fetchQuotes)
 export default router;

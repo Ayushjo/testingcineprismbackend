@@ -1827,3 +1827,17 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/articles/search?filter=rs\",\"status\":\"200\",\"responseTime\":\"734.674\"}","timestamp":"2025-09-27T05:35:32.232Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/articles/search?filter=r\",\"status\":\"200\",\"responseTime\":\"341.577\"}","timestamp":"2025-09-27T05:35:35.165Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:35:54.397Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-27T05:36:20.280Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-30T07:19:30.234Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/add-quotes\",\"status\":\"200\",\"responseTime\":\"3642.907\"}","timestamp":"2025-09-30T07:21:31.830Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/add-quotes\",\"status\":\"200\",\"responseTime\":\"876.436\"}","timestamp":"2025-09-30T07:22:25.805Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/edit-quotes\",\"status\":\"404\",\"responseTime\":\"1.355\"}","timestamp":"2025-09-30T07:23:10.928Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-30T07:23:25.684Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/edit-quote\",\"status\":\"500\",\"responseTime\":\"12.225\"}","timestamp":"2025-09-30T07:23:28.364Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-30T07:23:47.827Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/edit-quote\",\"status\":\"200\",\"responseTime\":\"2591.751\"}","timestamp":"2025-09-30T07:23:52.218Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-quotes\",\"status\":\"200\",\"responseTime\":\"834.078\"}","timestamp":"2025-09-30T07:24:13.831Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-30T07:28:48.733Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-30T07:28:53.922Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-30T07:28:57.226Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-30T07:29:02.261Z"}

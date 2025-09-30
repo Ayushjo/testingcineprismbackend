@@ -28,4 +28,7 @@ router.route("/delete-post").post(extractUser_1.extractUserDetails, adminControl
 router.route("/delete-image").post(extractUser_1.extractUserDetails, adminController_1.deleteImage);
 router.route("/has-liked").post(extractUser_1.extractUserDetails, adminController_1.hasLiked);
 router.route("/latest-reviews").get(adminController_1.latestReviews);
+router.route("/add-quotes").post(extractUser_1.extractUserDetails, adminController_1.addQuotes);
+router.route("/edit-quote").post(extractUser_1.extractUserDetails, adminController_1.editQutoe);
+router.route("/fetch-quotes").get(adminController_1.fetchQuotes);
 exports.default = router;
