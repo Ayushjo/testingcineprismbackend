@@ -371,7 +371,7 @@ export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
     });
 
     // Filter out poster images
-    const filteredPosts = posts.map((post) => ({
+    let filteredPosts = posts.map((post) => ({
       ...post,
       images: post.images.filter(
         (image) =>
@@ -379,6 +379,9 @@ export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
           image.imageUrl !== post.posterImageUrl
       ),
     }));
+
+    // Sort by view count
+    filteredPosts = filteredPosts.sort((a, b) =>b.createdAt.getTime() - a.createdAt.getTime());
 
     // Cache for 5 minutes
     await setCache(cacheKey, JSON.stringify(filteredPosts), 300);
