@@ -151,7 +151,7 @@ const refreshTrendingMovies = async (req, res) => {
 };
 exports.refreshTrendingMovies = refreshTrendingMovies;
 // Fetch data from TMDB API
-// Fetch data from TMDB API - Movies trending in theaters
+// Fetch data from TMDB API
 const fetchFromTMDB = async () => {
     const TMDB_API_KEY = process.env.TMDB_API_KEY;
     const BASE_URL = "https://api.themoviedb.org/3";
@@ -162,31 +162,53 @@ const fetchFromTMDB = async () => {
         // Get current date and date range for movies in theaters
         const today = new Date();
         const threeWeeksAgo = new Date(today);
-        threeWeeksAgo.setDate(today.getDate() - 21); // Movies released in last 3 weeks
+        threeWeeksAgo.setDate(today.getDate() - 21);
         const futureDate = new Date(today);
-        futureDate.setDate(today.getDate() + 7); // Include movies releasing this week
-        const releaseDateGte = threeWeeksAgo.toISOString().split('T')[0];
-        const releaseDateLte = futureDate.toISOString().split('T')[0];
-        // Fetch movies currently in theaters (now_playing)
-        const nowPlayingResponse = await axios_1.default.get(`${BASE_URL}/movie/now_playing?api_key=${TMDB_API_KEY}&language=en-US&page=1&region=US`);
-        if (!nowPlayingResponse.data || !nowPlayingResponse.data.results) {
-            throw new Error("Invalid response format from TMDB API");
+        futureDate.setDate(today.getDate() + 7);
+        const releaseDateGte = threeWeeksAgo.toISOString().split("T")[0];
+        const releaseDateLte = futureDate.toISOString().split("T")[0];
+        // Fetch movies from multiple regions
+        const regions = ['US', 'IN', 'GB', 'CA', 'AU']; // US, India, UK, Canada, Australia
+        const allMovies = [];
+        // Fetch now playing movies from all regions
+        for (const region of regions) {
+            try {
+                const nowPlayingResponse = await axios_1.default.get(`${BASE_URL}/movie/now_playing?api_key=${TMDB_API_KEY}&language=en-US&page=1&region=${region}`);
+                if (nowPlayingResponse.data?.results) {
+                    allMovies.push(...nowPlayingResponse.data.results);
+                }
+            }
+            catch (error) {
+                console.warn(`Failed to fetch now playing for region ${region}:`, error.message);
+            }
         }
-        // Also fetch discover endpoint for trending theatrical releases
+        // Fetch discover endpoint without region restriction for global trending
         const discoverResponse = await axios_1.default.get(`${BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&release_date.gte=${releaseDateGte}&release_date.lte=${releaseDateLte}&with_release_type=2|3`);
-        // Combine and deduplicate movies from both endpoints
-        const nowPlayingMovies = nowPlayingResponse.data.results;
-        const discoverMovies = discoverResponse.data.results;
-        // Merge and remove duplicates based on movie ID
+        if (discoverResponse.data?.results) {
+            allMovies.push(...discoverResponse.data.results);
+        }
+        // Fetch popular movies from different language industries
+        const languages = ['hi', 'te', 'ta', 'ml', 'kn']; // Hindi, Telugu, Tamil, Malayalam, Kannada
+        for (const language of languages) {
+            try {
+                const languageResponse = await axios_1.default.get(`${BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&page=1&release_date.gte=${releaseDateGte}&release_date.lte=${releaseDateLte}&with_original_language=${language}&with_release_type=2|3`);
+                if (languageResponse.data?.results) {
+                    allMovies.push(...languageResponse.data.results);
+                }
+            }
+            catch (error) {
+                console.warn(`Failed to fetch movies for language ${language}:`, error.message);
+            }
+        }
+        // Remove duplicates based on movie ID
         const movieMap = new Map();
-        [...nowPlayingMovies, ...discoverMovies].forEach((movie) => {
+        allMovies.forEach((movie) => {
             if (!movieMap.has(movie.id)) {
                 movieMap.set(movie.id, movie);
             }
         });
         // Convert map to array and sort by popularity
-        const combinedMovies = Array.from(movieMap.values())
-            .sort((a, b) => b.popularity - a.popularity);
+        const combinedMovies = Array.from(movieMap.values()).sort((a, b) => b.popularity - a.popularity);
         // Get detailed information for top 20 movies
         const detailedMovies = await Promise.all(combinedMovies.slice(0, 20).map(async (movie) => {
             try {
@@ -198,10 +220,10 @@ const fetchFromTMDB = async () => {
             }
             catch (detailError) {
                 console.warn(`Failed to fetch details for movie ID ${movie.id}:`, detailError.message);
-                return movie; // Return basic movie data if detailed fetch fails
+                return movie;
             }
         }));
-        console.log(`🎭 Fetched ${detailedMovies.length} movies currently in theaters`);
+        console.log(`🎭 Fetched ${detailedMovies.length} movies from multiple industries currently in theaters`);
         return detailedMovies;
     }
     catch (error) {
