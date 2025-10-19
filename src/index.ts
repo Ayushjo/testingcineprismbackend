@@ -107,7 +107,7 @@ app.use(
       console.log("Origin is null:", origin === null);
 
       const allowedOrigins = [
-        "https://testingcineprism.vercel.app",
+        "https://thecineprism.com",
         "http://localhost:3000",
         "http://localhost:5173",
         // Add capacitor/ionic origins if using mobile app
