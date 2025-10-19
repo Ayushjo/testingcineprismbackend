@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add src/controllers/articleHtmlController.ts src/controllers/postHtmlController.ts src/index.ts)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nUpdate frontend domain from testingcineprism.vercel.app to thecineprism.com\n\n- Updated FRONTEND_URL in .env configuration\n- Updated CORS allowed origins to include new domain\n- Updated hardcoded frontend URLs in article and post HTML controllers\n- Updated error page fallback links to new domain\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git checkout prod)",
+      "Bash(git merge main -m \"$(cat <<''EOF''\nMerge main: Update frontend domain to thecineprism.com\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push origin prod)",
+      "Bash(git checkout main)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
