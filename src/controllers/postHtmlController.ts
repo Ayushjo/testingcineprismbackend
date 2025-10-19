@@ -53,7 +53,7 @@ export const postHtml = async (req: Request, res: Response) => {
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
 
-    const frontendUrl = "https://testingcineprism.vercel.app";
+    const frontendUrl = "https://thecineprism.com";
     const postUrl = `${frontendUrl}/post/${post.id}`;
     const currentUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
 
@@ -282,7 +282,7 @@ export const postHtml = async (req: Request, res: Response) => {
         <body style="font-family: Arial; text-align: center; padding: 50px; background: #0f172a; color: white;">
           <h1 style="color: #ef4444;">Something went wrong</h1>
           <p>Please try again later.</p>
-          <a href="https://testingcineprism.vercel.app" style="color: #10b981; text-decoration: none;">← Back to CinePrism</a>
+          <a href="https://thecineprism.com" style="color: #10b981; text-decoration: none;">← Back to CinePrism</a>
         </body>
       </html>
     `);
