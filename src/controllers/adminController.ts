@@ -346,7 +346,7 @@ export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
-export const fetchAllPost = async (req: AuthorizedRequest, res: Response) => {
+export const fetchAllPost = async (req: Request, res: Response) => {
   try {
     const cacheKey = "all_posts";
 
@@ -598,7 +598,7 @@ export const hasLiked = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
-export const latestReviews = async (req: AuthorizedRequest, res: Response) => {
+export const latestReviews = async (req: Request, res: Response) => {
   try {
     const cacheKey = "latest_reviews";
 
@@ -694,7 +694,7 @@ export const editQutoe = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
-export const fetchQuotes = async (req: AuthorizedRequest, res: Response) => {
+export const fetchQuotes = async (req: Request, res: Response) => {
   try {
     const quotes = await client.quotes.findMany({
       orderBy: {
@@ -764,12 +764,8 @@ export const addByGenre = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
-export const fetchGenre = async(req:AuthorizedRequest,res:Response)=>{
+export const fetchGenre = async(req:Request,res:Response)=>{
   try {
-    const user = req.user;
-    if (user.role === "USER") {
-      return res.status(400).json("You are not authorized");
-    }
     const {genre} = req.params
     const genrePosts = await client.byGenres.findMany({
       where: {

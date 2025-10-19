@@ -24,7 +24,7 @@ import {
 const router = Router();
 
 router.route("/add-byGenres").post(extractUserDetails,uploadFile.single("file"),addByGenre);
-router.route("/fetch-byGenre/:genre").get(extractUserDetails,fetchGenre)
+router.route("/fetch-byGenre/:genre").get(fetchGenre)
 router
   .route("/add-poster")
   .post(extractUserDetails, uploadFile.single("file"), uploadPoster);
