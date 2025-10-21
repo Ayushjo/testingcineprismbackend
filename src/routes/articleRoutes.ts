@@ -43,5 +43,5 @@ router
   .route("/:articleId/like")
   .post(extractUserDetails, rateLimiter.toggleLike, toggleLike);
 router.route("/:articleId/like").get(optionalAuth, getLikeStatus);
-router.route("/:slug").get(articleHtml)
+router.route("/share/:slug").get(articleHtml);
 export default router;

@@ -42,7 +42,6 @@ export const articleHtml = async (req: Request, res: Response) => {
 
     // Get description from various sources
     const getDescription = () => {
-      
       if (article.shortDescription && article.shortDescription.length > 0) {
         return article.shortDescription.length > 160
           ? article.shortDescription.substring(0, 157) + "..."
@@ -78,7 +77,7 @@ export const articleHtml = async (req: Request, res: Response) => {
 
     // Get the best available image URL
     let articleImageUrl = "";
-    const imageUrl = article.mainImageUrl ;
+    const imageUrl = article.mainImageUrl;
 
     if (imageUrl) {
       articleImageUrl = imageUrl.replace("http://", "https://");
