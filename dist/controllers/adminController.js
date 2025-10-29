@@ -355,11 +355,13 @@ const fetchAllPost = async (req, res) => {
             },
         });
         // Filter out poster images
-        const filteredPosts = posts.map((post) => ({
+        let filteredPosts = posts.map((post) => ({
             ...post,
             images: post.images.filter((image) => image.imageUrl !== post.reviewPosterImageUrl &&
                 image.imageUrl !== post.posterImageUrl),
         }));
+        // Sort by view count
+        filteredPosts = filteredPosts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         // Cache for 5 minutes
         await (0, redis_1.setCache)(cacheKey, JSON.stringify(filteredPosts), 300);
         console.log("💾 Data cached for 5 minutes");
@@ -737,10 +739,6 @@ const addByGenre = async (req, res) => {
 exports.addByGenre = addByGenre;
 const fetchGenre = async (req, res) => {
     try {
-        const user = req.user;
-        if (user.role === "USER") {
-            return res.status(400).json("You are not authorized");
-        }
         const { genre } = req.params;
         const genrePosts = await __1.default.byGenres.findMany({
             where: {

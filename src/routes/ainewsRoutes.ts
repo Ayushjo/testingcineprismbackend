@@ -9,13 +9,14 @@ import {
   getNewsByCategory,
   searchNews,
 } from "../controllers/ainewsControllers";
+import { validateRefreshToken } from "../middlewares/refresh";
 
 const router = Router();
 
 router.route("/").get(getTrendingNews);
 router.route("/search").get(searchNews);
 router.route("/category/:category").get(getNewsByCategory);
-router.route("/refresh").post(refreshTrendingNews);
+router.route("/refresh").post(validateRefreshToken,refreshTrendingNews);
 router.route("/status/refresh").get(getRefreshStatus);
 router.route("/:id").get(getNewsById);
 

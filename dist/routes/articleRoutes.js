@@ -32,5 +32,5 @@ router
     .route("/:articleId/like")
     .post(extractUser_1.extractUserDetails, rateLimiter_1.rateLimiter.toggleLike, articleController_1.toggleLike);
 router.route("/:articleId/like").get(optionalAuth_1.optionalAuth, articleController_1.getLikeStatus);
-router.route("/:slug").get(articleHtmlController_1.articleHtml);
+router.route("/share/:slug").get(articleHtmlController_1.articleHtml);
 exports.default = router;

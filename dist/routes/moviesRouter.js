@@ -2,10 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const trendingMovieController_1 = require("../controllers/trendingMovieController");
+const refresh_1 = require("../middlewares/refresh");
 const router = (0, express_1.Router)();
 router.get("/", trendingMovieController_1.getTrendingMovies);
 router.get("/:id", trendingMovieController_1.getMovieById);
-router.post("/refresh", trendingMovieController_1.refreshTrendingMovies);
+router.post("/refresh", refresh_1.validateRefreshToken, trendingMovieController_1.refreshTrendingMovies);
 router.get("/status/refresh", trendingMovieController_1.getRefreshStatus);
 router.post("/edit-rank", trendingMovieController_1.editTrendingMoviesRank);
 exports.default = router;

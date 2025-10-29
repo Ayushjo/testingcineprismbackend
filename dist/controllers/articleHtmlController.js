@@ -66,7 +66,7 @@ const articleHtml = async (req, res) => {
             .replace(/'/g, "&#39;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
-        const frontendUrl = "https://testingcineprism.vercel.app";
+        const frontendUrl = "https://thecineprism.com";
         const articleUrl = `${frontendUrl}/articles/${article.slug || article.id}`;
         const currentUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         // Get the best available image URL
@@ -318,7 +318,7 @@ const articleHtml = async (req, res) => {
         <body style="font-family: Arial; text-align: center; padding: 50px; background: #0f172a; color: white;">
           <h1 style="color: #ef4444;">Something went wrong</h1>
           <p>Please try again later.</p>
-          <a href="https://testingcineprism.vercel.app" style="color: #10b981; text-decoration: none;">← Back to TheCinePrism</a>
+          <a href="https://thecineprism.com" style="color: #10b981; text-decoration: none;">← Back to TheCinePrism</a>
         </body>
       </html>
     `);
