@@ -23,14 +23,15 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
     const slug = generateSlug(title);
     const parsedBlocks = JSON.parse(blocks);
 
-    // Fix: Add safety check for files
     const files = (req.files as Express.Multer.File[]) || [];
 
     let mainImageUrl = "";
-    // Fix: Use optional chaining
+    let mainImagePublicId = ""; // NEW: Track publicId
+
     const mainImageFile = files?.find?.(
       (file) => file.fieldname === "mainImage"
     );
+
     if (mainImageFile) {
       const fileBuffer = getBuffer(mainImageFile);
       if (!fileBuffer || !fileBuffer.content) {
@@ -47,12 +48,12 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
           .json({ message: "An error occurred while uploading to cloudinary" });
       }
       mainImageUrl = cloud.url;
+      mainImagePublicId = cloud.public_id; // NEW: Save publicId
     }
 
     const processedBlocks: any = await Promise.all(
       parsedBlocks.map(async (block: any, index: number) => {
         if (block.type === "IMAGE") {
-          // Fix: Use optional chaining and safe find
           const blockImageFile = files?.find?.(
             (file) => file.fieldname === `blockImage_${index}`
           );
@@ -73,19 +74,30 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
             throw new Error("An error occurred while uploading to cloudinary");
           }
 
+          // UPDATED: Return with publicId at top level
           return {
-            ...block,
+            type: block.type,
             content: {
-              ...block.content,
               url: cloud.url,
               publicId: cloud.public_id,
+              alt: block.content?.alt || "",
+              caption: block.content?.caption || "",
             },
+            publicId: cloud.public_id, // NEW: Add publicId field
+            order: index,
           };
         }
-        return block;
+
+        // Non-image blocks
+        return {
+          ...block,
+          publicId: null, // NEW: Null for non-image blocks
+          order: index,
+        };
       })
     );
 
+    // UPDATED: Include mainImagePublicId and publicId in blocks
     const article = await client.article.create({
       data: {
         title,
@@ -95,12 +107,9 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
         published: published === "true",
         publishedAt: published === "true" ? new Date() : null,
         mainImageUrl,
+        mainImagePublicId, // NEW: Save publicId
         blocks: {
-          create: processedBlocks.map((block: any, index: number) => ({
-            type: block.type,
-            content: block.content,
-            order: index,
-          })),
+          create: processedBlocks, // Now includes publicId field
         },
       },
       include: {
@@ -109,6 +118,7 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
         },
       },
     });
+
     await deleteCache("all_articles");
 
     res.status(200).json({ article });
@@ -131,7 +141,9 @@ export const getArticles = async (req: Request, res: Response) => {
       });
     }
     console.log("🔍 Cache MISS - fetching from database");
-    const articles = await client.article.findMany();
+    const articles = await client.article.findMany({
+      where: { published: true },
+    });
     await setCache(cacheKey, JSON.stringify(articles), 300);
     res.status(200).json({ articles });
   } catch (error: any) {
@@ -212,6 +224,271 @@ export const getSingleArticle = async (
     res.status(500).json({ message: error.message });
   }
 };
+export const updateArticle = async (req: AuthorizedRequest, res: Response) => {
+  try {
+    const user = req.user;
+
+    // 1. Authorization check
+    if (user.role === "USER") {
+      return res.status(403).json({ message: "You are not authorized" });
+    }
+
+    // 2. Extract data from request
+    const { articleId } = req.params;
+    const {
+      title,
+      shortDescription,
+      author,
+      published,
+      blocks,
+      keepImagePublicIds,
+      keepMainImage,
+    } = req.body;
+
+    // 3. Validate article exists
+    const existingArticle = await client.article.findUnique({
+      where: { id: articleId },
+      include: {
+        blocks: {
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+
+    if (!existingArticle) {
+      return res.status(404).json({ message: "Article not found" });
+    }
+
+    // 4. Parse JSON strings
+    const parsedBlocks = JSON.parse(blocks);
+    const keepImagePublicIdsArray = keepImagePublicIds
+      ? JSON.parse(keepImagePublicIds)
+      : [];
+
+    // 5. Handle file uploads safely
+    const files = (req.files as Express.Multer.File[]) || [];
+
+    // 6. Collect current image publicIds for cleanup
+    // UPDATED: Use the new field first, fallback to extracting from URL
+    const currentMainImagePublicId =
+      existingArticle.mainImagePublicId ||
+      extractPublicIdFromUrl(existingArticle.mainImageUrl);
+
+    // UPDATED: Use the new publicId field first, fallback to content
+    const currentBlockImagePublicIds = existingArticle.blocks
+      .filter((block) => block.type === "IMAGE")
+      .map((block) => block.publicId || (block.content as any)?.publicId)
+      .filter(Boolean); // Remove nulls
+
+    // 7. Track images to delete
+    let imagesToDelete: string[] = [];
+
+    // 8. Process main image
+    let mainImageUrl = existingArticle.mainImageUrl;
+    let mainImagePublicId = existingArticle.mainImagePublicId; // NEW: Track publicId
+
+    if (keepMainImage === "false" || !keepMainImage) {
+      const mainImageFile = files?.find?.(
+        (file) => file.fieldname === "mainImage"
+      );
+
+      if (mainImageFile) {
+        const fileBuffer = getBuffer(mainImageFile);
+        if (!fileBuffer || !fileBuffer.content) {
+          return res.status(500).json({
+            message: "Failed to process main image file.",
+          });
+        }
+
+        const cloud = await cloudinary.v2.uploader.upload(fileBuffer.content, {
+          folder: "articles",
+        });
+
+        if (!cloud) {
+          return res.status(500).json({
+            message: "Failed to upload main image to cloudinary",
+          });
+        }
+
+        mainImageUrl = cloud.url;
+        mainImagePublicId = cloud.public_id; // NEW: Save publicId
+
+        // Mark old main image for deletion
+        if (currentMainImagePublicId) {
+          imagesToDelete.push(currentMainImagePublicId);
+        }
+      }
+    }
+
+    // 9. Process blocks and upload new block images
+    const processedBlocks = await Promise.all(
+      parsedBlocks.map(async (block: any, index: number) => {
+        if (block.type === "IMAGE") {
+          const blockImageFile = files?.find?.(
+            (file) => file.fieldname === `blockImage_${index}`
+          );
+
+          if (blockImageFile) {
+            // NEW IMAGE UPLOAD
+            const fileBuffer = getBuffer(blockImageFile);
+            if (!fileBuffer || !fileBuffer.content) {
+              throw new Error(
+                `Failed to process image file for block ${index}.`
+              );
+            }
+
+            const cloud = await cloudinary.v2.uploader.upload(
+              fileBuffer.content,
+              { folder: "articles" }
+            );
+
+            if (!cloud) {
+              throw new Error(
+                `Failed to upload image for block ${index} to cloudinary`
+              );
+            }
+
+            // If this block had an old image, mark it for deletion
+            if (
+              block.content?.publicId &&
+              block.content.keepExisting === false
+            ) {
+              imagesToDelete.push(block.content.publicId);
+            }
+
+            // UPDATED: Return with publicId at top level
+            return {
+              type: block.type,
+              content: {
+                url: cloud.url,
+                publicId: cloud.public_id,
+                alt: block.content.alt || "",
+                caption: block.content.caption || "",
+              },
+              publicId: cloud.public_id, // NEW: Add publicId field
+              order: index,
+            };
+          } else {
+            // KEEPING EXISTING IMAGE
+            // UPDATED: Return with publicId at top level
+            return {
+              type: block.type,
+              content: {
+                url: block.content.url,
+                publicId: block.content.publicId,
+                alt: block.content.alt || "",
+                caption: block.content.caption || "",
+              },
+              publicId: block.content.publicId, // NEW: Add publicId field
+              order: index,
+            };
+          }
+        }
+
+        // Non-image blocks
+        return {
+          type: block.type,
+          content: block.content,
+          publicId: null, // NEW: Null for non-image blocks
+          order: index,
+        };
+      })
+    );
+
+    // 10. Determine all images to delete
+    const blockImagesToDelete = currentBlockImagePublicIds.filter(
+      (publicId) => !keepImagePublicIdsArray.includes(publicId)
+    );
+
+    imagesToDelete = [...imagesToDelete, ...blockImagesToDelete];
+
+    // 11. Generate new slug if title changed
+    const slug =
+      title !== existingArticle.title
+        ? generateSlug(title)
+        : existingArticle.slug;
+
+    // 12. Update article in database with transaction
+    const updatedArticle = await client.$transaction(async (prisma) => {
+      await prisma.contentBlock.deleteMany({
+        where: { articleId },
+      });
+
+      // UPDATED: Include mainImagePublicId in update
+      const article = await prisma.article.update({
+        where: { id: articleId },
+        data: {
+          title,
+          slug,
+          shortDescription,
+          author,
+          published: published === "true",
+          publishedAt:
+            published === "true"
+              ? existingArticle.publishedAt || new Date()
+              : null,
+          mainImageUrl,
+          mainImagePublicId, // NEW: Save publicId
+          blocks: {
+            create: processedBlocks, // Now includes publicId field
+          },
+        },
+        include: {
+          blocks: {
+            orderBy: { order: "asc" },
+          },
+        },
+      });
+
+      return article;
+    });
+
+    // 13. Delete orphaned images from Cloudinary
+    if (imagesToDelete.length > 0) {
+      Promise.all(
+        imagesToDelete.map(async (publicId) => {
+          try {
+            await cloudinary.v2.uploader.destroy(publicId);
+            console.log(`Deleted image: ${publicId}`);
+          } catch (error) {
+            console.error(`Failed to delete image ${publicId}:`, error);
+          }
+        })
+      ).catch((error) => {
+        console.error("Error deleting images:", error);
+      });
+    }
+
+    // 14. Clear cache
+    await deleteCache(`article:${existingArticle.slug}`);
+    await deleteCache(`article:${slug}`);
+    await deleteCache("all_articles");
+
+    // 15. Send response
+    res.status(200).json({
+      message: "Article updated successfully",
+      article: updatedArticle,
+    });
+  } catch (error: any) {
+    console.error("Update article error:", error);
+    res.status(500).json({
+      message: error.message || "Failed to update article",
+    });
+  }
+};
+
+function extractPublicIdFromUrl(url: string): string | null {
+  try {
+    const matches = url.match(/\/v\d+\/(.+)\.\w+$/);
+    if (matches && matches[1]) {
+      return matches[1];
+    }
+    return null;
+  } catch (error) {
+    console.error("Error extracting publicId from URL:", error);
+    return null;
+  }
+}
 
 export const createComment = async (req: AuthorizedRequest, res: Response) => {
   try {
@@ -825,20 +1102,21 @@ export const getLikeStatus = async (req: AuthorizedRequest, res: Response) => {
 
 export const searchArticles = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const filter = req.query.filter as any
+    const filter = req.query.filter as any;
 
     const articles = await client.article.findMany({
       where: {
         title: {
           contains: filter,
-          mode: "insensitive"
-        }
-      }
-    })
+          mode: "insensitive",
+        },
+        published: true,
+      },
+    });
     res.status(200).json({
       success: true,
-      articles
-    })
+      articles,
+    });
   } catch (error: any) {
     console.log(error.meesage);
     return res.status(500).json({ message: "Internal server error" });

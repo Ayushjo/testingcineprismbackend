@@ -12,6 +12,7 @@ import {
   getSingleArticle,
   searchArticles,
   toggleLike,
+  updateArticle,
   updateComment,
 } from "../controllers/articleController";
 import { extractUserDetails } from "../middlewares/extractUser";
@@ -20,12 +21,14 @@ import { rateLimiter } from "../middlewares/rateLimiter";
 import { optionalAuth } from "../middlewares/optionalAuth";
 import { articleHtml } from "../controllers/articleHtmlController";
 
-
 const router = Router();
-router.route("/search").get(extractUserDetails,searchArticles)
+router.route("/search").get(extractUserDetails, searchArticles);
 router
   .route("/create-article")
   .post(extractUserDetails, uploadFile.any(), createArticle);
+router
+  .route("/update-article/:articleId")
+  .post(extractUserDetails, uploadFile.any(), updateArticle);
 router.route("/get-articles").get(getArticles);
 router.route("/get-article/:slug").get(getSingleArticle);
 router
