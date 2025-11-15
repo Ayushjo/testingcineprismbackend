@@ -535,12 +535,6 @@ const fetchRelatedPosts = async (req, res) => {
                     id: { in: currentPost.relatedPostIds },
                     NOT: { id: postId },
                 },
-                select: {
-                    id: true,
-                    title: true,
-                    posterImageUrl: true,
-                    year: true,
-                },
                 take: 3,
             });
         }
@@ -554,12 +548,6 @@ const fetchRelatedPosts = async (req, res) => {
                             in: [...relatedPosts.map((p) => p.id), postId],
                         },
                     },
-                },
-                select: {
-                    id: true,
-                    title: true,
-                    posterImageUrl: true,
-                    year: true,
                 },
                 take: 3 - relatedPosts.length,
                 orderBy: { createdAt: "desc" },

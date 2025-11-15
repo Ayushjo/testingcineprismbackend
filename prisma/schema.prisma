@@ -87,6 +87,7 @@ model Article{
   published Boolean @default(true)
   publishedAt DateTime?
   viewCount Int @default(0)
+  mainImagePublicId String?
   images ArticleImage[]
   comments Comment[]
   likes Like[]
@@ -101,6 +102,7 @@ model ContentBlock{
   type BlockType
   content Json
   order Int
+  publicId String?
 
   article Article @relation(fields: [articleId], references: [id],onDelete: Cascade)
   

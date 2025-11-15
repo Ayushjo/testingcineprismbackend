@@ -15,6 +15,9 @@ router.route("/search").get(extractUser_1.extractUserDetails, articleController_
 router
     .route("/create-article")
     .post(extractUser_1.extractUserDetails, multer_1.default.any(), articleController_1.createArticle);
+router
+    .route("/update-article/:articleId")
+    .post(extractUser_1.extractUserDetails, multer_1.default.any(), articleController_1.updateArticle);
 router.route("/get-articles").get(articleController_1.getArticles);
 router.route("/get-article/:slug").get(articleController_1.getSingleArticle);
 router
