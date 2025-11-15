@@ -26,7 +26,8 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
     const files = (req.files as Express.Multer.File[]) || [];
 
     let mainImageUrl = "";
-    let mainImagePublicId = ""; // NEW: Track publicId
+    // REMOVE THIS LINE TEMPORARILY:
+    // let mainImagePublicId = "";
 
     const mainImageFile = files?.find?.(
       (file) => file.fieldname === "mainImage"
@@ -48,7 +49,8 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
           .json({ message: "An error occurred while uploading to cloudinary" });
       }
       mainImageUrl = cloud.url;
-      mainImagePublicId = cloud.public_id; // NEW: Save publicId
+      // REMOVE THIS LINE:
+      // mainImagePublicId = cloud.public_id;
     }
 
     const processedBlocks: any = await Promise.all(
@@ -74,7 +76,6 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
             throw new Error("An error occurred while uploading to cloudinary");
           }
 
-          // UPDATED: Return with publicId at top level
           return {
             type: block.type,
             content: {
@@ -83,21 +84,21 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
               alt: block.content?.alt || "",
               caption: block.content?.caption || "",
             },
-            publicId: cloud.public_id, // NEW: Add publicId field
+            // KEEP THIS - it's for ContentBlock table
+            publicId: cloud.public_id,
             order: index,
           };
         }
 
-        // Non-image blocks
         return {
           ...block,
-          publicId: null, // NEW: Null for non-image blocks
+          publicId: null,
           order: index,
         };
       })
     );
 
-    // UPDATED: Include mainImagePublicId and publicId in blocks
+    // REMOVE mainImagePublicId from here:
     const article = await client.article.create({
       data: {
         title,
@@ -107,9 +108,10 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
         published: published === "true",
         publishedAt: published === "true" ? new Date() : null,
         mainImageUrl,
-        mainImagePublicId, // NEW: Save publicId
+        // REMOVE THIS LINE:
+        // mainImagePublicId,
         blocks: {
-          create: processedBlocks, // Now includes publicId field
+          create: processedBlocks,
         },
       },
       include: {

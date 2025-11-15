@@ -27,7 +27,8 @@ const createArticle = async (req, res) => {
         const parsedBlocks = JSON.parse(blocks);
         const files = req.files || [];
         let mainImageUrl = "";
-        let mainImagePublicId = ""; // NEW: Track publicId
+        // REMOVE THIS LINE TEMPORARILY:
+        // let mainImagePublicId = "";
         const mainImageFile = files?.find?.((file) => file.fieldname === "mainImage");
         if (mainImageFile) {
             const fileBuffer = (0, dataUri_1.default)(mainImageFile);
@@ -45,7 +46,8 @@ const createArticle = async (req, res) => {
                     .json({ message: "An error occurred while uploading to cloudinary" });
             }
             mainImageUrl = cloud.url;
-            mainImagePublicId = cloud.public_id; // NEW: Save publicId
+            // REMOVE THIS LINE:
+            // mainImagePublicId = cloud.public_id;
         }
         const processedBlocks = await Promise.all(parsedBlocks.map(async (block, index) => {
             if (block.type === "IMAGE") {
@@ -61,7 +63,6 @@ const createArticle = async (req, res) => {
                 if (!cloud) {
                     throw new Error("An error occurred while uploading to cloudinary");
                 }
-                // UPDATED: Return with publicId at top level
                 return {
                     type: block.type,
                     content: {
@@ -70,18 +71,18 @@ const createArticle = async (req, res) => {
                         alt: block.content?.alt || "",
                         caption: block.content?.caption || "",
                     },
-                    publicId: cloud.public_id, // NEW: Add publicId field
+                    // KEEP THIS - it's for ContentBlock table
+                    publicId: cloud.public_id,
                     order: index,
                 };
             }
-            // Non-image blocks
             return {
                 ...block,
-                publicId: null, // NEW: Null for non-image blocks
+                publicId: null,
                 order: index,
             };
         }));
-        // UPDATED: Include mainImagePublicId and publicId in blocks
+        // REMOVE mainImagePublicId from here:
         const article = await __1.default.article.create({
             data: {
                 title,
@@ -91,9 +92,10 @@ const createArticle = async (req, res) => {
                 published: published === "true",
                 publishedAt: published === "true" ? new Date() : null,
                 mainImageUrl,
-                mainImagePublicId, // NEW: Save publicId
+                // REMOVE THIS LINE:
+                // mainImagePublicId,
                 blocks: {
-                    create: processedBlocks, // Now includes publicId field
+                    create: processedBlocks,
                 },
             },
             include: {
