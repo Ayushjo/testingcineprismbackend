@@ -26,8 +26,6 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
     const files = (req.files as Express.Multer.File[]) || [];
 
     let mainImageUrl = "";
-    // REMOVE THIS LINE TEMPORARILY:
-    // let mainImagePublicId = "";
 
     const mainImageFile = files?.find?.(
       (file) => file.fieldname === "mainImage"
@@ -49,8 +47,6 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
           .json({ message: "An error occurred while uploading to cloudinary" });
       }
       mainImageUrl = cloud.url;
-      // REMOVE THIS LINE:
-      // mainImagePublicId = cloud.public_id;
     }
 
     const processedBlocks: any = await Promise.all(
@@ -80,25 +76,25 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
             type: block.type,
             content: {
               url: cloud.url,
-              publicId: cloud.public_id,
+              publicId: cloud.public_id, // Keep in content JSON
               alt: block.content?.alt || "",
               caption: block.content?.caption || "",
             },
-            // KEEP THIS - it's for ContentBlock table
-            publicId: cloud.public_id,
+            // REMOVE THIS LINE:
+            // publicId: cloud.public_id,
             order: index,
           };
         }
 
         return {
           ...block,
-          publicId: null,
+          // REMOVE THIS LINE:
+          // publicId: null,
           order: index,
         };
       })
     );
 
-    // REMOVE mainImagePublicId from here:
     const article = await client.article.create({
       data: {
         title,
@@ -108,8 +104,6 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
         published: published === "true",
         publishedAt: published === "true" ? new Date() : null,
         mainImageUrl,
-        // REMOVE THIS LINE:
-        // mainImagePublicId,
         blocks: {
           create: processedBlocks,
         },
