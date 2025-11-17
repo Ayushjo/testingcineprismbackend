@@ -108,6 +108,7 @@ app.use(
 
       const allowedOrigins = [
         "https://thecineprism.com",
+        "https://www.thecineprism.com",
         "http://localhost:3000",
         "http://localhost:5173",
         // Add capacitor/ionic origins if using mobile app
