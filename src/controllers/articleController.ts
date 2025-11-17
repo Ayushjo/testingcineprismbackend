@@ -4,6 +4,8 @@ import { AuthorizedRequest } from "../middlewares/extractUser";
 import getBuffer from "../config/dataUri";
 import cloudinary from "cloudinary";
 import { deleteCache, getFromCache, setCache } from "../config/redis";
+import { uploadToS3 } from "../utils/s3Upload";
+import { deleteFromS3 } from "../utils/s3Delete";
 const generateSlug = (title: string) => {
   return title
     .toLowerCase() // "Top 25..." → "top 25..."
@@ -26,27 +28,20 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
     const files = (req.files as Express.Multer.File[]) || [];
 
     let mainImageUrl = "";
+    let mainImageKey = "";
 
     const mainImageFile = files?.find?.(
       (file) => file.fieldname === "mainImage"
     );
 
     if (mainImageFile) {
-      const fileBuffer = getBuffer(mainImageFile);
-      if (!fileBuffer || !fileBuffer.content) {
-        return res.status(500).json({
-          message: "Was not able to convert the file from buffer to base64.",
-        });
-      }
-      const cloud = await cloudinary.v2.uploader.upload(fileBuffer.content, {
-        folder: "articles",
-      });
-      if (!cloud) {
-        return res
-          .status(500)
-          .json({ message: "An error occurred while uploading to cloudinary" });
-      }
-      mainImageUrl = cloud.url;
+      // ✅ CHANGED: Using S3 instead of Cloudinary
+      const { url, key } = await uploadToS3(
+        mainImageFile,
+        "articles/main-images"
+      );
+      mainImageUrl = url;
+      mainImageKey = key;
     }
 
     const processedBlocks: any = await Promise.all(
@@ -58,38 +53,27 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
           if (!blockImageFile) {
             return block;
           }
-          const fileBuffer = getBuffer(blockImageFile);
-          if (!fileBuffer || !fileBuffer.content) {
-            throw new Error(
-              "Was not able to convert the file from buffer to base64."
-            );
-          }
-          const cloud = await cloudinary.v2.uploader.upload(
-            fileBuffer.content,
-            { folder: "articles" }
+
+          // ✅ CHANGED: Using S3 instead of Cloudinary
+          const { url, key } = await uploadToS3(
+            blockImageFile,
+            "articles/content-blocks"
           );
-          if (!cloud) {
-            throw new Error("An error occurred while uploading to cloudinary");
-          }
 
           return {
             type: block.type,
             content: {
-              url: cloud.url,
-              publicId: cloud.public_id, // Keep in content JSON
+              url,
+              key, // S3 key instead of publicId
               alt: block.content?.alt || "",
               caption: block.content?.caption || "",
             },
-            // REMOVE THIS LINE:
-            // publicId: cloud.public_id,
             order: index,
           };
         }
 
         return {
           ...block,
-          // REMOVE THIS LINE:
-          // publicId: null,
           order: index,
         };
       })
@@ -104,6 +88,7 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
         published: published === "true",
         publishedAt: published === "true" ? new Date() : null,
         mainImageUrl,
+        mainImagePublicId: mainImageKey, // Store S3 key in existing field
         blocks: {
           create: processedBlocks,
         },

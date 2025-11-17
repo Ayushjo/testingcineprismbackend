@@ -6,13 +6,18 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently \"tsc -b -w\" \"nodemon ./dist/index.js\"",
     "build": "tsc -b",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/index.js",
+    "test:s3": "ts-node ./src/scripts/testS3Connection.ts",
+    "dryRun:s3": "ts-node ./src/scripts/dryRunMigration.ts",
+    "migrate:cloudinary-to-s3": "ts-node ./src/scripts/migrateToS3.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.932.0",
+    "@aws-sdk/s3-request-presigner": "^3.932.0",
     "@prisma/client": "^6.13.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cheerio": "^0.22.35",
@@ -44,6 +49,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
+    "postgresql": "^0.0.1",
     "prisma": "^6.13.0",
     "redis": "^5.8.2",
     "rss-parser": "^3.13.0",
