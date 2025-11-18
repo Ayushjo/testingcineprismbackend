@@ -5,20 +5,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.clearAllCache = exports.deleteCachePattern = exports.getCacheInfo = exports.getAllCacheKeys = exports.deleteCache = exports.getFromCache = exports.setCache = void 0;
 const ioredis_1 = __importDefault(require("ioredis"));
-const redisClient = new ioredis_1.default.Cluster([
-    {
-        host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT),
-    },
-], {
-    redisOptions: {
-        tls: {}, // required for AWS Serverless Redis
+const redisClient = new ioredis_1.default({
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
+    tls: {}, // AWS Serverless Redis requires TLS
+    enableReadyCheck: false, // Serverless Redis does NOT support CLUSTER commands
+    maxRetriesPerRequest: null,
+    retryStrategy(times) {
+        return Math.min(times * 200, 2000);
     },
 });
+// Logs
 redisClient.on("connect", () => {
-    console.log("✅ Connected to AWS Redis Cluster");
+    console.log("✅ Connected to AWS Serverless Redis");
 });
 redisClient.on("error", (err) => {
+    // Serverless Redis returns MOVED replies sometimes — ignore them
+    if (err?.message?.includes("MOVED")) {
+        console.warn("⚠️ Ignoring MOVED redirect (expected for AWS Serverless Redis)");
+        return;
+    }
     console.error("❌ Redis error:", err);
 });
 // ---------- CACHING HELPERS ----------

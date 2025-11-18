@@ -1,24 +1,30 @@
 import Redis from "ioredis";
 
-const redisClient = new Redis.Cluster(
-  [
-    {
-      host: process.env.REDIS_HOST,
-      port: Number(process.env.REDIS_PORT),
-    },
-  ],
-  {
-    redisOptions: {
-      tls: {}, // required for AWS Serverless Redis
-    },
-  }
-);
+const redisClient = new Redis({
+  host: process.env.REDIS_HOST,
+  port: Number(process.env.REDIS_PORT),
+  tls: {}, // AWS Serverless Redis requires TLS
+  enableReadyCheck: false, // Serverless Redis does NOT support CLUSTER commands
+  maxRetriesPerRequest: null,
+  retryStrategy(times) {
+    return Math.min(times * 200, 2000);
+  },
+});
 
+// Logs
 redisClient.on("connect", () => {
-  console.log("✅ Connected to AWS Redis Cluster");
+  console.log("✅ Connected to AWS Serverless Redis");
 });
 
 redisClient.on("error", (err) => {
+  // Serverless Redis returns MOVED replies sometimes — ignore them
+  if (err?.message?.includes("MOVED")) {
+    console.warn(
+      "⚠️ Ignoring MOVED redirect (expected for AWS Serverless Redis)"
+    );
+    return;
+  }
+
   console.error("❌ Redis error:", err);
 });
 
