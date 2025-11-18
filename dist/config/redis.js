@@ -5,17 +5,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.clearAllCache = exports.deleteCachePattern = exports.getCacheInfo = exports.getAllCacheKeys = exports.deleteCache = exports.getFromCache = exports.setCache = void 0;
 const ioredis_1 = __importDefault(require("ioredis"));
-const redisClient = new ioredis_1.default({
-    host: process.env.REDIS_HOST,
-    port: Number(process.env.REDIS_PORT),
-    tls: {},
+const redisClient = new ioredis_1.default.Cluster([
+    {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+    },
+], {
+    redisOptions: {
+        tls: {}, // required for AWS Serverless Redis
+    },
 });
 redisClient.on("connect", () => {
-    console.log("✅ Connected to AWS Redis");
+    console.log("✅ Connected to AWS Redis Cluster");
 });
 redisClient.on("error", (err) => {
     console.error("❌ Redis error:", err);
 });
+// ---------- CACHING HELPERS ----------
 const setCache = async (key, value, ttl) => {
     try {
         if (ttl) {
@@ -49,7 +55,6 @@ const deleteCache = async (key) => {
     }
 };
 exports.deleteCache = deleteCache;
-// ✅ NEW: Get all cache keys
 const getAllCacheKeys = async () => {
     try {
         return await redisClient.keys("*");
@@ -60,7 +65,6 @@ const getAllCacheKeys = async () => {
     }
 };
 exports.getAllCacheKeys = getAllCacheKeys;
-// ✅ NEW: Get cache key with TTL and size info
 const getCacheInfo = async (key) => {
     try {
         const value = await redisClient.get(key);
@@ -78,7 +82,6 @@ const getCacheInfo = async (key) => {
     }
 };
 exports.getCacheInfo = getCacheInfo;
-// ✅ NEW: Delete multiple keys by pattern
 const deleteCachePattern = async (pattern) => {
     try {
         const keys = await redisClient.keys(pattern);
@@ -93,7 +96,6 @@ const deleteCachePattern = async (pattern) => {
     }
 };
 exports.deleteCachePattern = deleteCachePattern;
-// ✅ NEW: Clear ALL cache
 const clearAllCache = async () => {
     try {
         await redisClient.flushdb();

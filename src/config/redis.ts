@@ -1,18 +1,28 @@
 import Redis from "ioredis";
 
-const redisClient = new Redis({
-  host: process.env.REDIS_HOST,
-  port: Number(process.env.REDIS_PORT),
-  tls: {},
-});
+const redisClient = new Redis.Cluster(
+  [
+    {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+    },
+  ],
+  {
+    redisOptions: {
+      tls: {}, // required for AWS Serverless Redis
+    },
+  }
+);
 
 redisClient.on("connect", () => {
-  console.log("✅ Connected to AWS Redis");
+  console.log("✅ Connected to AWS Redis Cluster");
 });
 
 redisClient.on("error", (err) => {
   console.error("❌ Redis error:", err);
 });
+
+// ---------- CACHING HELPERS ----------
 
 export const setCache = async (key: string, value: string, ttl?: number) => {
   try {
@@ -43,7 +53,6 @@ export const deleteCache = async (key: string) => {
   }
 };
 
-// ✅ NEW: Get all cache keys
 export const getAllCacheKeys = async (): Promise<string[]> => {
   try {
     return await redisClient.keys("*");
@@ -53,7 +62,6 @@ export const getAllCacheKeys = async (): Promise<string[]> => {
   }
 };
 
-// ✅ NEW: Get cache key with TTL and size info
 export const getCacheInfo = async (key: string) => {
   try {
     const value = await redisClient.get(key);
@@ -71,7 +79,6 @@ export const getCacheInfo = async (key: string) => {
   }
 };
 
-// ✅ NEW: Delete multiple keys by pattern
 export const deleteCachePattern = async (pattern: string): Promise<number> => {
   try {
     const keys = await redisClient.keys(pattern);
@@ -85,7 +92,6 @@ export const deleteCachePattern = async (pattern: string): Promise<number> => {
   }
 };
 
-// ✅ NEW: Clear ALL cache
 export const clearAllCache = async (): Promise<void> => {
   try {
     await redisClient.flushdb();
