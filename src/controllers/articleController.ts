@@ -156,7 +156,7 @@ export const getSingleArticle = async (
 
         // Update the cached article's view count
         parsedArticle.viewCount += 1;
-        await setCache(cacheKey, JSON.stringify(parsedArticle), 300); // 5 minutes
+        await setCache(cacheKey, JSON.stringify(parsedArticle), 1800); // ✅ Fixed: was 1900
       }
 
       return res.status(200).json({ article: parsedArticle });
@@ -196,8 +196,8 @@ export const getSingleArticle = async (
       });
     }
 
-    // Cache the article for 5 minutes (300 seconds)
-    await setCache(cacheKey, JSON.stringify(updatedArticle), 300);
+    // Cache the article for 30 minutes (1800 seconds)
+    await setCache(cacheKey, JSON.stringify(updatedArticle), 1800);
 
     res.status(200).json({ article: updatedArticle });
   } catch (error: any) {

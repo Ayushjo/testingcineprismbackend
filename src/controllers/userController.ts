@@ -442,18 +442,24 @@ export const fetchSinglePost = async (
     const userId = req.user?.id;
 
     const cacheKey = `post:${postId}`;
-    const posts: any = await getFromCache(cacheKey);
-    const parsedPosts = JSON.parse(posts);
-    if (parsedPosts) {
+    const cachedPost = await getFromCache(cacheKey);
+
+    // ✅ Fixed: Check if cache exists before parsing
+    if (cachedPost) {
+      const parsedPost = JSON.parse(cachedPost);
+
+      // Increment view count
       await client.post.update({
         where: { id: postId },
         data: {
-          viewCount: parsedPosts.viewCount + 1,
+          viewCount: parsedPost.viewCount + 1,
         },
       });
-      parsedPosts.viewCount += 1;
-      await setCache(cacheKey, JSON.stringify(parsedPosts), 300);
-      res.status(200).json({ success: true, post: parsedPosts });
+
+      parsedPost.viewCount += 1;
+      await setCache(cacheKey, JSON.stringify(parsedPost), 1800);
+
+      return res.status(200).json({ success: true, post: parsedPost });
     }
 
     // Optimized query with selective loading for performance
@@ -506,6 +512,8 @@ export const fetchSinglePost = async (
         message: "Post not found",
       });
     }
+
+    // Increment view count
     await client.post.update({
       where: { id: postId },
       data: {
@@ -515,6 +523,7 @@ export const fetchSinglePost = async (
 
     const post = firstPost;
     post.viewCount += 1;
+
     // Filter out poster images from the images array
     const filteredImages = post.images.filter(
       (image) =>
@@ -535,7 +544,9 @@ export const fetchSinglePost = async (
         replies: [], // Replies loaded separately
       })),
     };
-    await setCache(cacheKey, JSON.stringify(transformedPost), 3600);
+
+    // Cache for 30 minutes
+    await setCache(cacheKey, JSON.stringify(transformedPost), 1800);
 
     res.status(200).json({
       success: true,

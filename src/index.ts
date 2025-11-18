@@ -213,6 +213,9 @@ app.use("/api/v1/auth", authRoutes);
 import htmlRoutes from "./routes/htmlRoutes.js"
 app.use("/",htmlRoutes)
 
+import cacheRoutes from "./routes/cacheRoutes.js"
+app.use("/api/v1/cache",cacheRoutes)
+
 import articleRoutes from "./routes/articleRoutes.js"
 app.use("/api/v1/articles",articleRoutes)
 app.listen(PORT, () => {

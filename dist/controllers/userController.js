@@ -413,18 +413,20 @@ const fetchSinglePost = async (req, res) => {
         const postId = req.params.id;
         const userId = req.user?.id;
         const cacheKey = `post:${postId}`;
-        const posts = await (0, redis_1.getFromCache)(cacheKey);
-        const parsedPosts = JSON.parse(posts);
-        if (parsedPosts) {
+        const cachedPost = await (0, redis_1.getFromCache)(cacheKey);
+        // ✅ Fixed: Check if cache exists before parsing
+        if (cachedPost) {
+            const parsedPost = JSON.parse(cachedPost);
+            // Increment view count
             await __1.default.post.update({
                 where: { id: postId },
                 data: {
-                    viewCount: parsedPosts.viewCount + 1,
+                    viewCount: parsedPost.viewCount + 1,
                 },
             });
-            parsedPosts.viewCount += 1;
-            await (0, redis_1.setCache)(cacheKey, JSON.stringify(parsedPosts), 300);
-            res.status(200).json({ success: true, post: parsedPosts });
+            parsedPost.viewCount += 1;
+            await (0, redis_1.setCache)(cacheKey, JSON.stringify(parsedPost), 1800);
+            return res.status(200).json({ success: true, post: parsedPost });
         }
         // Optimized query with selective loading for performance
         const firstPost = await __1.default.post.findFirst({
@@ -475,6 +477,7 @@ const fetchSinglePost = async (req, res) => {
                 message: "Post not found",
             });
         }
+        // Increment view count
         await __1.default.post.update({
             where: { id: postId },
             data: {
@@ -499,7 +502,8 @@ const fetchSinglePost = async (req, res) => {
                 replies: [], // Replies loaded separately
             })),
         };
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(transformedPost), 3600);
+        // Cache for 30 minutes
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(transformedPost), 1800);
         res.status(200).json({
             success: true,
             post: transformedPost,

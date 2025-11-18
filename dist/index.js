@@ -81,6 +81,7 @@ app.use((0, cors_1.default)({
         console.log("Origin is null:", origin === null);
         const allowedOrigins = [
             "https://thecineprism.com",
+            "https://www.thecineprism.com",
             "http://localhost:3000",
             "http://localhost:5173",
             // Add capacitor/ionic origins if using mobile app
@@ -164,6 +165,8 @@ const authRoutes_js_1 = __importDefault(require("./routes/authRoutes.js"));
 app.use("/api/v1/auth", authRoutes_js_1.default);
 const htmlRoutes_js_1 = __importDefault(require("./routes/htmlRoutes.js"));
 app.use("/", htmlRoutes_js_1.default);
+const cacheRoutes_js_1 = __importDefault(require("./routes/cacheRoutes.js"));
+app.use("/api/v1/cache", cacheRoutes_js_1.default);
 const articleRoutes_js_1 = __importDefault(require("./routes/articleRoutes.js"));
 app.use("/api/v1/articles", articleRoutes_js_1.default);
 app.listen(PORT, () => {
