@@ -6,12 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.clearAllCache = exports.deleteCachePattern = exports.getCacheInfo = exports.getAllCacheKeys = exports.deleteCache = exports.getFromCache = exports.setCache = void 0;
 const ioredis_1 = __importDefault(require("ioredis"));
 const redisClient = new ioredis_1.default({
-    host: process.env.REDIS_HOST || "localhost",
-    port: parseInt(process.env.REDIS_PORT || "6379"),
-    retryStrategy: (times) => {
-        return Math.min(times * 50, 2000);
-    },
-    maxRetriesPerRequest: 3,
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
+    tls: {},
 });
 redisClient.on("connect", () => {
     console.log("✅ Connected to AWS Redis");

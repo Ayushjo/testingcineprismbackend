@@ -1,12 +1,9 @@
 import Redis from "ioredis";
 
 const redisClient = new Redis({
-  host: process.env.REDIS_HOST || "localhost",
-  port: parseInt(process.env.REDIS_PORT || "6379"),
-  retryStrategy: (times: number) => {
-    return Math.min(times * 50, 2000);
-  },
-  maxRetriesPerRequest: 3,
+  host: process.env.REDIS_HOST,
+  port: Number(process.env.REDIS_PORT),
+  tls: {},
 });
 
 redisClient.on("connect", () => {
