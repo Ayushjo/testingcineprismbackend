@@ -28,13 +28,11 @@ const createArticle = async (req, res) => {
         const parsedBlocks = JSON.parse(blocks);
         const files = req.files || [];
         let mainImageUrl = "";
-        let mainImageKey = "";
         const mainImageFile = files?.find?.((file) => file.fieldname === "mainImage");
         if (mainImageFile) {
-            // ✅ CHANGED: Using S3 instead of Cloudinary
-            const { url, key } = await (0, s3Upload_1.uploadToS3)(mainImageFile, "articles/main-images");
+            // ✅ Upload to S3
+            const { url } = await (0, s3Upload_1.uploadToS3)(mainImageFile, "articles/main-images");
             mainImageUrl = url;
-            mainImageKey = key;
         }
         const processedBlocks = await Promise.all(parsedBlocks.map(async (block, index) => {
             if (block.type === "IMAGE") {
@@ -42,22 +40,24 @@ const createArticle = async (req, res) => {
                 if (!blockImageFile) {
                     return block;
                 }
-                // ✅ CHANGED: Using S3 instead of Cloudinary
+                // ✅ Upload to S3
                 const { url, key } = await (0, s3Upload_1.uploadToS3)(blockImageFile, "articles/content-blocks");
                 return {
                     type: block.type,
                     content: {
                         url,
-                        key, // S3 key instead of publicId
+                        key, // Store S3 key inside content JSON only
                         alt: block.content?.alt || "",
                         caption: block.content?.caption || "",
                     },
                     order: index,
+                    // ✅ REMOVED: publicId field (not using it)
                 };
             }
             return {
                 ...block,
                 order: index,
+                // ✅ REMOVED: publicId field (not using it)
             };
         }));
         const article = await __1.default.article.create({
@@ -69,7 +69,6 @@ const createArticle = async (req, res) => {
                 published: published === "true",
                 publishedAt: published === "true" ? new Date() : null,
                 mainImageUrl,
-                mainImagePublicId: mainImageKey, // Store S3 key in existing field
                 blocks: {
                     create: processedBlocks,
                 },

@@ -28,20 +28,15 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
     const files = (req.files as Express.Multer.File[]) || [];
 
     let mainImageUrl = "";
-    let mainImageKey = "";
 
     const mainImageFile = files?.find?.(
       (file) => file.fieldname === "mainImage"
     );
 
     if (mainImageFile) {
-      // ✅ CHANGED: Using S3 instead of Cloudinary
-      const { url, key } = await uploadToS3(
-        mainImageFile,
-        "articles/main-images"
-      );
+      // ✅ Upload to S3
+      const { url } = await uploadToS3(mainImageFile, "articles/main-images");
       mainImageUrl = url;
-      mainImageKey = key;
     }
 
     const processedBlocks: any = await Promise.all(
@@ -54,7 +49,7 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
             return block;
           }
 
-          // ✅ CHANGED: Using S3 instead of Cloudinary
+          // ✅ Upload to S3
           const { url, key } = await uploadToS3(
             blockImageFile,
             "articles/content-blocks"
@@ -64,17 +59,19 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
             type: block.type,
             content: {
               url,
-              key, // S3 key instead of publicId
+              key, // Store S3 key inside content JSON only
               alt: block.content?.alt || "",
               caption: block.content?.caption || "",
             },
             order: index,
+            // ✅ REMOVED: publicId field (not using it)
           };
         }
 
         return {
           ...block,
           order: index,
+          // ✅ REMOVED: publicId field (not using it)
         };
       })
     );
@@ -88,7 +85,6 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
         published: published === "true",
         publishedAt: published === "true" ? new Date() : null,
         mainImageUrl,
-        mainImagePublicId: mainImageKey, // Store S3 key in existing field
         blocks: {
           create: processedBlocks,
         },
