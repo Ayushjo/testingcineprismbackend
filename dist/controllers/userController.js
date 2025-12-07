@@ -8,7 +8,6 @@ const __1 = __importDefault(require(".."));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const commentHelpers_1 = require("../helpers/commentHelpers");
-const redis_1 = require("../config/redis");
 dotenv_1.default.config();
 const fetchUser = async (req, res) => {
     try {
@@ -412,23 +411,6 @@ const fetchSinglePost = async (req, res) => {
     try {
         const postId = req.params.id;
         const userId = req.user?.id;
-        const cacheKey = `post:${postId}`;
-        const cachedPost = await (0, redis_1.getFromCache)(cacheKey);
-        // ✅ Fixed: Check if cache exists before parsing
-        if (cachedPost) {
-            const parsedPost = JSON.parse(cachedPost);
-            // Increment view count
-            await __1.default.post.update({
-                where: { id: postId },
-                data: {
-                    viewCount: parsedPost.viewCount + 1,
-                },
-            });
-            parsedPost.viewCount += 1;
-            await (0, redis_1.setCache)(cacheKey, JSON.stringify(parsedPost), 1800);
-            return res.status(200).json({ success: true, post: parsedPost });
-        }
-        // Optimized query with selective loading for performance
         const firstPost = await __1.default.post.findFirst({
             where: { id: postId },
             include: {
@@ -502,8 +484,6 @@ const fetchSinglePost = async (req, res) => {
                 replies: [], // Replies loaded separately
             })),
         };
-        // Cache for 30 minutes
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(transformedPost), 1800);
         res.status(200).json({
             success: true,
             post: transformedPost,

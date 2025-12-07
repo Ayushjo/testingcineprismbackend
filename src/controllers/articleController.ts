@@ -3,7 +3,6 @@ import client from "..";
 import { AuthorizedRequest } from "../middlewares/extractUser";
 import getBuffer from "../config/dataUri";
 import cloudinary from "cloudinary";
-import { deleteCache, getFromCache, setCache } from "../config/redis";
 import { uploadToS3 } from "../utils/s3Upload";
 import { deleteFromS3 } from "../utils/s3Delete";
 const generateSlug = (title: string) => {
@@ -96,8 +95,6 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
       },
     });
 
-    await deleteCache("all_articles");
-
     res.status(200).json({ article });
   } catch (error: any) {
     console.log(error.message);
@@ -106,22 +103,9 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
 };
 export const getArticles = async (req: Request, res: Response) => {
   try {
-    const cacheKey = "all_articles";
-    // Try cache first
-    const cachedArticles = await getFromCache(cacheKey);
-
-    if (cachedArticles) {
-      console.log("📦 Cache HIT - returning cached posts");
-      return res.status(200).json({
-        articles: JSON.parse(cachedArticles),
-        message: "Articles fetched successfully (from cache)",
-      });
-    }
-    console.log("🔍 Cache MISS - fetching from database");
     const articles = await client.article.findMany({
       where: { published: true },
     });
-    await setCache(cacheKey, JSON.stringify(articles), 300);
     res.status(200).json({ articles });
   } catch (error: any) {
     console.log(error.message);
@@ -135,30 +119,7 @@ export const getSingleArticle = async (
 ) => {
   try {
     const { slug } = req.params;
-    const cacheKey = `article:${slug}`;
 
-    const cachedArticle = await getFromCache(cacheKey);
-    if (cachedArticle) {
-      const parsedArticle = JSON.parse(cachedArticle);
-
-      // Still increment view count for cached articles
-      if (parsedArticle.viewCount !== undefined) {
-        await client.article.update({
-          where: { id: parsedArticle.id },
-          data: {
-            viewCount: parsedArticle.viewCount + 1,
-          },
-        });
-
-        // Update the cached article's view count
-        parsedArticle.viewCount += 1;
-        await setCache(cacheKey, JSON.stringify(parsedArticle), 1800); // ✅ Fixed: was 1900
-      }
-
-      return res.status(200).json({ article: parsedArticle });
-    }
-
-    // If not in cache, fetch from database
     const article = await client.article.findFirst({
       where: { slug },
       include: {
@@ -191,9 +152,6 @@ export const getSingleArticle = async (
         },
       });
     }
-
-    // Cache the article for 30 minutes (1800 seconds)
-    await setCache(cacheKey, JSON.stringify(updatedArticle), 1800);
 
     res.status(200).json({ article: updatedArticle });
   } catch (error: any) {
@@ -436,12 +394,7 @@ export const updateArticle = async (req: AuthorizedRequest, res: Response) => {
       });
     }
 
-    // 14. Clear cache
-    await deleteCache(`article:${existingArticle.slug}`);
-    await deleteCache(`article:${slug}`);
-    await deleteCache("all_articles");
-
-    // 15. Send response
+    // 14. Send response
     res.status(200).json({
       message: "Article updated successfully",
       article: updatedArticle,

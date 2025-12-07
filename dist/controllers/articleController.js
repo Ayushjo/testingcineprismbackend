@@ -7,7 +7,6 @@ exports.searchArticles = exports.getLikeStatus = exports.toggleLike = exports.fe
 const __1 = __importDefault(require(".."));
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
-const redis_1 = require("../config/redis");
 const s3Upload_1 = require("../utils/s3Upload");
 const generateSlug = (title) => {
     return title
@@ -79,7 +78,6 @@ const createArticle = async (req, res) => {
                 },
             },
         });
-        await (0, redis_1.deleteCache)("all_articles");
         res.status(200).json({ article });
     }
     catch (error) {
@@ -90,21 +88,9 @@ const createArticle = async (req, res) => {
 exports.createArticle = createArticle;
 const getArticles = async (req, res) => {
     try {
-        const cacheKey = "all_articles";
-        // Try cache first
-        const cachedArticles = await (0, redis_1.getFromCache)(cacheKey);
-        if (cachedArticles) {
-            console.log("📦 Cache HIT - returning cached posts");
-            return res.status(200).json({
-                articles: JSON.parse(cachedArticles),
-                message: "Articles fetched successfully (from cache)",
-            });
-        }
-        console.log("🔍 Cache MISS - fetching from database");
         const articles = await __1.default.article.findMany({
             where: { published: true },
         });
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(articles), 300);
         res.status(200).json({ articles });
     }
     catch (error) {
@@ -116,25 +102,6 @@ exports.getArticles = getArticles;
 const getSingleArticle = async (req, res) => {
     try {
         const { slug } = req.params;
-        const cacheKey = `article:${slug}`;
-        const cachedArticle = await (0, redis_1.getFromCache)(cacheKey);
-        if (cachedArticle) {
-            const parsedArticle = JSON.parse(cachedArticle);
-            // Still increment view count for cached articles
-            if (parsedArticle.viewCount !== undefined) {
-                await __1.default.article.update({
-                    where: { id: parsedArticle.id },
-                    data: {
-                        viewCount: parsedArticle.viewCount + 1,
-                    },
-                });
-                // Update the cached article's view count
-                parsedArticle.viewCount += 1;
-                await (0, redis_1.setCache)(cacheKey, JSON.stringify(parsedArticle), 1800); // ✅ Fixed: was 1900
-            }
-            return res.status(200).json({ article: parsedArticle });
-        }
-        // If not in cache, fetch from database
         const article = await __1.default.article.findFirst({
             where: { slug },
             include: {
@@ -165,8 +132,6 @@ const getSingleArticle = async (req, res) => {
                 },
             });
         }
-        // Cache the article for 30 minutes (1800 seconds)
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(updatedArticle), 1800);
         res.status(200).json({ article: updatedArticle });
     }
     catch (error) {
@@ -351,11 +316,7 @@ const updateArticle = async (req, res) => {
                 console.error("Error deleting images:", error);
             });
         }
-        // 14. Clear cache
-        await (0, redis_1.deleteCache)(`article:${existingArticle.slug}`);
-        await (0, redis_1.deleteCache)(`article:${slug}`);
-        await (0, redis_1.deleteCache)("all_articles");
-        // 15. Send response
+        // 14. Send response
         res.status(200).json({
             message: "Article updated successfully",
             article: updatedArticle,

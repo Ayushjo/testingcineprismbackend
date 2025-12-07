@@ -4,7 +4,6 @@ import { Request, Response } from "express";
 import axios from "axios";
 import client from "..";
 import { ScrapedNews } from "../types/news";
-import { getFromCache, setCache, deleteCache } from "../config/redis";
 
 // NewsAPI Integration
 const fetchFromNewsAPI = async (): Promise<ScrapedNews[]> => {
@@ -260,18 +259,6 @@ const removeDuplicateArticles = (articles: ScrapedNews[]): ScrapedNews[] => {
 
 export const getTrendingNews = async (req: Request, res: Response) => {
   try {
-    const cacheKey = "trending_news";
-
-    // Try cache first
-    const cachedNews = await getFromCache(cacheKey);
-
-    if (cachedNews) {
-      console.log("📦 Cache HIT - returning cached trending news");
-      return res.status(200).json(JSON.parse(cachedNews));
-    }
-
-    console.log("🔍 Cache MISS - fetching trending news from database");
-
     const news = await client.trendingNews.findMany({
       orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
       take: 50,
@@ -301,10 +288,6 @@ export const getTrendingNews = async (req: Request, res: Response) => {
         sources: [...new Set(news.map((n) => n.sourceName))],
       },
     };
-
-    // Cache for 8 minutes
-    await setCache(cacheKey, JSON.stringify(response), 480);
-    console.log("💾 Trending news cached for 8 minutes");
 
     res.status(200).json(response);
   } catch (error: any) {
@@ -412,9 +395,6 @@ export const refreshTrendingNews = async (req: Request, res: Response) => {
     console.log(
       `Successfully refreshed ${insertedNews.length} articles in ${processingTime}ms`
     );
-    // Add this after successful database insertion
-    await deleteCache("trending_news");
-    console.log("🗑️ Cleared trending news cache");
 
     res.status(200).json({
       success: true,

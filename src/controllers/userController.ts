@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import { AuthorizedRequest } from "../middlewares/extractUser";
 import Cookies from "js-cookie";
 import { formatComment, getCommentInclude } from "../helpers/commentHelpers";
-import { getFromCache, setCache } from "../config/redis";
 dotenv.config();
 
 export const fetchUser = async (req: Request, res: Response) => {
@@ -441,28 +440,6 @@ export const fetchSinglePost = async (
     const postId = req.params.id;
     const userId = req.user?.id;
 
-    const cacheKey = `post:${postId}`;
-    const cachedPost = await getFromCache(cacheKey);
-
-    // ✅ Fixed: Check if cache exists before parsing
-    if (cachedPost) {
-      const parsedPost = JSON.parse(cachedPost);
-
-      // Increment view count
-      await client.post.update({
-        where: { id: postId },
-        data: {
-          viewCount: parsedPost.viewCount + 1,
-        },
-      });
-
-      parsedPost.viewCount += 1;
-      await setCache(cacheKey, JSON.stringify(parsedPost), 1800);
-
-      return res.status(200).json({ success: true, post: parsedPost });
-    }
-
-    // Optimized query with selective loading for performance
     const firstPost = await client.post.findFirst({
       where: { id: postId },
       include: {
@@ -544,9 +521,6 @@ export const fetchSinglePost = async (
         replies: [], // Replies loaded separately
       })),
     };
-
-    // Cache for 30 minutes
-    await setCache(cacheKey, JSON.stringify(transformedPost), 1800);
 
     res.status(200).json({
       success: true,

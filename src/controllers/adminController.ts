@@ -4,7 +4,6 @@ import getBuffer from "../config/dataUri";
 import client from "..";
 import cloudinary from "cloudinary";
 import { Multer } from "multer";
-import { getFromCache, setCache, deleteCache } from "../config/redis";
 import { uploadToS3 } from "../utils/s3Upload";
 export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
   try {
@@ -55,8 +54,6 @@ export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
       where: { id: postId },
       data: { posterImageUrl: poster.imageUrl },
     });
-
-    await deleteCache("all_posts");
 
     res.status(201).json({
       poster,
@@ -120,8 +117,6 @@ export const uploadReviewPoster = async (
       data: { reviewPosterImageUrl: poster.imageUrl },
     });
 
-    await deleteCache("all_posts");
-
     res.status(201).json({
       poster,
       message: "Review poster uploaded successfully",
@@ -161,10 +156,6 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
           language,
         },
       });
-
-      // Clear cache so next fetch gets fresh data
-      await deleteCache("all_posts");
-      console.log("🗑️ Cleared posts cache");
 
       res.status(201).json({ post, message: "Post created successfully" });
     } else {
@@ -206,8 +197,6 @@ export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
       uploadedImages.push(image);
     }
 
-    await deleteCache("all_posts");
-
     res.status(201).json({
       images: uploadedImages,
       message: `${uploadedImages.length} images uploaded successfully`,
@@ -220,22 +209,6 @@ export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchAllPost = async (req: Request, res: Response) => {
   try {
-    const cacheKey = "all_posts";
-
-    // Try cache first
-    const cachedPosts = await getFromCache(cacheKey);
-
-    if (cachedPosts) {
-      console.log("📦 Cache HIT - returning cached posts");
-      return res.status(200).json({
-        posts: JSON.parse(cachedPosts),
-        message: "Posts fetched successfully (from cache)",
-      });
-    }
-
-    console.log("🔍 Cache MISS - fetching from database");
-
-    // Get from database
     const posts = await client.post.findMany({
       include: {
         images: true,
@@ -254,10 +227,6 @@ export const fetchAllPost = async (req: Request, res: Response) => {
 
     // Sort by view count
     filteredPosts = filteredPosts.sort((a, b) =>b.createdAt.getTime() - a.createdAt.getTime());
-
-    // Cache for 5 minutes
-    await setCache(cacheKey, JSON.stringify(filteredPosts), 300);
-    console.log("💾 Data cached for 5 minutes");
 
     res.status(200).json({
       posts: filteredPosts,
@@ -296,9 +265,6 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
       },
     });
 
-    await deleteCache("top_picks");
-    console.log("🗑️ Cleared top picks cache");
-
     res.status(200).json({
       topPick,
       message: "Top pick added successfully",
@@ -311,25 +277,7 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const cacheKey = "top_picks";
-
-    const cachedTopPicks = await getFromCache(cacheKey);
-
-    if (cachedTopPicks) {
-      console.log("📦 Cache HIT - returning cached top picks");
-      return res.status(200).json({
-        topPicks: JSON.parse(cachedTopPicks),
-        message: "Top picks fetched successfully (from cache)",
-      });
-    }
-
-    console.log("🔍 Cache MISS - fetching from database");
-
     const topPicks = await client.topPicks.findMany({});
-
-    // Cache for 10 minutes
-    await setCache(cacheKey, JSON.stringify(topPicks), 600);
-    console.log("💾 Top picks cached for 10 minutes");
 
     res.status(200).json({
       topPicks,
@@ -384,7 +332,6 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
             language,
           },
         });
-        await deleteCache("all_posts");
         return res.status(200).json({ message: "Post updated successfully" });
       }
     }
@@ -412,7 +359,6 @@ export const deletePost = async (req: AuthorizedRequest, res: Response) => {
             id: postId,
           },
         });
-        await deleteCache("all_posts");
         return res.status(200).json({ message: "Post deleted successfully" });
       }
     }
@@ -439,7 +385,6 @@ export const deleteImage = async (req: AuthorizedRequest, res: Response) => {
             id: imageId,
           },
         });
-        await deleteCache("all_posts");
         return res.status(200).json({ message: "Image deleted successfully" });
       }
     }
@@ -472,19 +417,6 @@ export const hasLiked = async (req: AuthorizedRequest, res: Response) => {
 
 export const latestReviews = async (req: Request, res: Response) => {
   try {
-    const cacheKey = "latest_reviews";
-
-    const cachedTopPicks = await getFromCache(cacheKey);
-
-    if (cachedTopPicks) {
-      console.log("📦 Cache HIT - returning cached top picks");
-      return res.status(200).json({
-        latestReviews: JSON.parse(cachedTopPicks),
-        message: "Latest reviews fetched successfully (from cache)",
-      });
-    }
-
-    console.log("🔍 Cache MISS - fetching from database");
     const latestReviews = await client.post.findMany({
       orderBy: {
         createdAt: "desc",
@@ -492,9 +424,6 @@ export const latestReviews = async (req: Request, res: Response) => {
       take: 7,
     });
 
-    if (latestReviews && latestReviews.length > 0) {
-      await setCache(cacheKey, JSON.stringify(latestReviews), 600);
-    }
     res.status(200).json({
       latestReviews,
       message: "Latest reviews fetched successfully",
