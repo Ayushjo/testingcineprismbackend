@@ -183,7 +183,10 @@ app.use((req, res, next) => {
 
   next();
 });
+
 app.use(cookieParser());
+import newsletterWebhookRoutes from "./routes/newsletterWebhookRoutes.js";
+app.use("/api/v1/webhooks", newsletterWebhookRoutes);
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
@@ -215,6 +218,14 @@ app.use("/",htmlRoutes)
 
 import articleRoutes from "./routes/articleRoutes.js"
 app.use("/api/v1/articles",articleRoutes)
+
+import newsletterRoutes from "./routes/newsletterRoutes.js";
+app.use("/api/v1/newsletter", newsletterRoutes);
+
+
+
+import "./queues/emailWorker.js";
+
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
 });
