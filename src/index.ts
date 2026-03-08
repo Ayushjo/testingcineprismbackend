@@ -115,6 +115,7 @@ app.use(
         "capacitor://localhost",
         "ionic://localhost",
         "http://localhost",
+        "http://localhost:5174",
       ];
 
       console.log("Allowed origins:", allowedOrigins);
