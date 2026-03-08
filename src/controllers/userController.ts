@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import { AuthorizedRequest } from "../middlewares/extractUser";
 import Cookies from "js-cookie";
 import { formatComment, getCommentInclude } from "../helpers/commentHelpers";
-import { getFromCache, setCache } from "../config/redis";
 dotenv.config();
 
 export const fetchUser = async (req: Request, res: Response) => {
@@ -441,22 +440,6 @@ export const fetchSinglePost = async (
     const postId = req.params.id;
     const userId = req.user?.id;
 
-    const cacheKey = `post:${postId}`;
-    const posts: any = await getFromCache(cacheKey);
-    const parsedPosts = JSON.parse(posts);
-    if (parsedPosts) {
-      await client.post.update({
-        where: { id: postId },
-        data: {
-          viewCount: parsedPosts.viewCount + 1,
-        },
-      });
-      parsedPosts.viewCount += 1;
-      await setCache(cacheKey, JSON.stringify(parsedPosts), 300);
-      res.status(200).json({ success: true, post: parsedPosts });
-    }
-
-    // Optimized query with selective loading for performance
     const firstPost = await client.post.findFirst({
       where: { id: postId },
       include: {
@@ -506,6 +489,8 @@ export const fetchSinglePost = async (
         message: "Post not found",
       });
     }
+
+    // Increment view count
     await client.post.update({
       where: { id: postId },
       data: {
@@ -515,6 +500,7 @@ export const fetchSinglePost = async (
 
     const post = firstPost;
     post.viewCount += 1;
+
     // Filter out poster images from the images array
     const filteredImages = post.images.filter(
       (image) =>
@@ -535,7 +521,6 @@ export const fetchSinglePost = async (
         replies: [], // Replies loaded separately
       })),
     };
-    await setCache(cacheKey, JSON.stringify(transformedPost), 3600);
 
     res.status(200).json({
       success: true,
@@ -578,12 +563,6 @@ export const fetchRelatedPosts = async (
           id: { in: currentPost.relatedPostIds },
           NOT: { id: postId },
         },
-        select: {
-          id: true,
-          title: true,
-          posterImageUrl: true,
-          year: true,
-        },
         take: 3,
       });
     }
@@ -598,12 +577,6 @@ export const fetchRelatedPosts = async (
               in: [...relatedPosts.map((p: any) => p.id), postId],
             },
           },
-        },
-        select: {
-          id: true,
-          title: true,
-          posterImageUrl: true,
-          year: true,
         },
         take: 3 - relatedPosts.length,
         orderBy: { createdAt: "desc" },

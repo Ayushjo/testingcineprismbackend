@@ -8,7 +8,6 @@ const __1 = __importDefault(require(".."));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const commentHelpers_1 = require("../helpers/commentHelpers");
-const redis_1 = require("../config/redis");
 dotenv_1.default.config();
 const fetchUser = async (req, res) => {
     try {
@@ -412,21 +411,6 @@ const fetchSinglePost = async (req, res) => {
     try {
         const postId = req.params.id;
         const userId = req.user?.id;
-        const cacheKey = `post:${postId}`;
-        const posts = await (0, redis_1.getFromCache)(cacheKey);
-        const parsedPosts = JSON.parse(posts);
-        if (parsedPosts) {
-            await __1.default.post.update({
-                where: { id: postId },
-                data: {
-                    viewCount: parsedPosts.viewCount + 1,
-                },
-            });
-            parsedPosts.viewCount += 1;
-            await (0, redis_1.setCache)(cacheKey, JSON.stringify(parsedPosts), 300);
-            res.status(200).json({ success: true, post: parsedPosts });
-        }
-        // Optimized query with selective loading for performance
         const firstPost = await __1.default.post.findFirst({
             where: { id: postId },
             include: {
@@ -475,6 +459,7 @@ const fetchSinglePost = async (req, res) => {
                 message: "Post not found",
             });
         }
+        // Increment view count
         await __1.default.post.update({
             where: { id: postId },
             data: {
@@ -499,7 +484,6 @@ const fetchSinglePost = async (req, res) => {
                 replies: [], // Replies loaded separately
             })),
         };
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(transformedPost), 3600);
         res.status(200).json({
             success: true,
             post: transformedPost,
@@ -535,12 +519,6 @@ const fetchRelatedPosts = async (req, res) => {
                     id: { in: currentPost.relatedPostIds },
                     NOT: { id: postId },
                 },
-                select: {
-                    id: true,
-                    title: true,
-                    posterImageUrl: true,
-                    year: true,
-                },
                 take: 3,
             });
         }
@@ -554,12 +532,6 @@ const fetchRelatedPosts = async (req, res) => {
                             in: [...relatedPosts.map((p) => p.id), postId],
                         },
                     },
-                },
-                select: {
-                    id: true,
-                    title: true,
-                    posterImageUrl: true,
-                    year: true,
                 },
                 take: 3 - relatedPosts.length,
                 orderBy: { createdAt: "desc" },

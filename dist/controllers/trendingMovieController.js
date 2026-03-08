@@ -6,18 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.editTrendingMoviesRank = exports.getMovieById = exports.getRefreshStatus = exports.refreshTrendingMovies = exports.getTrendingMovies = void 0;
 const __1 = __importDefault(require(".."));
 const axios_1 = __importDefault(require("axios"));
-const redis_1 = require("../config/redis");
 // Get all trending movies (for frontend consumption)
 const getTrendingMovies = async (req, res) => {
     try {
-        const cacheKey = "trending_movies";
-        // Try cache first
-        const cachedMovies = await (0, redis_1.getFromCache)(cacheKey);
-        if (cachedMovies) {
-            console.log("📦 Cache HIT - returning cached trending movies");
-            return res.status(200).json(JSON.parse(cachedMovies));
-        }
-        console.log("🔍 Cache MISS - fetching trending movies from database");
         const movies = await __1.default.trendingMovie.findMany({
             orderBy: { trendingRank: "asc" },
             take: 20,
@@ -43,9 +34,6 @@ const getTrendingMovies = async (req, res) => {
             count: formattedMovies.length,
             last_updated: movies[0]?.lastUpdated || null,
         };
-        // Cache for 10 minutes
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(response), 600);
-        console.log("💾 Trending movies cached for 10 minutes");
         res.status(200).json(response);
     }
     catch (error) {
@@ -114,9 +102,6 @@ const refreshTrendingMovies = async (req, res) => {
             },
         });
         console.log(`✅ Successfully refreshed ${insertedMovies.length} trending movies in ${processingTime}ms`);
-        // Add this after successful database insertion
-        await (0, redis_1.deleteCache)("trending_movies");
-        console.log("🗑️ Cleared trending movies cache");
         res.status(200).json({
             success: true,
             message: "Trending movies refreshed successfully",
@@ -314,9 +299,6 @@ const editTrendingMoviesRank = async (req, res) => {
                 data: { trendingRank: movie.trendingRank },
             });
         }
-        // Add this after the rank update loop
-        await (0, redis_1.deleteCache)("trending_movies");
-        console.log("🗑️ Cleared trending movies cache after rank update");
         res.status(200).json({
             success: true,
             message: "Movie rank updated successfully",

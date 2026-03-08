@@ -23,6 +23,7 @@ model User{
   opinions UnpopularOpinion[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  newsletterSubscriber NewsletterSubscriber?
 }
 
 enum Role {
@@ -77,6 +78,20 @@ model byGenres{
   updatedAt DateTime @updatedAt
 }
 
+
+model IndieMovies{
+  id String @id @default(uuid())
+  genres String[]
+  title String
+  year Int
+  posterImageUrl String
+  directedBy String
+  streamingAt String
+  synopsis String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Article{
   id String @id @default(uuid())
   title String
@@ -87,6 +102,7 @@ model Article{
   published Boolean @default(true)
   publishedAt DateTime?
   viewCount Int @default(0)
+  mainImagePublicId String?
   images ArticleImage[]
   comments Comment[]
   likes Like[]
@@ -101,6 +117,7 @@ model ContentBlock{
   type BlockType
   content Json
   order Int
+  publicId String?
 
   article Article @relation(fields: [articleId], references: [id],onDelete: Cascade)
   
@@ -297,4 +314,285 @@ model ContentRefreshLog {
   @@index([lastSuccessfulRefresh])
   @@index([status])
   @@map("content_refresh_log")
+}
+
+
+//Newsletter
+
+
+
+// ─── ENUMS ───────────────────────────────────────────────
+
+enum NewsletterType {
+  BOLLYWOOD
+  HOLLYWOOD
+}
+
+enum PaymentProvider {
+  STRIPE
+  RAZORPAY
+}
+
+enum SubscriberStatus {
+  PENDING        // signed up, payment not completed yet
+  ACTIVE         // paying, receiving emails
+  PAST_DUE       // payment failed, in retry window
+  CANCELED       // fully canceled, no access
+  UNSUBSCRIBED   // opted out of emails manually
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+enum InvoiceStatus {
+  PAID
+  OPEN
+  FAILED
+  VOID
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+}
+
+enum EmailLogStatus {
+  QUEUED
+  SENT
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED   // SES complaint — critical to track
+  FAILED
+}
+
+// ─── NEWSLETTER PLAN ─────────────────────────────────────
+
+// One row per plan. You'll have at least:
+// - Bollywood Monthly, Bollywood Yearly
+// - Hollywood Monthly, Hollywood Yearly
+// Pricing is DB-driven so you can change it without redeploying
+
+model NewsletterPlan {
+  id                String          @id @default(uuid())
+  name              String          // e.g. "Bollywood Weekly"
+  description       String?
+  type              NewsletterType
+  billingInterval   BillingInterval
+  amount            Decimal         @db.Decimal(10, 2)
+  currency          String          @default("inr") // inr for Razorpay, usd for Stripe
+  isActive          Boolean         @default(true)  // set false to retire a plan
+
+  // Provider-side plan/price IDs
+  // These are created on Stripe/Razorpay dashboards and stored here
+  stripePriceId     String?         // Stripe Price ID e.g. price_xxxxx
+  razorpayPlanId    String?         // Razorpay Plan ID e.g. plan_xxxxx
+
+  subscriptions     NewsletterSubscription[]
+  campaigns         NewsletterCampaign[]
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+// ─── NEWSLETTER SUBSCRIBER ───────────────────────────────
+
+// Core identity table. One row per email address.
+// userId is optional — someone can subscribe without a Google account
+
+model NewsletterSubscriber {
+  id                String             @id @default(uuid())
+  email             String             @unique
+  name              String?
+
+  // Optional link to your existing User model
+  userId            String?            @unique
+  user              User?              @relation(fields: [userId], references: [id])
+
+  status            SubscriberStatus   @default(PENDING)
+
+  // Country detected from IP during signup
+  // Used to route to Stripe (international) or Razorpay (India)
+  country           String?            // e.g. "IN", "US"
+  provider          PaymentProvider?   // set once they complete payment
+
+  // Unsubscribe — unique token, no auth needed
+  // Link format: /unsubscribe?token=xxxx
+  unsubscribeToken  String             @unique @default(uuid())
+  unsubscribedAt    DateTime?
+
+  // Email verification for non-OAuth subscribers
+  confirmToken      String?
+  confirmedAt       DateTime?
+
+  subscriptions     NewsletterSubscription[]
+  emailLogs         NewsletterEmailLog[]
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+// ─── NEWSLETTER SUBSCRIPTION ─────────────────────────────
+
+// One row per subscriber per plan.
+// A subscriber who wants both Bollywood + Hollywood gets two rows here.
+
+model NewsletterSubscription {
+  id                    String           @id @default(uuid())
+
+  subscriberId          String
+  subscriber            NewsletterSubscriber @relation(fields: [subscriberId], references: [id])
+
+  planId                String
+  plan                  NewsletterPlan   @relation(fields: [planId], references: [id])
+
+  provider              PaymentProvider
+  status                PaymentStatus    @default(ACTIVE)
+
+  // ── Stripe fields (populated if provider = STRIPE) ──
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?          @unique
+  stripePaymentMethodId String?          // saved card
+
+  // ── Razorpay fields (populated if provider = RAZORPAY) ──
+  razorpayCustomerId    String?
+  razorpaySubscriptionId String?         @unique
+  razorpayMandateId     String?          // UPI Autopay mandate ID — separate from subscription
+  razorpayPaymentMethodType String?      // "upi" | "card" | "emandate"
+
+  // Billing period
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+
+  // Cancellation
+  cancelAtPeriodEnd     Boolean          @default(false)
+  canceledAt            DateTime?
+
+  // Failed payment tracking
+  retryCount            Int              @default(0)  // increments on each failed charge
+  lastPaymentError      String?          // last error message from provider
+
+  payments              NewsletterPayment[]
+
+  // Ensure one subscription per subscriber per plan
+  @@unique([subscriberId, planId])
+
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+}
+
+// ─── NEWSLETTER PAYMENT ──────────────────────────────────
+
+// Ledger of every charge attempt, success or failure.
+// Never delete rows from here.
+
+model NewsletterPayment {
+  id                String           @id @default(uuid())
+
+  subscriptionId    String
+  subscription      NewsletterSubscription @relation(fields: [subscriptionId], references: [id])
+
+  provider          PaymentProvider
+  status            InvoiceStatus
+
+  amount            Decimal          @db.Decimal(10, 2)
+  currency          String
+
+  // Provider-side invoice/payment IDs
+  stripeInvoiceId   String?          @unique
+  stripePaymentIntentId String?
+
+  razorpayPaymentId String?          @unique  // e.g. pay_xxxxx
+  razorpayInvoiceId String?          // e.g. inv_xxxxx if using Razorpay invoices
+
+  paidAt            DateTime?
+  failureReason     String?          // populated on failed payments
+
+  createdAt         DateTime         @default(now())
+}
+
+// ─── NEWSLETTER CAMPAIGN ─────────────────────────────────
+
+// Each issue/edition you send out.
+// Linked to a plan — Bollywood campaign only goes to Bollywood subscribers.
+
+model NewsletterCampaign {
+  id              String           @id @default(uuid())
+
+  planId          String
+  plan            NewsletterPlan   @relation(fields: [planId], references: [id])
+
+  subject         String
+  previewText     String?          // the snippet shown in email clients before opening
+
+  // The actual newsletter content — stored as JSON
+  // Maps to your HTML template sections:
+  // { spotlight: {...}, releases: [...], editorial: {...}, hiddenGem: {...}, etc. }
+  content         Json
+
+  status          CampaignStatus   @default(DRAFT)
+  scheduledAt     DateTime?        // when to send, null = send immediately
+  sentAt          DateTime?        // populated once sending completes
+
+  // Stats — denormalized for quick admin dashboard reads
+  totalRecipients Int              @default(0)
+  totalSent       Int              @default(0)
+  totalOpened     Int              @default(0)
+  totalClicked    Int              @default(0)
+  totalBounced    Int              @default(0)
+
+  emailLogs       NewsletterEmailLog[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+// ─── NEWSLETTER EMAIL LOG ────────────────────────────────
+
+// One row per email per campaign per subscriber.
+// Critical for SES compliance — bounces and complaints must be tracked
+// or AWS will suspend your sending.
+
+model NewsletterEmailLog {
+  id              String           @id @default(uuid())
+
+  subscriberId    String
+  subscriber      NewsletterSubscriber @relation(fields: [subscriberId], references: [id])
+
+  campaignId      String
+  campaign        NewsletterCampaign @relation(fields: [campaignId], references: [id])
+
+  // SES Message ID — returned when you call SES SendEmail
+  // Used to match SNS bounce/complaint notifications back to this row
+  sesMessageId    String?          @unique
+
+  status          EmailLogStatus   @default(QUEUED)
+
+  sentAt          DateTime?
+  openedAt        DateTime?        // requires SES open tracking pixel
+  clickedAt       DateTime?        // requires SES click tracking
+  bouncedAt       DateTime?
+  complainedAt    DateTime?        // user hit spam — remove from all future sends immediately
+
+  // Bounce details from SNS notification
+  bounceType      String?          // "Permanent" | "Transient"
+  bounceSubType   String?          // "NoEmail" | "Suppressed" | "MailboxFull" etc.
+
+  createdAt       DateTime         @default(now())
+
+  @@index([subscriberId])
+  @@index([campaignId])
+  @@index([sesMessageId])
+  @@index([status])
 }

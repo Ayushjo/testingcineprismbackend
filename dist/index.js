@@ -80,7 +80,8 @@ app.use((0, cors_1.default)({
         console.log("Origin is undefined:", origin === undefined);
         console.log("Origin is null:", origin === null);
         const allowedOrigins = [
-            "https://testingcineprism.vercel.app",
+            "https://thecineprism.com",
+            "https://www.thecineprism.com",
             "http://localhost:3000",
             "http://localhost:5173",
             // Add capacitor/ionic origins if using mobile app

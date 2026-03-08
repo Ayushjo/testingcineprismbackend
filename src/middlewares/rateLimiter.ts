@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthorizedRequest } from "./extractUser";
 
-// Simple in-memory rate limiter (for production, use Redis)
+// Simple in-memory rate limiter
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 const createRateLimiter = (maxRequests: number, windowMs: number) => {

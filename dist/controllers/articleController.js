@@ -3,11 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchArticles = exports.getLikeStatus = exports.toggleLike = exports.fetchCommentThread = exports.fetchReplies = exports.fetchComments = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.getSingleArticle = exports.getArticles = exports.createArticle = void 0;
+exports.searchArticles = exports.getLikeStatus = exports.toggleLike = exports.fetchCommentThread = exports.fetchReplies = exports.fetchComments = exports.deleteComment = exports.updateComment = exports.createReply = exports.createComment = exports.updateArticle = exports.getSingleArticle = exports.getArticles = exports.createArticle = void 0;
 const __1 = __importDefault(require(".."));
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
-const redis_1 = require("../config/redis");
+const s3Upload_1 = require("../utils/s3Upload");
 const generateSlug = (title) => {
     return title
         .toLowerCase() // "Top 25..." → "top 25..."
@@ -25,53 +25,39 @@ const createArticle = async (req, res) => {
         const { title, shortDescription, author, published, blocks } = req.body;
         const slug = generateSlug(title);
         const parsedBlocks = JSON.parse(blocks);
-        // Fix: Add safety check for files
         const files = req.files || [];
         let mainImageUrl = "";
-        // Fix: Use optional chaining
         const mainImageFile = files?.find?.((file) => file.fieldname === "mainImage");
         if (mainImageFile) {
-            const fileBuffer = (0, dataUri_1.default)(mainImageFile);
-            if (!fileBuffer || !fileBuffer.content) {
-                return res.status(500).json({
-                    message: "Was not able to convert the file from buffer to base64.",
-                });
-            }
-            const cloud = await cloudinary_1.default.v2.uploader.upload(fileBuffer.content, {
-                folder: "articles",
-            });
-            if (!cloud) {
-                return res
-                    .status(500)
-                    .json({ message: "An error occurred while uploading to cloudinary" });
-            }
-            mainImageUrl = cloud.url;
+            // ✅ Upload to S3
+            const { url } = await (0, s3Upload_1.uploadToS3)(mainImageFile, "articles/main-images");
+            mainImageUrl = url;
         }
         const processedBlocks = await Promise.all(parsedBlocks.map(async (block, index) => {
             if (block.type === "IMAGE") {
-                // Fix: Use optional chaining and safe find
                 const blockImageFile = files?.find?.((file) => file.fieldname === `blockImage_${index}`);
                 if (!blockImageFile) {
                     return block;
                 }
-                const fileBuffer = (0, dataUri_1.default)(blockImageFile);
-                if (!fileBuffer || !fileBuffer.content) {
-                    throw new Error("Was not able to convert the file from buffer to base64.");
-                }
-                const cloud = await cloudinary_1.default.v2.uploader.upload(fileBuffer.content, { folder: "articles" });
-                if (!cloud) {
-                    throw new Error("An error occurred while uploading to cloudinary");
-                }
+                // ✅ Upload to S3
+                const { url, key } = await (0, s3Upload_1.uploadToS3)(blockImageFile, "articles/content-blocks");
                 return {
-                    ...block,
+                    type: block.type,
                     content: {
-                        ...block.content,
-                        url: cloud.url,
-                        publicId: cloud.public_id,
+                        url,
+                        key, // Store S3 key inside content JSON only
+                        alt: block.content?.alt || "",
+                        caption: block.content?.caption || "",
                     },
+                    order: index,
+                    // ✅ REMOVED: publicId field (not using it)
                 };
             }
-            return block;
+            return {
+                ...block,
+                order: index,
+                // ✅ REMOVED: publicId field (not using it)
+            };
         }));
         const article = await __1.default.article.create({
             data: {
@@ -83,11 +69,7 @@ const createArticle = async (req, res) => {
                 publishedAt: published === "true" ? new Date() : null,
                 mainImageUrl,
                 blocks: {
-                    create: processedBlocks.map((block, index) => ({
-                        type: block.type,
-                        content: block.content,
-                        order: index,
-                    })),
+                    create: processedBlocks,
                 },
             },
             include: {
@@ -96,7 +78,6 @@ const createArticle = async (req, res) => {
                 },
             },
         });
-        await (0, redis_1.deleteCache)("all_articles");
         res.status(200).json({ article });
     }
     catch (error) {
@@ -107,19 +88,9 @@ const createArticle = async (req, res) => {
 exports.createArticle = createArticle;
 const getArticles = async (req, res) => {
     try {
-        const cacheKey = "all_articles";
-        // Try cache first
-        const cachedArticles = await (0, redis_1.getFromCache)(cacheKey);
-        if (cachedArticles) {
-            console.log("📦 Cache HIT - returning cached posts");
-            return res.status(200).json({
-                articles: JSON.parse(cachedArticles),
-                message: "Articles fetched successfully (from cache)",
-            });
-        }
-        console.log("🔍 Cache MISS - fetching from database");
-        const articles = await __1.default.article.findMany();
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(articles), 300);
+        const articles = await __1.default.article.findMany({
+            where: { published: true },
+        });
         res.status(200).json({ articles });
     }
     catch (error) {
@@ -131,25 +102,6 @@ exports.getArticles = getArticles;
 const getSingleArticle = async (req, res) => {
     try {
         const { slug } = req.params;
-        const cacheKey = `article:${slug}`;
-        const cachedArticle = await (0, redis_1.getFromCache)(cacheKey);
-        if (cachedArticle) {
-            const parsedArticle = JSON.parse(cachedArticle);
-            // Still increment view count for cached articles
-            if (parsedArticle.viewCount !== undefined) {
-                await __1.default.article.update({
-                    where: { id: parsedArticle.id },
-                    data: {
-                        viewCount: parsedArticle.viewCount + 1,
-                    },
-                });
-                // Update the cached article's view count
-                parsedArticle.viewCount += 1;
-                await (0, redis_1.setCache)(cacheKey, JSON.stringify(parsedArticle), 300); // 5 minutes
-            }
-            return res.status(200).json({ article: parsedArticle });
-        }
-        // If not in cache, fetch from database
         const article = await __1.default.article.findFirst({
             where: { slug },
             include: {
@@ -180,8 +132,6 @@ const getSingleArticle = async (req, res) => {
                 },
             });
         }
-        // Cache the article for 5 minutes (300 seconds)
-        await (0, redis_1.setCache)(cacheKey, JSON.stringify(updatedArticle), 300);
         res.status(200).json({ article: updatedArticle });
     }
     catch (error) {
@@ -190,6 +140,209 @@ const getSingleArticle = async (req, res) => {
     }
 };
 exports.getSingleArticle = getSingleArticle;
+const updateArticle = async (req, res) => {
+    try {
+        const user = req.user;
+        // 1. Authorization check
+        if (user.role === "USER") {
+            return res.status(403).json({ message: "You are not authorized" });
+        }
+        // 2. Extract data from request
+        const { articleId } = req.params;
+        const { title, shortDescription, author, published, blocks, keepImagePublicIds, keepMainImage, } = req.body;
+        // 3. Validate article exists
+        const existingArticle = await __1.default.article.findUnique({
+            where: { id: articleId },
+            include: {
+                blocks: {
+                    orderBy: { order: "asc" },
+                },
+            },
+        });
+        if (!existingArticle) {
+            return res.status(404).json({ message: "Article not found" });
+        }
+        // 4. Parse JSON strings
+        const parsedBlocks = JSON.parse(blocks);
+        const keepImagePublicIdsArray = keepImagePublicIds
+            ? JSON.parse(keepImagePublicIds)
+            : [];
+        // 5. Handle file uploads safely
+        const files = req.files || [];
+        // 6. Collect current image publicIds for cleanup
+        // UPDATED: Use the new field first, fallback to extracting from URL
+        const currentMainImagePublicId = existingArticle.mainImagePublicId ||
+            extractPublicIdFromUrl(existingArticle.mainImageUrl);
+        // UPDATED: Use the new publicId field first, fallback to content
+        const currentBlockImagePublicIds = existingArticle.blocks
+            .filter((block) => block.type === "IMAGE")
+            .map((block) => block.publicId || block.content?.publicId)
+            .filter(Boolean); // Remove nulls
+        // 7. Track images to delete
+        let imagesToDelete = [];
+        // 8. Process main image
+        let mainImageUrl = existingArticle.mainImageUrl;
+        let mainImagePublicId = existingArticle.mainImagePublicId; // NEW: Track publicId
+        if (keepMainImage === "false" || !keepMainImage) {
+            const mainImageFile = files?.find?.((file) => file.fieldname === "mainImage");
+            if (mainImageFile) {
+                const fileBuffer = (0, dataUri_1.default)(mainImageFile);
+                if (!fileBuffer || !fileBuffer.content) {
+                    return res.status(500).json({
+                        message: "Failed to process main image file.",
+                    });
+                }
+                const cloud = await cloudinary_1.default.v2.uploader.upload(fileBuffer.content, {
+                    folder: "articles",
+                });
+                if (!cloud) {
+                    return res.status(500).json({
+                        message: "Failed to upload main image to cloudinary",
+                    });
+                }
+                mainImageUrl = cloud.url;
+                mainImagePublicId = cloud.public_id; // NEW: Save publicId
+                // Mark old main image for deletion
+                if (currentMainImagePublicId) {
+                    imagesToDelete.push(currentMainImagePublicId);
+                }
+            }
+        }
+        // 9. Process blocks and upload new block images
+        const processedBlocks = await Promise.all(parsedBlocks.map(async (block, index) => {
+            if (block.type === "IMAGE") {
+                const blockImageFile = files?.find?.((file) => file.fieldname === `blockImage_${index}`);
+                if (blockImageFile) {
+                    // NEW IMAGE UPLOAD
+                    const fileBuffer = (0, dataUri_1.default)(blockImageFile);
+                    if (!fileBuffer || !fileBuffer.content) {
+                        throw new Error(`Failed to process image file for block ${index}.`);
+                    }
+                    const cloud = await cloudinary_1.default.v2.uploader.upload(fileBuffer.content, { folder: "articles" });
+                    if (!cloud) {
+                        throw new Error(`Failed to upload image for block ${index} to cloudinary`);
+                    }
+                    // If this block had an old image, mark it for deletion
+                    if (block.content?.publicId &&
+                        block.content.keepExisting === false) {
+                        imagesToDelete.push(block.content.publicId);
+                    }
+                    // UPDATED: Return with publicId at top level
+                    return {
+                        type: block.type,
+                        content: {
+                            url: cloud.url,
+                            publicId: cloud.public_id,
+                            alt: block.content.alt || "",
+                            caption: block.content.caption || "",
+                        },
+                        publicId: cloud.public_id, // NEW: Add publicId field
+                        order: index,
+                    };
+                }
+                else {
+                    // KEEPING EXISTING IMAGE
+                    // UPDATED: Return with publicId at top level
+                    return {
+                        type: block.type,
+                        content: {
+                            url: block.content.url,
+                            publicId: block.content.publicId,
+                            alt: block.content.alt || "",
+                            caption: block.content.caption || "",
+                        },
+                        publicId: block.content.publicId, // NEW: Add publicId field
+                        order: index,
+                    };
+                }
+            }
+            // Non-image blocks
+            return {
+                type: block.type,
+                content: block.content,
+                publicId: null, // NEW: Null for non-image blocks
+                order: index,
+            };
+        }));
+        // 10. Determine all images to delete
+        const blockImagesToDelete = currentBlockImagePublicIds.filter((publicId) => !keepImagePublicIdsArray.includes(publicId));
+        imagesToDelete = [...imagesToDelete, ...blockImagesToDelete];
+        // 11. Generate new slug if title changed
+        const slug = title !== existingArticle.title
+            ? generateSlug(title)
+            : existingArticle.slug;
+        // 12. Update article in database with transaction
+        const updatedArticle = await __1.default.$transaction(async (prisma) => {
+            await prisma.contentBlock.deleteMany({
+                where: { articleId },
+            });
+            // UPDATED: Include mainImagePublicId in update
+            const article = await prisma.article.update({
+                where: { id: articleId },
+                data: {
+                    title,
+                    slug,
+                    shortDescription,
+                    author,
+                    published: published === "true",
+                    publishedAt: published === "true"
+                        ? existingArticle.publishedAt || new Date()
+                        : null,
+                    mainImageUrl,
+                    mainImagePublicId, // NEW: Save publicId
+                    blocks: {
+                        create: processedBlocks, // Now includes publicId field
+                    },
+                },
+                include: {
+                    blocks: {
+                        orderBy: { order: "asc" },
+                    },
+                },
+            });
+            return article;
+        });
+        // 13. Delete orphaned images from Cloudinary
+        if (imagesToDelete.length > 0) {
+            Promise.all(imagesToDelete.map(async (publicId) => {
+                try {
+                    await cloudinary_1.default.v2.uploader.destroy(publicId);
+                    console.log(`Deleted image: ${publicId}`);
+                }
+                catch (error) {
+                    console.error(`Failed to delete image ${publicId}:`, error);
+                }
+            })).catch((error) => {
+                console.error("Error deleting images:", error);
+            });
+        }
+        // 14. Send response
+        res.status(200).json({
+            message: "Article updated successfully",
+            article: updatedArticle,
+        });
+    }
+    catch (error) {
+        console.error("Update article error:", error);
+        res.status(500).json({
+            message: error.message || "Failed to update article",
+        });
+    }
+};
+exports.updateArticle = updateArticle;
+function extractPublicIdFromUrl(url) {
+    try {
+        const matches = url.match(/\/v\d+\/(.+)\.\w+$/);
+        if (matches && matches[1]) {
+            return matches[1];
+        }
+        return null;
+    }
+    catch (error) {
+        console.error("Error extracting publicId from URL:", error);
+        return null;
+    }
+}
 const createComment = async (req, res) => {
     try {
         const { articleId } = req.params;
@@ -764,13 +917,14 @@ const searchArticles = async (req, res) => {
             where: {
                 title: {
                     contains: filter,
-                    mode: "insensitive"
-                }
-            }
+                    mode: "insensitive",
+                },
+                published: true,
+            },
         });
         res.status(200).json({
             success: true,
-            articles
+            articles,
         });
     }
     catch (error) {

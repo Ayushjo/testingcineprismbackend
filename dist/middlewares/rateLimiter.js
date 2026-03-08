@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rateLimiter = void 0;
-// Simple in-memory rate limiter (for production, use Redis)
+// Simple in-memory rate limiter
 const rateLimitStore = new Map();
 const createRateLimiter = (maxRequests, windowMs) => {
     return (req, res, next) => {

@@ -4,121 +4,61 @@ import getBuffer from "../config/dataUri";
 import client from "..";
 import cloudinary from "cloudinary";
 import { Multer } from "multer";
-import { getFromCache, setCache, deleteCache } from "../config/redis";
-
+import { uploadToS3 } from "../utils/s3Upload";
 export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
   try {
     const user = req.user;
-    if (user.role === "ADMIN") {
-      const file = req.file;
-      const { postId } = req.body;
-      const existingPoster = await client.post.findFirst({
-        where: {
-          id: postId,
-        },
-      });
-      if (existingPoster?.posterImageUrl) {
-        const existingPosterImage = await client.postImage.findFirst({
-          where: {
-            imageUrl: existingPoster?.posterImageUrl,
-          },
-        });
-        await client.postImage.delete({
-          where: {
-            id: existingPosterImage?.id,
-          },
-        });
-        existingPoster.posterImageUrl = "";
-        if (!file) {
-          return res.status(400).json({ message: "No file uploaded" });
-        }
-        const fileBuffer = getBuffer(file);
-        if (!fileBuffer || !fileBuffer.content) {
-          res.status(500).json({
-            message: "Was not able to convert the file from buffer to base64.",
-          });
-        } else {
-          const cloud = await cloudinary.v2.uploader.upload(
-            fileBuffer.content,
-            {
-              folder: "posters",
-            }
-          );
-          if (!cloud) {
-            res
-              .status(500)
-              .json({ message: "An error occurred while uploading" });
-          }
-          const poster = await client.postImage.create({
-            data: {
-              imageUrl: cloud.url,
-              postId,
-            },
-          });
-          if (poster) {
-            await client.post.update({
-              where: {
-                id: postId,
-              },
-              data: {
-                posterImageUrl: poster.imageUrl,
-              },
-            });
-            await deleteCache("all_posts");
-            res
-              .status(201)
-              .json({ poster, message: "Poster uploaded successfully" });
-          } else {
-            res.status(500).json({ message: "An error occurred" });
-          }
-        }
-      } else {
-        if (!file) {
-          return res.status(400).json({ message: "No file uploaded" });
-        }
-        const fileBuffer = getBuffer(file);
-        if (!fileBuffer || !fileBuffer.content) {
-          res.status(500).json({
-            message: "Was not able to convert the file from buffer to base64.",
-          });
-        } else {
-          const cloud = await cloudinary.v2.uploader.upload(
-            fileBuffer.content,
-            {
-              folder: "posters",
-            }
-          );
-          if (!cloud) {
-            res
-              .status(500)
-              .json({ message: "An error occurred while uploading" });
-          }
-          const poster = await client.postImage.create({
-            data: {
-              imageUrl: cloud.url,
-              postId,
-            },
-          });
-          if (poster) {
-            await client.post.update({
-              where: {
-                id: postId,
-              },
-              data: {
-                posterImageUrl: poster.imageUrl,
-              },
-            });
-            res
-              .status(201)
-              .json({ poster, message: "Poster uploaded successfully" });
-          } else {
-            res.status(500).json({ message: "An error occurred" });
-          }
-        }
-      }
-    } else {
-      res.status(401).json({ message: "You are not an admin" });
+    if (user.role !== "ADMIN") {
+      return res.status(401).json({ message: "You are not an admin" });
     }
+
+    const file = req.file;
+    const { postId } = req.body;
+
+    if (!file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const existingPoster = await client.post.findFirst({
+      where: { id: postId },
+    });
+
+    if (!existingPoster) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Delete old poster image if exists
+    if (existingPoster.posterImageUrl) {
+      const existingPosterImage = await client.postImage.findFirst({
+        where: { imageUrl: existingPoster.posterImageUrl },
+      });
+
+      if (existingPosterImage) {
+        await client.postImage.delete({
+          where: { id: existingPosterImage.id },
+        });
+      }
+    }
+
+    // ✅ Upload to S3
+    const { url } = await uploadToS3(file, "posts/posters");
+
+    const poster = await client.postImage.create({
+      data: {
+        imageUrl: url,
+        postId,
+      },
+    });
+
+    await client.post.update({
+      where: { id: postId },
+      data: { posterImageUrl: poster.imageUrl },
+    });
+
+    res.status(201).json({
+      poster,
+      message: "Poster uploaded successfully",
+    });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -126,120 +66,61 @@ export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
 };
 export const uploadReviewPoster = async (
   req: AuthorizedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const user = req.user;
-    if (user.role === "ADMIN") {
-      const file = req.file;
-      const { postId } = req.body;
-      const existingPoster = await client.post.findFirst({
-        where: {
-          id: postId,
-        },
-      });
-      if (existingPoster?.reviewPosterImageUrl) {
-        const existingReviewPosterImage = await client.postImage.findFirst({
-          where: {
-            imageUrl: existingPoster?.reviewPosterImageUrl,
-          },
-        });
-        await client.postImage.delete({
-          where: {
-            id: existingReviewPosterImage?.id,
-          },
-        });
-        existingPoster.posterImageUrl = "";
-        if (!file) {
-          return res.status(400).json({ message: "No file uploaded" });
-        }
-        const fileBuffer = getBuffer(file);
-        if (!fileBuffer || !fileBuffer.content) {
-          res.status(500).json({
-            message: "Was not able to convert the file from buffer to base64.",
-          });
-        } else {
-          const cloud = await cloudinary.v2.uploader.upload(
-            fileBuffer.content,
-            {
-              folder: "posters",
-            }
-          );
-          if (!cloud) {
-            res
-              .status(500)
-              .json({ message: "An error occurred while uploading" });
-          }
-          const poster = await client.postImage.create({
-            data: {
-              imageUrl: cloud.url,
-              postId,
-            },
-          });
-          if (poster) {
-            await client.post.update({
-              where: {
-                id: postId,
-              },
-              data: {
-                reviewPosterImageUrl: poster.imageUrl,
-              },
-            });
-            res
-              .status(201)
-              .json({ poster, message: "Poster uploaded successfully" });
-          } else {
-            res.status(500).json({ message: "An error occurred" });
-          }
-        }
-      } else {
-        if (!file) {
-          return res.status(400).json({ message: "No file uploaded" });
-        }
-        const fileBuffer = getBuffer(file);
-        if (!fileBuffer || !fileBuffer.content) {
-          res.status(500).json({
-            message: "Was not able to convert the file from buffer to base64.",
-          });
-        } else {
-          const cloud = await cloudinary.v2.uploader.upload(
-            fileBuffer.content,
-            {
-              folder: "posters",
-            }
-          );
-          if (!cloud) {
-            res
-              .status(500)
-              .json({ message: "An error occurred while uploading" });
-          }
-          const poster = await client.postImage.create({
-            data: {
-              imageUrl: cloud.url,
-              postId,
-            },
-          });
-          if (poster) {
-            await client.post.update({
-              where: {
-                id: postId,
-              },
-              data: {
-                reviewPosterImageUrl: poster.imageUrl,
-              },
-            });
-            await deleteCache("all_posts");
-            res
-              .status(201)
-              .json({ poster, message: "Poster uploaded successfully" });
-          } else {
-            res.status(500).json({ message: "An error occurred" });
-          }
-        }
-      }
-    } else {
-      res.status(401).json({ message: "You are not an admin" });
+    if (user.role !== "ADMIN") {
+      return res.status(401).json({ message: "You are not an admin" });
     }
+
+    const file = req.file;
+    const { postId } = req.body;
+
+    if (!file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const existingPoster = await client.post.findFirst({
+      where: { id: postId },
+    });
+
+    if (!existingPoster) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Delete old review poster if exists
+    if (existingPoster.reviewPosterImageUrl) {
+      const existingReviewPosterImage = await client.postImage.findFirst({
+        where: { imageUrl: existingPoster.reviewPosterImageUrl },
+      });
+
+      if (existingReviewPosterImage) {
+        await client.postImage.delete({
+          where: { id: existingReviewPosterImage.id },
+        });
+      }
+    }
+
+    // ✅ Upload to S3
+    const { url } = await uploadToS3(file, "posts/review-posters");
+
+    const poster = await client.postImage.create({
+      data: {
+        imageUrl: url,
+        postId,
+      },
+    });
+
+    await client.post.update({
+      where: { id: postId },
+      data: { reviewPosterImageUrl: poster.imageUrl },
+    });
+
+    res.status(201).json({
+      poster,
+      message: "Review poster uploaded successfully",
+    });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -276,10 +157,6 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
         },
       });
 
-      // Clear cache so next fetch gets fresh data
-      await deleteCache("all_posts");
-      console.log("🗑️ Cleared posts cache");
-
       res.status(201).json({ post, message: "Post created successfully" });
     } else {
       res.status(401).json({ message: "You are not an admin" });
@@ -293,53 +170,37 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
 export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
   try {
     const user = req.user;
-    if (user.role === "ADMIN") {
-      const files = req.files as Express.Multer.File[];
-      const { postId } = req.body;
-
-      if (!files || files.length === 0) {
-        return res.status(400).json({ message: "No files uploaded" });
-      }
-      const uploadedImages = [];
-      for (const file of files) {
-        const fileBuffer = getBuffer(file);
-
-        if (!fileBuffer || !fileBuffer.content) {
-          return res.status(500).json({
-            message: "Was not able to convert the file from buffer to base64.",
-          });
-        }
-        const cloud = await cloudinary.v2.uploader.upload(fileBuffer.content, {
-          folder: "images",
-        });
-        if (!cloud) {
-          return res.status(500).json({
-            message: "An error occurred while uploading to cloudinary",
-          });
-        }
-        const image = await client.postImage.create({
-          data: {
-            imageUrl: cloud.url,
-            postId,
-          },
-        });
-
-        if (!image) {
-          return res.status(500).json({
-            message: "An error occurred while saving to database",
-          });
-        }
-
-        uploadedImages.push(image);
-      }
-      await deleteCache("all_posts");
-      res.status(201).json({
-        images: uploadedImages,
-        message: `${uploadedImages.length} images uploaded successfully`,
-      });
-    } else {
-      res.status(401).json({ message: "You are not an admin" });
+    if (user.role !== "ADMIN") {
+      return res.status(401).json({ message: "You are not an admin" });
     }
+
+    const files = req.files as Express.Multer.File[];
+    const { postId } = req.body;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
+    }
+
+    const uploadedImages = [];
+
+    for (const file of files) {
+      // ✅ Upload to S3
+      const { url } = await uploadToS3(file, "posts/images");
+
+      const image = await client.postImage.create({
+        data: {
+          imageUrl: url,
+          postId,
+        },
+      });
+
+      uploadedImages.push(image);
+    }
+
+    res.status(201).json({
+      images: uploadedImages,
+      message: `${uploadedImages.length} images uploaded successfully`,
+    });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -348,22 +209,6 @@ export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchAllPost = async (req: Request, res: Response) => {
   try {
-    const cacheKey = "all_posts";
-
-    // Try cache first
-    const cachedPosts = await getFromCache(cacheKey);
-
-    if (cachedPosts) {
-      console.log("📦 Cache HIT - returning cached posts");
-      return res.status(200).json({
-        posts: JSON.parse(cachedPosts),
-        message: "Posts fetched successfully (from cache)",
-      });
-    }
-
-    console.log("🔍 Cache MISS - fetching from database");
-
-    // Get from database
     const posts = await client.post.findMany({
       include: {
         images: true,
@@ -376,16 +221,14 @@ export const fetchAllPost = async (req: Request, res: Response) => {
       images: post.images.filter(
         (image) =>
           image.imageUrl !== post.reviewPosterImageUrl &&
-          image.imageUrl !== post.posterImageUrl
+          image.imageUrl !== post.posterImageUrl,
       ),
     }));
 
     // Sort by view count
-    filteredPosts = filteredPosts.sort((a, b) =>b.createdAt.getTime() - a.createdAt.getTime());
-
-    // Cache for 5 minutes
-    await setCache(cacheKey, JSON.stringify(filteredPosts), 300);
-    console.log("💾 Data cached for 5 minutes");
+    filteredPosts = filteredPosts.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
 
     res.status(200).json({
       posts: filteredPosts,
@@ -399,6 +242,11 @@ export const fetchAllPost = async (req: Request, res: Response) => {
 
 export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
+    const user = req.user;
+    if (user.role === "USER") {
+      return res.status(400).json({ message: "You are not authorized" });
+    }
+
     const { year, title, genre } = req.body;
     const file = req.file;
     const yearInt = parseInt(year);
@@ -406,31 +254,23 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
     if (!file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
-    const fileBuffer = getBuffer(file);
-    if (!fileBuffer || !fileBuffer.content) {
-      return res.status(500).json({
-        message: "Was not able to convert the file from buffer to base64.",
-      });
-    }
-    const cloud = await cloudinary.v2.uploader.upload(fileBuffer.content, {
-      folder: "posters",
-    });
-    if (!cloud) {
-      return res.status(500).json({
-        message: "An error occurred while uploading to cloudinary",
-      });
-    }
+
+    // ✅ Upload to S3
+    const { url } = await uploadToS3(file, "top-picks");
+
     const topPick = await client.topPicks.create({
       data: {
         title,
         genre,
         year: yearInt,
-        posterImageUrl: cloud.url,
+        posterImageUrl: url,
       },
     });
-    await deleteCache("top_picks");
-    console.log("🗑️ Cleared top picks cache");
-    res.status(200).json({ topPick, message: "Top pick added successfully" });
+
+    res.status(200).json({
+      topPick,
+      message: "Top pick added successfully",
+    });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -439,25 +279,7 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
-    const cacheKey = "top_picks";
-
-    const cachedTopPicks = await getFromCache(cacheKey);
-
-    if (cachedTopPicks) {
-      console.log("📦 Cache HIT - returning cached top picks");
-      return res.status(200).json({
-        topPicks: JSON.parse(cachedTopPicks),
-        message: "Top picks fetched successfully (from cache)",
-      });
-    }
-
-    console.log("🔍 Cache MISS - fetching from database");
-
     const topPicks = await client.topPicks.findMany({});
-
-    // Cache for 10 minutes
-    await setCache(cacheKey, JSON.stringify(topPicks), 600);
-    console.log("💾 Top picks cached for 10 minutes");
 
     res.status(200).json({
       topPicks,
@@ -512,7 +334,6 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
             language,
           },
         });
-        await deleteCache("all_posts");
         return res.status(200).json({ message: "Post updated successfully" });
       }
     }
@@ -540,7 +361,6 @@ export const deletePost = async (req: AuthorizedRequest, res: Response) => {
             id: postId,
           },
         });
-        await deleteCache("all_posts");
         return res.status(200).json({ message: "Post deleted successfully" });
       }
     }
@@ -567,7 +387,6 @@ export const deleteImage = async (req: AuthorizedRequest, res: Response) => {
             id: imageId,
           },
         });
-        await deleteCache("all_posts");
         return res.status(200).json({ message: "Image deleted successfully" });
       }
     }
@@ -600,19 +419,6 @@ export const hasLiked = async (req: AuthorizedRequest, res: Response) => {
 
 export const latestReviews = async (req: Request, res: Response) => {
   try {
-    const cacheKey = "latest_reviews";
-
-    const cachedTopPicks = await getFromCache(cacheKey);
-
-    if (cachedTopPicks) {
-      console.log("📦 Cache HIT - returning cached top picks");
-      return res.status(200).json({
-        latestReviews: JSON.parse(cachedTopPicks),
-        message: "Latest reviews fetched successfully (from cache)",
-      });
-    }
-
-    console.log("🔍 Cache MISS - fetching from database");
     const latestReviews = await client.post.findMany({
       orderBy: {
         createdAt: "desc",
@@ -620,9 +426,6 @@ export const latestReviews = async (req: Request, res: Response) => {
       take: 7,
     });
 
-    if (latestReviews && latestReviews.length > 0) {
-      await setCache(cacheKey, JSON.stringify(latestReviews), 600);
-    }
     res.status(200).json({
       latestReviews,
       message: "Latest reviews fetched successfully",
@@ -722,29 +525,24 @@ export const addByGenre = async (req: AuthorizedRequest, res: Response) => {
   try {
     const user = req.user;
     if (user.role === "USER") {
-      return res.status(400).json("You are not authorized");
+      return res.status(400).json({ message: "You are not authorized" });
     }
-    const { title, directedBy, synopsis } = req.body;
-    let { year } = req.body;
-    let { genre } = req.body;
-    genre = JSON.parse(genre);
 
+    const { title, directedBy, synopsis } = req.body;
+    let { year, genre } = req.body;
+
+    genre = JSON.parse(genre);
     year = parseInt(year);
+
     const file = req.file;
-    const fileBuffer = getBuffer(file);
-    if (!fileBuffer || !fileBuffer.content) {
-      return res.status(500).json({
-        message: "Was not able to convert the file from buffer to base64.",
-      });
+
+    if (!file) {
+      return res.status(400).json({ message: "No file uploaded" });
     }
-    const cloud = await cloudinary.v2.uploader.upload(fileBuffer.content, {
-      folder: "posters",
-    });
-    if (!cloud) {
-      return res.status(500).json({
-        message: "An error occurred while uploading to cloudinary",
-      });
-    }
+
+    // ✅ Upload to S3
+    const { url } = await uploadToS3(file, "by-genres");
+
     const newByGenre = await client.byGenres.create({
       data: {
         genre,
@@ -752,21 +550,20 @@ export const addByGenre = async (req: AuthorizedRequest, res: Response) => {
         directedBy,
         year,
         synopsis,
-        posterImageUrl: cloud.url,
+        posterImageUrl: url,
       },
     });
-    return res.status(200).json({
-      newByGenre,
-    });
+
+    return res.status(200).json({ newByGenre });
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
   }
 };
 
-export const fetchGenre = async(req:Request,res:Response)=>{
+export const fetchGenre = async (req: Request, res: Response) => {
   try {
-    const {genre} = req.params
+    const { genre } = req.params;
     const genrePosts = await client.byGenres.findMany({
       where: {
         genre: {
@@ -779,11 +576,97 @@ export const fetchGenre = async(req:Request,res:Response)=>{
         .status(400)
         .json({ success: false, message: "No posts found" });
     }
-    return res.status(200).json({genrePosts});
-    
-  } catch (error:any) {
+    return res.status(200).json({ genrePosts });
+  } catch (error: any) {
     console.log(error.message);
-    res.status(500).json({message:error.message});
-    
+    res.status(500).json({ message: error.message });
   }
-}
+};
+
+export const createIndieMovie = async (
+  req: AuthorizedRequest,
+  res: Response,
+) => {
+  try {
+    const user = req.user;
+    if (user.role === "USER") {
+      return res.status(400).json({ message: "You are not authorized" });
+    }
+
+    const { title, directedBy, synopsis, streamingAt } = req.body;
+    let { year, genres } = req.body;
+
+    genres = JSON.parse(genres);
+    year = parseInt(year);
+
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const { url } = await uploadToS3(file, "indie-movies");
+
+    const newIndieMovie = await client.indieMovies.create({
+      data: {
+        genres,
+        title,
+        directedBy,
+        year,
+        synopsis,
+        streamingAt,
+        posterImageUrl: url,
+      },
+    });
+
+    return res.status(200).json({ newIndieMovie });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const fetchAllIndieMovies = async (req: Request, res: Response) => {
+  try {
+    const indieMovies = await client.indieMovies.findMany();
+
+    if (indieMovies.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No indie movies found" });
+    }
+
+    return res.status(200).json({ indieMovies });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const fetchIndieByGenre = async (req: Request, res: Response) => {
+  try {
+    const { genre } = req.params;
+
+    const indieMovies = await client.indieMovies.findMany({
+      where: {
+        genres: {
+          has: genre,
+        },
+      },
+    });
+
+    if (indieMovies.length === 0) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "No indie movies found for this genre",
+        });
+    }
+
+    return res.status(200).json({ indieMovies });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
