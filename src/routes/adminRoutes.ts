@@ -5,13 +5,16 @@ import {
   addByGenre,
   addQuotes,
   addTopPicks,
+  createIndieMovie,
   createPost,
   deleteImage,
   deletePost,
   editPost,
   editQutoe,
+  fetchAllIndieMovies,
   fetchAllPost,
   fetchGenre,
+  fetchIndieByGenre,
   fetchQuotes,
   fetchTopPicks,
   hasLiked,
@@ -48,4 +51,7 @@ router.route("/latest-reviews").get(latestReviews);
 router.route("/add-quotes").post(extractUserDetails,addQuotes)
 router.route("/edit-quote").post(extractUserDetails,editQutoe)
 router.route("/fetch-quotes").get(fetchQuotes)
+router.route("/create-indie").post(extractUserDetails,createIndieMovie)
+router.route("/fetch-indie").get(fetchAllIndieMovies)
+router.route("/fetch-indie/:genre").get(fetchIndieByGenre)
 export default router;

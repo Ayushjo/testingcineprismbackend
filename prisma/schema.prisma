@@ -78,6 +78,20 @@ model byGenres{
   updatedAt DateTime @updatedAt
 }
 
+
+model IndieMovies{
+  id String @id @default(uuid())
+  genres String[]
+  title String
+  year Int
+  posterImageUrl String
+  directedBy String
+  streamingAt String
+  synopsis String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Article{
   id String @id @default(uuid())
   title String

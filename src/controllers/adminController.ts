@@ -66,7 +66,7 @@ export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
 };
 export const uploadReviewPoster = async (
   req: AuthorizedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const user = req.user;
@@ -221,12 +221,14 @@ export const fetchAllPost = async (req: Request, res: Response) => {
       images: post.images.filter(
         (image) =>
           image.imageUrl !== post.reviewPosterImageUrl &&
-          image.imageUrl !== post.posterImageUrl
+          image.imageUrl !== post.posterImageUrl,
       ),
     }));
 
     // Sort by view count
-    filteredPosts = filteredPosts.sort((a, b) =>b.createdAt.getTime() - a.createdAt.getTime());
+    filteredPosts = filteredPosts.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
 
     res.status(200).json({
       posts: filteredPosts,
@@ -559,9 +561,9 @@ export const addByGenre = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
-export const fetchGenre = async(req:Request,res:Response)=>{
+export const fetchGenre = async (req: Request, res: Response) => {
   try {
-    const {genre} = req.params
+    const { genre } = req.params;
     const genrePosts = await client.byGenres.findMany({
       where: {
         genre: {
@@ -574,11 +576,97 @@ export const fetchGenre = async(req:Request,res:Response)=>{
         .status(400)
         .json({ success: false, message: "No posts found" });
     }
-    return res.status(200).json({genrePosts});
-    
-  } catch (error:any) {
+    return res.status(200).json({ genrePosts });
+  } catch (error: any) {
     console.log(error.message);
-    res.status(500).json({message:error.message});
-    
+    res.status(500).json({ message: error.message });
   }
-}
+};
+
+export const createIndieMovie = async (
+  req: AuthorizedRequest,
+  res: Response,
+) => {
+  try {
+    const user = req.user;
+    if (user.role === "USER") {
+      return res.status(400).json({ message: "You are not authorized" });
+    }
+
+    const { title, directedBy, synopsis, streamingAt } = req.body;
+    let { year, genres } = req.body;
+
+    genres = JSON.parse(genres);
+    year = parseInt(year);
+
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const { url } = await uploadToS3(file, "indie-movies");
+
+    const newIndieMovie = await client.indieMovies.create({
+      data: {
+        genres,
+        title,
+        directedBy,
+        year,
+        synopsis,
+        streamingAt,
+        posterImageUrl: url,
+      },
+    });
+
+    return res.status(200).json({ newIndieMovie });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const fetchAllIndieMovies = async (req: Request, res: Response) => {
+  try {
+    const indieMovies = await client.indieMovies.findMany();
+
+    if (indieMovies.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No indie movies found" });
+    }
+
+    return res.status(200).json({ indieMovies });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const fetchIndieByGenre = async (req: Request, res: Response) => {
+  try {
+    const { genre } = req.params;
+
+    const indieMovies = await client.indieMovies.findMany({
+      where: {
+        genres: {
+          has: genre,
+        },
+      },
+    });
+
+    if (indieMovies.length === 0) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "No indie movies found for this genre",
+        });
+    }
+
+    return res.status(200).json({ indieMovies });
+  } catch (error: any) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
