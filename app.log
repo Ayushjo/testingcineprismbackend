@@ -1879,3 +1879,80 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-30T13:57:08.845Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-09-30T13:57:11.712Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2025-11-09T01:41:22.827Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-03-08T03:38:04.132Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Email worker started and listening for jobs","timestamp":"2026-03-08T03:38:14.906Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-03-08T03:38:14.921Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Email worker started and listening for jobs","timestamp":"2026-03-08T03:39:32.979Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-03-08T03:39:32.988Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Email worker started and listening for jobs","timestamp":"2026-03-08T03:39:40.331Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-03-08T03:39:40.341Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Email worker started and listening for jobs","timestamp":"2026-03-08T03:40:37.572Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-03-08T03:40:37.581Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"OPTIONS\",\"url\":\"/api/v1/admin/create-indie\",\"status\":\"500\",\"responseTime\":\"10.755\"}","timestamp":"2026-03-08T03:43:47.521Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Email worker started and listening for jobs","timestamp":"2026-03-08T03:44:07.435Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-03-08T03:44:07.452Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"OPTIONS\",\"url\":\"/api/v1/admin/create-indie\",\"status\":\"204\",\"responseTime\":\"3.303\"}","timestamp":"2026-03-08T03:44:10.225Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-indie\",\"status\":\"500\",\"responseTime\":\"2.746\"}","timestamp":"2026-03-08T03:44:10.232Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Email worker started and listening for jobs","timestamp":"2026-03-08T03:45:34.767Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-03-08T03:45:34.776Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-indie\",\"status\":\"500\",\"responseTime\":\"339.208\"}","timestamp":"2026-03-08T03:45:36.373Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-indie\",\"status\":\"500\",\"responseTime\":\"239.808\"}","timestamp":"2026-03-08T03:46:39.355Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Email worker started and listening for jobs","timestamp":"2026-03-08T03:47:20.482Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-03-08T03:47:20.492Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-indie\",\"status\":\"200\",\"responseTime\":\"3185.925\"}","timestamp":"2026-03-08T03:47:28.174Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"OPTIONS\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"204\",\"responseTime\":\"0.920\"}","timestamp":"2026-03-08T03:48:27.346Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"200\",\"responseTime\":\"875.705\"}","timestamp":"2026-03-08T03:48:28.225Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-indie\",\"status\":\"200\",\"responseTime\":\"835.539\"}","timestamp":"2026-03-08T03:51:03.003Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"POST\",\"url\":\"/api/v1/admin/create-indie\",\"status\":\"200\",\"responseTime\":\"841.447\"}","timestamp":"2026-03-08T03:52:21.581Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"200\",\"responseTime\":\"2491.492\"}","timestamp":"2026-03-08T03:52:33.159Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"304\",\"responseTime\":\"288.980\"}","timestamp":"2026-03-08T03:52:33.450Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"304\",\"responseTime\":\"539.730\"}","timestamp":"2026-03-08T03:52:57.929Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"304\",\"responseTime\":\"280.391\"}","timestamp":"2026-03-08T03:52:58.658Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"304\",\"responseTime\":\"281.708\"}","timestamp":"2026-03-08T03:53:01.673Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"304\",\"responseTime\":\"2588.509\"}","timestamp":"2026-03-08T04:27:34.611Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"-\",\"responseTime\":\"-\"}","timestamp":"2026-03-08T04:34:13.956Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"200\",\"responseTime\":\"2374.249\"}","timestamp":"2026-03-08T04:34:16.902Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"304\",\"responseTime\":\"275.864\"}","timestamp":"2026-03-08T04:34:17.179Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"304\",\"responseTime\":\"547.447\"}","timestamp":"2026-03-08T04:35:04.594Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"304\",\"responseTime\":\"557.189\"}","timestamp":"2026-03-08T04:35:29.114Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"OPTIONS\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"204\",\"responseTime\":\"1.536\"}","timestamp":"2026-03-08T04:36:08.630Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"200\",\"responseTime\":\"553.459\"}","timestamp":"2026-03-08T04:36:09.186Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"OPTIONS\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"204\",\"responseTime\":\"0.463\"}","timestamp":"2026-03-08T04:36:24.404Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"200\",\"responseTime\":\"550.404\"}","timestamp":"2026-03-08T04:36:24.956Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"OPTIONS\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"204\",\"responseTime\":\"1.376\"}","timestamp":"2026-03-08T04:36:26.821Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/api/v1/admin/fetch-indie\",\"status\":\"200\",\"responseTime\":\"300.759\"}","timestamp":"2026-03-08T04:36:27.125Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: read ECONNRESET","timestamp":"2026-03-08T05:03:51.008Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:51.682Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:52.061Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:52.696Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:53.075Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:53.707Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:54.083Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:54.717Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:55.090Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:55.734Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:56.095Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:56.742Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:57.103Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:57.846Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:03:58.202Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:04:00.834Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:04:01.185Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:04:08.941Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:04:09.297Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:04:28.951Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:04:29.308Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:04:48.962Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:04:49.319Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:05:08.968Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:05:09.341Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:05:28.993Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:05:29.355Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:05:49.004Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: getaddrinfo ENOTFOUND hopper.proxy.rlwy.net","timestamp":"2026-03-08T05:05:49.361Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: connect ETIMEDOUT","timestamp":"2026-03-08T05:06:19.018Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: connect ETIMEDOUT","timestamp":"2026-03-08T05:06:19.374Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: read ECONNRESET","timestamp":"2026-03-08T05:06:44.548Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: read ECONNRESET","timestamp":"2026-03-08T05:06:44.549Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: connect EACCES 66.33.22.246:59602","timestamp":"2026-03-08T05:06:47.546Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker error: connect EACCES 66.33.22.246:59602","timestamp":"2026-03-08T05:06:47.547Z"}

@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const newsletterController_js_1 = require("../controllers/newsletterController.js");
+const router = (0, express_1.Router)();
+router.get("/plans", newsletterController_js_1.getPlans);
+router.post("/checkout", newsletterController_js_1.createCheckout);
+router.get("/unsubscribe", newsletterController_js_1.unsubscribe);
+router.get("/status/:email", newsletterController_js_1.getSubscriberStatus);
+exports.default = router;

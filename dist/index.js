@@ -88,6 +88,7 @@ app.use((0, cors_1.default)({
             "capacitor://localhost",
             "ionic://localhost",
             "http://localhost",
+            "http://localhost:5174",
         ];
         console.log("Allowed origins:", allowedOrigins);
         console.log("Origin in allowed list:", allowedOrigins.includes(origin));
@@ -149,6 +150,8 @@ app.use((req, res, next) => {
     next();
 });
 app.use((0, cookie_parser_1.default)());
+const newsletterWebhookRoutes_js_1 = __importDefault(require("./routes/newsletterWebhookRoutes.js"));
+app.use("/api/v1/webhooks", newsletterWebhookRoutes_js_1.default);
 app.use(express_1.default.json());
 const PORT = process.env.PORT || 3000;
 const userRoutes_js_1 = __importDefault(require("./routes/userRoutes.js"));
@@ -167,6 +170,9 @@ const htmlRoutes_js_1 = __importDefault(require("./routes/htmlRoutes.js"));
 app.use("/", htmlRoutes_js_1.default);
 const articleRoutes_js_1 = __importDefault(require("./routes/articleRoutes.js"));
 app.use("/api/v1/articles", articleRoutes_js_1.default);
+const newsletterRoutes_js_1 = __importDefault(require("./routes/newsletterRoutes.js"));
+app.use("/api/v1/newsletter", newsletterRoutes_js_1.default);
+require("./queues/emailWorker.js");
 app.listen(PORT, () => {
     logger_js_1.default.info(`Server is running on port ${PORT}`);
 });

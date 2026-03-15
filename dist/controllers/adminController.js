@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchGenre = exports.addByGenre = exports.fetchQuotes = exports.editQutoe = exports.addQuotes = exports.latestReviews = exports.hasLiked = exports.deleteImage = exports.deletePost = exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
+exports.fetchIndieByGenre = exports.fetchAllIndieMovies = exports.createIndieMovie = exports.fetchGenre = exports.addByGenre = exports.fetchQuotes = exports.editQutoe = exports.addQuotes = exports.latestReviews = exports.hasLiked = exports.deleteImage = exports.deletePost = exports.editPost = exports.fetchTopPicks = exports.addTopPicks = exports.fetchAllPost = exports.uploadImages = exports.createPost = exports.uploadReviewPoster = exports.uploadPoster = void 0;
 const __1 = __importDefault(require(".."));
 const s3Upload_1 = require("../utils/s3Upload");
 const uploadPoster = async (req, res) => {
@@ -534,3 +534,79 @@ const fetchGenre = async (req, res) => {
     }
 };
 exports.fetchGenre = fetchGenre;
+const createIndieMovie = async (req, res) => {
+    try {
+        // const user = req.user;
+        // if (user.role === "USER") {
+        //   return res.status(400).json({ message: "You are not authorized" });
+        // }
+        const { title, directedBy, synopsis, streamingAt } = req.body;
+        let { year, genres } = req.body;
+        genres = JSON.parse(genres);
+        year = parseInt(year);
+        const file = req.file;
+        if (!file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+        const { url } = await (0, s3Upload_1.uploadToS3)(file, "indie-movies");
+        const newIndieMovie = await __1.default.indieMovies.create({
+            data: {
+                genres,
+                title,
+                directedBy,
+                year,
+                synopsis,
+                streamingAt,
+                posterImageUrl: url,
+            },
+        });
+        return res.status(200).json({ newIndieMovie });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.createIndieMovie = createIndieMovie;
+const fetchAllIndieMovies = async (req, res) => {
+    try {
+        const indieMovies = await __1.default.indieMovies.findMany();
+        if (indieMovies.length === 0) {
+            return res
+                .status(400)
+                .json({ success: false, message: "No indie movies found" });
+        }
+        return res.status(200).json({ indieMovies });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.fetchAllIndieMovies = fetchAllIndieMovies;
+const fetchIndieByGenre = async (req, res) => {
+    try {
+        const { genre } = req.params;
+        const indieMovies = await __1.default.indieMovies.findMany({
+            where: {
+                genres: {
+                    has: genre,
+                },
+            },
+        });
+        if (indieMovies.length === 0) {
+            return res
+                .status(400)
+                .json({
+                success: false,
+                message: "No indie movies found for this genre",
+            });
+        }
+        return res.status(200).json({ indieMovies });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.fetchIndieByGenre = fetchIndieByGenre;
