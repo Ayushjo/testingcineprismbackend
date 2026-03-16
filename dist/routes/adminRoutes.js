@@ -33,4 +33,7 @@ router.route("/latest-reviews").get(adminController_1.latestReviews);
 router.route("/add-quotes").post(extractUser_1.extractUserDetails, adminController_1.addQuotes);
 router.route("/edit-quote").post(extractUser_1.extractUserDetails, adminController_1.editQutoe);
 router.route("/fetch-quotes").get(adminController_1.fetchQuotes);
+router.route("/create-indie").post(multer_1.default.single("file"), adminController_1.createIndieMovie);
+router.route("/fetch-indie").get(adminController_1.fetchAllIndieMovies);
+router.route("/fetch-indie/:genre").get(adminController_1.fetchIndieByGenre);
 exports.default = router;
