@@ -172,19 +172,16 @@ const importantKeywords = [
     "trailer",
     "blockbuster",
 ];
-// Calculate trending score for articles
 const calculateTrendingScore = (article) => {
     let score = 50;
     const content = (article.title +
         " " +
         (article.description || "")).toLowerCase();
-    // Keyword scoring
     importantKeywords.forEach((keyword) => {
         if (content.includes(keyword.toLowerCase())) {
             score += 15;
         }
     });
-    // Content quality
     if (article.content && article.content.length > 500)
         score += 20;
     else if (article.content && article.content.length > 200)
@@ -195,7 +192,6 @@ const calculateTrendingScore = (article) => {
         score += 15;
     if (article.author)
         score += 5;
-    // Recency scoring
     const hoursOld = (Date.now() - article.published_at.getTime()) / (1000 * 60 * 60);
     if (hoursOld < 6)
         score += 25;
@@ -203,7 +199,6 @@ const calculateTrendingScore = (article) => {
         score += 15;
     else if (hoursOld < 72)
         score += 10;
-    // Source reliability
     const premiumSources = [
         "Variety",
         "Hollywood Reporter",
@@ -216,7 +211,6 @@ const calculateTrendingScore = (article) => {
     }
     return Math.max(score, 0);
 };
-// Remove duplicate articles
 const removeDuplicateArticles = (articles) => {
     const seen = new Set();
     const unique = [];
@@ -232,7 +226,6 @@ const removeDuplicateArticles = (articles) => {
     }
     return unique;
 };
-// Controllers
 const getTrendingNews = async (req, res) => {
     try {
         const news = await __1.default.trendingNews.findMany({
@@ -285,7 +278,6 @@ const refreshTrendingNews = async (req, res) => {
         });
         console.log("Starting news refresh with NewsAPI...");
         let allNews = [];
-        // Try NewsAPI first (primary source)
         try {
             const newsApiArticles = await fetchFromNewsAPI();
             allNews.push(...newsApiArticles);
@@ -293,7 +285,6 @@ const refreshTrendingNews = async (req, res) => {
         }
         catch (newsApiError) {
             console.warn("NewsAPI failed, falling back to RSS:", newsApiError.message);
-            // Fallback to RSS feeds if NewsAPI fails
             const rssArticles = await fetchFromRSSFeeds();
             allNews.push(...rssArticles);
             console.log(`RSS Fallback: Collected ${rssArticles.length} articles`);
@@ -301,7 +292,6 @@ const refreshTrendingNews = async (req, res) => {
         if (allNews.length === 0) {
             throw new Error("No articles were collected from any source");
         }
-        // Process and score articles
         const uniqueArticles = removeDuplicateArticles(allNews);
         console.log(`Unique articles: ${uniqueArticles.length}`);
         const scoredNews = uniqueArticles
@@ -311,7 +301,6 @@ const refreshTrendingNews = async (req, res) => {
         }))
             .sort((a, b) => b.score - a.score);
         const topNews = scoredNews;
-        // Update database
         await __1.default.trendingNews.deleteMany({});
         console.log("Cleared existing trending news");
         const insertedNews = [];
@@ -449,7 +438,6 @@ const getNewsById = async (req, res) => {
     }
 };
 exports.getNewsById = getNewsById;
-// Optional: Get news by category
 const getNewsByCategory = async (req, res) => {
     try {
         const { category = "entertainment" } = req.params;
@@ -488,7 +476,6 @@ const getNewsByCategory = async (req, res) => {
     }
 };
 exports.getNewsByCategory = getNewsByCategory;
-// Search news articles
 const searchNews = async (req, res) => {
     try {
         const { q } = req.query;

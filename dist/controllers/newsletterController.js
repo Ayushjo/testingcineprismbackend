@@ -11,8 +11,6 @@ const razorpay = new razorpay_1.default({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-// ─── GET ALL ACTIVE PLANS ─────────────────────────────────────────────────────
-// Frontend calls this to display pricing page
 const getPlans = async (req, res) => {
     try {
         const plans = await index_js_1.default.newsletterPlan.findMany({
@@ -27,9 +25,6 @@ const getPlans = async (req, res) => {
     }
 };
 exports.getPlans = getPlans;
-// ─── CREATE CHECKOUT ──────────────────────────────────────────────────────────
-// Called when user fills the signup form and clicks "Subscribe"
-// Creates subscriber record + Razorpay subscription and returns checkout URL
 const createCheckout = async (req, res) => {
     const { email, name, planId, country, userId } = req.body;
     if (!email || !planId || !country) {
@@ -38,7 +33,6 @@ const createCheckout = async (req, res) => {
             .json({ error: "email, planId and country are required" });
     }
     try {
-        // Fetch the plan
         const plan = await index_js_1.default.newsletterPlan.findUnique({
             where: { id: planId },
         });
@@ -50,7 +44,6 @@ const createCheckout = async (req, res) => {
                 .status(500)
                 .json({ error: "Plan not configured on Razorpay yet" });
         }
-        // Check if subscriber already exists with this email + plan combo
         const existingSubscriber = await index_js_1.default.newsletterSubscriber.findUnique({
             where: { email },
             include: {
@@ -62,7 +55,6 @@ const createCheckout = async (req, res) => {
         if (existingSubscriber?.subscriptions[0]?.status === "ACTIVE") {
             return res.status(409).json({ error: "Already subscribed to this plan" });
         }
-        // Create or reuse subscriber record
         let subscriber = existingSubscriber;
         if (!subscriber) {
             subscriber = await index_js_1.default.newsletterSubscriber.create({
@@ -77,27 +69,24 @@ const createCheckout = async (req, res) => {
                 include: { subscriptions: true },
             });
         }
-        // Create Razorpay customer
         const razorpayCustomer = await razorpay.customers.create({
             name: name || email,
             email,
-            fail_existing: 0, // don't fail if customer already exists
+            fail_existing: 0,
         });
-        // Create Razorpay subscription
-        // This generates the checkout URL the user completes
         const razorpaySubscription = await razorpay.subscriptions.create({
             plan_id: plan.razorpayPlanId,
-            customer_notify: 1, // Razorpay sends payment notifications
+            customer_notify: 1,
             quantity: 1,
-            total_count: plan.billingInterval === "YEARLY" ? 12 : 120, // how many billing cycles (120 = ~10 years for monthly = effectively forever)
+            total_count: plan.billingInterval === "YEARLY" ? 12 : 120,
             addons: [],
             notes: {
                 subscriberId: subscriber.id,
                 planId: plan.id,
                 email,
             },
+            callback_url: `${process.env.FRONTEND_URL}/newsletter/status?subscription_id={id}`,
         });
-        // Create subscription record in DB — status starts as ACTIVE after webhook confirms
         await index_js_1.default.newsletterSubscription.create({
             data: {
                 subscriberId: subscriber.id,
@@ -107,11 +96,10 @@ const createCheckout = async (req, res) => {
                 razorpayCustomerId: razorpayCustomer.id,
                 razorpaySubscriptionId: razorpaySubscription.id,
                 currentPeriodStart: new Date(),
-                currentPeriodEnd: new Date(), // placeholder, webhook will update this
+                currentPeriodEnd: new Date(),
             },
         });
         logger_js_1.default.info(`Checkout created for ${email}, subscription: ${razorpaySubscription.id}`);
-        // Return the short URL — frontend redirects user here to complete payment
         return res.status(200).json({
             subscriptionId: razorpaySubscription.id,
             checkoutUrl: razorpaySubscription.short_url,
@@ -124,8 +112,6 @@ const createCheckout = async (req, res) => {
     }
 };
 exports.createCheckout = createCheckout;
-// ─── UNSUBSCRIBE ──────────────────────────────────────────────────────────────
-// No auth needed — just the token from the email footer link
 const unsubscribe = async (req, res) => {
     const { token } = req.query;
     if (!token || typeof token !== "string") {
@@ -142,12 +128,11 @@ const unsubscribe = async (req, res) => {
         if (subscriber.status === "UNSUBSCRIBED") {
             return res.status(200).json({ message: "Already unsubscribed" });
         }
-        // Cancel active Razorpay subscriptions
         for (const sub of subscriber.subscriptions) {
             if (sub.razorpaySubscriptionId && sub.status === "ACTIVE") {
                 try {
                     await razorpay.subscriptions.cancel(sub.razorpaySubscriptionId, {
-                        cancel_at_cycle_end: 1, // cancel at end of current period, not immediately
+                        cancel_at_cycle_end: 1,
                     });
                 }
                 catch (rzpError) {
@@ -162,7 +147,6 @@ const unsubscribe = async (req, res) => {
                 },
             });
         }
-        // Mark subscriber as unsubscribed
         await index_js_1.default.newsletterSubscriber.update({
             where: { id: subscriber.id },
             data: {
@@ -179,8 +163,6 @@ const unsubscribe = async (req, res) => {
     }
 };
 exports.unsubscribe = unsubscribe;
-// ─── GET SUBSCRIBER STATUS ────────────────────────────────────────────────────
-// Frontend calls this to show subscription status in account page
 const getSubscriberStatus = async (req, res) => {
     const { email } = req.params;
     try {

@@ -188,7 +188,8 @@ app.use((req, res, next) => {
 app.use(cookieParser());
 import newsletterWebhookRoutes from "./routes/newsletterWebhookRoutes.js";
 app.use("/api/v1/webhooks", newsletterWebhookRoutes);
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 const PORT = process.env.PORT || 3000;
 
 import userRouter from "./routes/userRoutes.js";

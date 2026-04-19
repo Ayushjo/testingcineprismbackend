@@ -30,7 +30,6 @@ interface TMDBMovie {
   genre_ids: number[];
 }
 
-// Get all trending movies (for frontend consumption)
 export const getTrendingMovies = async (req: Request, res: Response) => {
   try {
     const movies = await client.trendingMovie.findMany({
@@ -71,12 +70,11 @@ export const getTrendingMovies = async (req: Request, res: Response) => {
     });
   }
 };
-// Manual refresh endpoint - fetches latest data from TMDB
 export const refreshTrendingMovies = async (req: Request, res: Response) => {
   const startTime = Date.now();
 
   try {
-    // Log refresh attempt
+
     await client.contentRefreshLog.create({
       data: {
         sectionType: "movies",

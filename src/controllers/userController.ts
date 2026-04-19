@@ -248,7 +248,6 @@ export const fetchCommentsWithOpinionId = async (
     const offset = (page - 1) * limit;
 
     if (loadReplies && parentCommentId) {
-      // Load replies for a specific comment (lazy loading)
       const replies = await client.comment.findMany({
         where: {
           parentCommentId: parentCommentId,
@@ -294,11 +293,11 @@ export const fetchCommentsWithOpinionId = async (
       });
     }
 
-    // Load top-level comments with limited depth (first load)
+
     const comments = await client.comment.findMany({
       where: {
         opinionId: opinionId,
-        parentCommentId: null, // Only top-level comments
+        parentCommentId: null, 
       },
       include: {
         user: {
@@ -326,7 +325,7 @@ export const fetchCommentsWithOpinionId = async (
           orderBy: {
             createdAt: "asc",
           },
-          take: 3, // Only show first 3 replies initially
+          take: 3, 
         },
         _count: {
           select: {
@@ -341,7 +340,6 @@ export const fetchCommentsWithOpinionId = async (
       take: limit,
     });
 
-    // Format comments with "load more" indicators
     const formattedComments = comments.map((comment) => ({
       ...formatComment(comment),
       replies: comment.replies.map(formatComment),
@@ -450,9 +448,9 @@ export const fetchSinglePost = async (
           },
           orderBy: { createdAt: "asc" },
         },
-        // Only fetch top-level comments initially for better performance
+
         comments: {
-          where: { parentCommentId: null }, // Only top-level comments
+          where: { parentCommentId: null }, 
           include: {
             user: {
               select: {
@@ -462,11 +460,11 @@ export const fetchSinglePost = async (
               },
             },
             _count: {
-              select: { replies: true }, // Count of replies for each comment
+              select: { replies: true }, 
             },
           },
           orderBy: { createdAt: "desc" },
-          take: 10, // Pagination - load first 10 comments
+          take: 10, 
         },
         likes: userId
           ? {
@@ -490,7 +488,6 @@ export const fetchSinglePost = async (
       });
     }
 
-    // Increment view count
     await client.post.update({
       where: { id: postId },
       data: {
@@ -501,7 +498,6 @@ export const fetchSinglePost = async (
     const post = firstPost;
     post.viewCount += 1;
 
-    // Filter out poster images from the images array
     const filteredImages = post.images.filter(
       (image) =>
         image.imageUrl !== post.reviewPosterImageUrl &&

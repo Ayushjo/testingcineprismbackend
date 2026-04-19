@@ -588,10 +588,7 @@ export const createIndieMovie = async (
   res: Response,
 ) => {
   try {
-    // const user = req.user;
-    // if (user.role === "USER") {
-    //   return res.status(400).json({ message: "You are not authorized" });
-    // }
+   
 
     const { title, directedBy, synopsis, streamingAt } = req.body;
     let { year, genres } = req.body;

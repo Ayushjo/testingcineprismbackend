@@ -8,7 +8,6 @@ import {
   clearAllCache,
 } from "../config/redis";
 
-// Get all cached items with details
 export const listAllCaches = async (req: AuthorizedRequest, res: Response) => {
   try {
     const user = req.user;
@@ -20,7 +19,6 @@ export const listAllCaches = async (req: AuthorizedRequest, res: Response) => {
       });
     }
 
-    // Get all cache keys
     const keys = await getAllCacheKeys();
 
     if (keys.length === 0) {
@@ -32,7 +30,6 @@ export const listAllCaches = async (req: AuthorizedRequest, res: Response) => {
       });
     }
 
-    // Get detailed info for each cache
     const cacheDetails = await Promise.all(
       keys.map(async (key) => {
         const info = await getCacheInfo(key);
@@ -40,7 +37,6 @@ export const listAllCaches = async (req: AuthorizedRequest, res: Response) => {
       })
     );
 
-    // Group caches by type
     const grouped = {
       articles: cacheDetails.filter((c) => c?.key.startsWith("article:")),
       allArticles: cacheDetails.filter((c) => c?.key === "all_articles"),
@@ -84,7 +80,6 @@ export const listAllCaches = async (req: AuthorizedRequest, res: Response) => {
   }
 };
 
-// Delete specific cache by key
 export const deleteSingleCache = async (
   req: AuthorizedRequest,
   res: Response
@@ -119,7 +114,6 @@ export const deleteSingleCache = async (
   }
 };
 
-// Delete multiple caches by pattern
 export const deleteCachesByPattern = async (
   req: AuthorizedRequest,
   res: Response
@@ -162,7 +156,6 @@ export const deleteCachesByPattern = async (
   }
 };
 
-// Delete all article caches
 export const deleteAllArticleCaches = async (
   req: AuthorizedRequest,
   res: Response
@@ -177,7 +170,7 @@ export const deleteAllArticleCaches = async (
       });
     }
 
-    // Delete all article-related caches
+
     const articleCount = await deleteCachePattern("article:*");
     await deleteCache("all_articles");
 
@@ -200,7 +193,7 @@ export const deleteAllArticleCaches = async (
   }
 };
 
-// Delete all post caches
+
 export const deleteAllPostCaches = async (
   req: AuthorizedRequest,
   res: Response
@@ -245,7 +238,7 @@ export const deleteAllPostCaches = async (
   }
 };
 
-// Clear ALL caches (nuclear option)
+
 export const deleteAllCaches = async (
   req: AuthorizedRequest,
   res: Response

@@ -5,6 +5,27 @@ import getBuffer from "../config/dataUri";
 import cloudinary from "cloudinary";
 import { uploadToS3 } from "../utils/s3Upload";
 import { deleteFromS3 } from "../utils/s3Delete";
+
+/**
+ * Process an array of async tasks in batches to avoid overwhelming the server
+ * with too many concurrent S3 uploads at once (important on a single small EC2).
+ */
+async function processInBatches<T>(
+  items: any[],
+  batchSize: number,
+  processor: (item: any, index: number) => Promise<T>
+): Promise<T[]> {
+  const results: T[] = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchResults = await Promise.all(
+      batch.map((item, batchIndex) => processor(item, i + batchIndex))
+    );
+    results.push(...batchResults);
+  }
+  return results;
+}
+
 const generateSlug = (title: string) => {
   return title
     .toLowerCase() // "Top 25..." → "top 25..."
@@ -38,8 +59,11 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
       mainImageUrl = url;
     }
 
-    const processedBlocks: any = await Promise.all(
-      parsedBlocks.map(async (block: any, index: number) => {
+    // ✅ Upload blocks in batches of 5 to avoid overwhelming RAM/network on single EC2
+    const processedBlocks: any = await processInBatches(
+      parsedBlocks,
+      5, // upload 5 images at a time concurrently
+      async (block: any, index: number) => {
         if (block.type === "IMAGE") {
           const blockImageFile = files?.find?.(
             (file) => file.fieldname === `blockImage_${index}`
@@ -72,7 +96,7 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
           order: index,
           // ✅ REMOVED: publicId field (not using it)
         };
-      })
+      }
     );
 
     const article = await client.article.create({

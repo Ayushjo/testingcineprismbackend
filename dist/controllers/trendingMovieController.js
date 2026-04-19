@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.editTrendingMoviesRank = exports.getMovieById = exports.getRefreshStatus = exports.refreshTrendingMovies = exports.getTrendingMovies = void 0;
 const __1 = __importDefault(require(".."));
 const axios_1 = __importDefault(require("axios"));
-// Get all trending movies (for frontend consumption)
 const getTrendingMovies = async (req, res) => {
     try {
         const movies = await __1.default.trendingMovie.findMany({
@@ -46,11 +45,9 @@ const getTrendingMovies = async (req, res) => {
     }
 };
 exports.getTrendingMovies = getTrendingMovies;
-// Manual refresh endpoint - fetches latest data from TMDB
 const refreshTrendingMovies = async (req, res) => {
     const startTime = Date.now();
     try {
-        // Log refresh attempt
         await __1.default.contentRefreshLog.create({
             data: {
                 sectionType: "movies",

@@ -234,7 +234,6 @@ const fetchCommentsWithOpinionId = async (req, res) => {
         }
         const offset = (page - 1) * limit;
         if (loadReplies && parentCommentId) {
-            // Load replies for a specific comment (lazy loading)
             const replies = await __1.default.comment.findMany({
                 where: {
                     parentCommentId: parentCommentId,
@@ -276,11 +275,10 @@ const fetchCommentsWithOpinionId = async (req, res) => {
                 message: "Replies fetched successfully",
             });
         }
-        // Load top-level comments with limited depth (first load)
         const comments = await __1.default.comment.findMany({
             where: {
                 opinionId: opinionId,
-                parentCommentId: null, // Only top-level comments
+                parentCommentId: null,
             },
             include: {
                 user: {
@@ -308,7 +306,7 @@ const fetchCommentsWithOpinionId = async (req, res) => {
                     orderBy: {
                         createdAt: "asc",
                     },
-                    take: 3, // Only show first 3 replies initially
+                    take: 3,
                 },
                 _count: {
                     select: {
@@ -322,7 +320,6 @@ const fetchCommentsWithOpinionId = async (req, res) => {
             skip: offset,
             take: limit,
         });
-        // Format comments with "load more" indicators
         const formattedComments = comments.map((comment) => ({
             ...(0, commentHelpers_1.formatComment)(comment),
             replies: comment.replies.map(commentHelpers_1.formatComment),
@@ -421,9 +418,8 @@ const fetchSinglePost = async (req, res) => {
                     },
                     orderBy: { createdAt: "asc" },
                 },
-                // Only fetch top-level comments initially for better performance
                 comments: {
-                    where: { parentCommentId: null }, // Only top-level comments
+                    where: { parentCommentId: null },
                     include: {
                         user: {
                             select: {
@@ -433,11 +429,11 @@ const fetchSinglePost = async (req, res) => {
                             },
                         },
                         _count: {
-                            select: { replies: true }, // Count of replies for each comment
+                            select: { replies: true },
                         },
                     },
                     orderBy: { createdAt: "desc" },
-                    take: 10, // Pagination - load first 10 comments
+                    take: 10,
                 },
                 likes: userId
                     ? {
@@ -459,7 +455,6 @@ const fetchSinglePost = async (req, res) => {
                 message: "Post not found",
             });
         }
-        // Increment view count
         await __1.default.post.update({
             where: { id: postId },
             data: {
@@ -468,7 +463,6 @@ const fetchSinglePost = async (req, res) => {
         });
         const post = firstPost;
         post.viewCount += 1;
-        // Filter out poster images from the images array
         const filteredImages = post.images.filter((image) => image.imageUrl !== post.reviewPosterImageUrl &&
             image.imageUrl !== post.posterImageUrl);
         // Transform data for frontend consumption

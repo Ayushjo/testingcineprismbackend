@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteAllCaches = exports.deleteAllPostCaches = exports.deleteAllArticleCaches = exports.deleteCachesByPattern = exports.deleteSingleCache = exports.listAllCaches = void 0;
 const redis_1 = require("../config/redis");
-// Get all cached items with details
 const listAllCaches = async (req, res) => {
     try {
         const user = req.user;
@@ -12,7 +11,6 @@ const listAllCaches = async (req, res) => {
                 message: "You are not authorized",
             });
         }
-        // Get all cache keys
         const keys = await (0, redis_1.getAllCacheKeys)();
         if (keys.length === 0) {
             return res.status(200).json({
@@ -22,12 +20,10 @@ const listAllCaches = async (req, res) => {
                 totalCaches: 0,
             });
         }
-        // Get detailed info for each cache
         const cacheDetails = await Promise.all(keys.map(async (key) => {
             const info = await (0, redis_1.getCacheInfo)(key);
             return info;
         }));
-        // Group caches by type
         const grouped = {
             articles: cacheDetails.filter((c) => c?.key.startsWith("article:")),
             allArticles: cacheDetails.filter((c) => c?.key === "all_articles"),
@@ -68,7 +64,6 @@ const listAllCaches = async (req, res) => {
     }
 };
 exports.listAllCaches = listAllCaches;
-// Delete specific cache by key
 const deleteSingleCache = async (req, res) => {
     try {
         const user = req.user;
@@ -97,7 +92,6 @@ const deleteSingleCache = async (req, res) => {
     }
 };
 exports.deleteSingleCache = deleteSingleCache;
-// Delete multiple caches by pattern
 const deleteCachesByPattern = async (req, res) => {
     try {
         const user = req.user;
@@ -133,7 +127,6 @@ const deleteCachesByPattern = async (req, res) => {
     }
 };
 exports.deleteCachesByPattern = deleteCachesByPattern;
-// Delete all article caches
 const deleteAllArticleCaches = async (req, res) => {
     try {
         const user = req.user;
@@ -143,7 +136,6 @@ const deleteAllArticleCaches = async (req, res) => {
                 message: "You are not authorized",
             });
         }
-        // Delete all article-related caches
         const articleCount = await (0, redis_1.deleteCachePattern)("article:*");
         await (0, redis_1.deleteCache)("all_articles");
         const totalDeleted = articleCount + 1;
@@ -164,7 +156,6 @@ const deleteAllArticleCaches = async (req, res) => {
     }
 };
 exports.deleteAllArticleCaches = deleteAllArticleCaches;
-// Delete all post caches
 const deleteAllPostCaches = async (req, res) => {
     try {
         const user = req.user;
@@ -202,7 +193,6 @@ const deleteAllPostCaches = async (req, res) => {
     }
 };
 exports.deleteAllPostCaches = deleteAllPostCaches;
-// Clear ALL caches (nuclear option)
 const deleteAllCaches = async (req, res) => {
     try {
         const user = req.user;

@@ -536,10 +536,6 @@ const fetchGenre = async (req, res) => {
 exports.fetchGenre = fetchGenre;
 const createIndieMovie = async (req, res) => {
     try {
-        // const user = req.user;
-        // if (user.role === "USER") {
-        //   return res.status(400).json({ message: "You are not authorized" });
-        // }
         const { title, directedBy, synopsis, streamingAt } = req.body;
         let { year, genres } = req.body;
         genres = JSON.parse(genres);

@@ -8,6 +8,19 @@ const __1 = __importDefault(require(".."));
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
 const s3Upload_1 = require("../utils/s3Upload");
+/**
+ * Process an array of async tasks in batches to avoid overwhelming the server
+ * with too many concurrent S3 uploads at once (important on a single small EC2).
+ */
+async function processInBatches(items, batchSize, processor) {
+    const results = [];
+    for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        const batchResults = await Promise.all(batch.map((item, batchIndex) => processor(item, i + batchIndex)));
+        results.push(...batchResults);
+    }
+    return results;
+}
 const generateSlug = (title) => {
     return title
         .toLowerCase() // "Top 25..." → "top 25..."
@@ -33,7 +46,9 @@ const createArticle = async (req, res) => {
             const { url } = await (0, s3Upload_1.uploadToS3)(mainImageFile, "articles/main-images");
             mainImageUrl = url;
         }
-        const processedBlocks = await Promise.all(parsedBlocks.map(async (block, index) => {
+        // ✅ Upload blocks in batches of 5 to avoid overwhelming RAM/network on single EC2
+        const processedBlocks = await processInBatches(parsedBlocks, 5, // upload 5 images at a time concurrently
+        async (block, index) => {
             if (block.type === "IMAGE") {
                 const blockImageFile = files?.find?.((file) => file.fieldname === `blockImage_${index}`);
                 if (!blockImageFile) {
@@ -58,7 +73,7 @@ const createArticle = async (req, res) => {
                 order: index,
                 // ✅ REMOVED: publicId field (not using it)
             };
-        }));
+        });
         const article = await __1.default.article.create({
             data: {
                 title,

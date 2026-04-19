@@ -137,7 +137,6 @@ const handleRazorpayWebhook = async (req, res) => {
                 }
                 break;
             }
-            // Fires when subscription is cancelled (either by user or after all retries failed)
             case "subscription.cancelled":
             case "subscription.completed": {
                 const sub = payload.payload.subscription?.entity;
@@ -166,28 +165,20 @@ const handleRazorpayWebhook = async (req, res) => {
             default:
                 logger_js_1.default.info(`Unhandled Razorpay event: ${event}`);
         }
-        // Always return 200 to Razorpay — if you return anything else
-        // Razorpay will keep retrying the webhook
         return res.status(200).json({ received: true });
     }
     catch (error) {
         logger_js_1.default.error(`Razorpay webhook error: ${error.message}`);
-        // Still return 200 to prevent Razorpay retrying — log the error and investigate
         return res.status(200).json({ received: true });
     }
 };
 exports.handleRazorpayWebhook = handleRazorpayWebhook;
-// ─── AWS SNS WEBHOOK ──────────────────────────────────────────────────────────
-// AWS SES sends bounce and complaint notifications via SNS to this endpoint
-// This is critical — missing bounces will get your SES account suspended
 const handleSNSNotification = async (req, res) => {
     const messageType = req.headers["x-amz-sns-message-type"];
     try {
         const body = JSON.parse(req.body.toString());
-        // SNS first sends a subscription confirmation — you must visit the URL to confirm
         if (messageType === "SubscriptionConfirmation") {
             logger_js_1.default.info(`SNS subscription confirmation URL: ${body.SubscribeURL}`);
-            // In production, auto-confirm by fetching the URL
             const https = await import("https");
             https.get(body.SubscribeURL, () => {
                 logger_js_1.default.info("SNS subscription confirmed automatically");
@@ -201,7 +192,6 @@ const handleSNSNotification = async (req, res) => {
                 const { bounceType, bounceSubType, bouncedRecipients } = notification.bounce;
                 const messageId = notification.mail.messageId;
                 for (const recipient of bouncedRecipients) {
-                    // Find the email log by SES message ID
                     const emailLog = await index_js_1.default.newsletterEmailLog.findFirst({
                         where: { sesMessageId: messageId },
                     });
@@ -215,13 +205,11 @@ const handleSNSNotification = async (req, res) => {
                                 bounceSubType,
                             },
                         });
-                        // Increment campaign bounce count
                         await index_js_1.default.newsletterCampaign.update({
                             where: { id: emailLog.campaignId },
                             data: { totalBounced: { increment: 1 } },
                         });
                     }
-                    // On permanent bounce — mark subscriber so we never email them again
                     if (bounceType === "Permanent") {
                         await index_js_1.default.newsletterSubscriber.updateMany({
                             where: { email: recipient.emailAddress },
@@ -247,7 +235,6 @@ const handleSNSNotification = async (req, res) => {
                             },
                         });
                     }
-                    // Complaint = user hit spam button — remove immediately, no exceptions
                     await index_js_1.default.newsletterSubscriber.updateMany({
                         where: { email: recipient.emailAddress },
                         data: { status: "UNSUBSCRIBED" },

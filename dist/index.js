@@ -152,7 +152,8 @@ app.use((req, res, next) => {
 app.use((0, cookie_parser_1.default)());
 const newsletterWebhookRoutes_js_1 = __importDefault(require("./routes/newsletterWebhookRoutes.js"));
 app.use("/api/v1/webhooks", newsletterWebhookRoutes_js_1.default);
-app.use(express_1.default.json());
+app.use(express_1.default.json({ limit: "50mb" }));
+app.use(express_1.default.urlencoded({ limit: "50mb", extended: true }));
 const PORT = process.env.PORT || 3000;
 const userRoutes_js_1 = __importDefault(require("./routes/userRoutes.js"));
 app.use("/api/v1/user", userRoutes_js_1.default);
