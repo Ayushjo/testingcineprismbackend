@@ -76,11 +76,35 @@ const createCheckout = async (req, res) => {
                 include: { subscriptions: true },
             });
         }
-        const razorpayCustomer = await razorpay.customers.create({
-            name: name || email,
-            email,
-            fail_existing: 0,
-        });
+        // FIX 1: Handle "customer already exists" gracefully
+        let razorpayCustomer = null;
+        try {
+            razorpayCustomer = await razorpay.customers.create({
+                name: name || email,
+                email,
+                fail_existing: 0,
+            });
+        }
+        catch (customerError) {
+            const isAlreadyExists = customerError?.error?.code === "BAD_REQUEST_ERROR" &&
+                customerError?.error?.description
+                    ?.toLowerCase()
+                    .includes("already exists");
+            if (isAlreadyExists) {
+                logger_js_1.default.warn(`Razorpay customer already exists for ${email}, fetching existing`);
+                try {
+                    const existing = await razorpay.customers.all({ email });
+                    razorpayCustomer = existing?.items?.[0] ?? { id: undefined };
+                }
+                catch (fetchError) {
+                    logger_js_1.default.warn(`Failed to fetch existing Razorpay customer for ${email}: ${JSON.stringify(fetchError)}`);
+                    razorpayCustomer = { id: undefined };
+                }
+            }
+            else {
+                throw customerError;
+            }
+        }
         const razorpaySubscription = await razorpay.subscriptions.create({
             plan_id: plan.razorpayPlanId,
             customer_notify: 1,
@@ -92,7 +116,7 @@ const createCheckout = async (req, res) => {
                 planId: plan.id,
                 email,
             },
-            callback_url: `${process.env.FRONTEND_URL}/newsletter/status?subscription_id={id}`,
+            // FIX 2: callback_url is not accepted by Razorpay subscriptions API — removed
         });
         await index_js_1.default.newsletterSubscription.create({
             data: {
@@ -100,7 +124,7 @@ const createCheckout = async (req, res) => {
                 planId: plan.id,
                 provider: "RAZORPAY",
                 status: "ACTIVE",
-                razorpayCustomerId: razorpayCustomer.id,
+                razorpayCustomerId: razorpayCustomer?.id ?? undefined,
                 razorpaySubscriptionId: razorpaySubscription.id,
                 currentPeriodStart: new Date(),
                 currentPeriodEnd: new Date(),
