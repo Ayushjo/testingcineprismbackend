@@ -30,7 +30,6 @@ export const getPlans = async (req: Request, res: Response) => {
   }
 };
 
-
 export const createCheckout = async (req: Request, res: Response) => {
   const { email, name, planId, country, userId } = req.body;
 
@@ -41,7 +40,6 @@ export const createCheckout = async (req: Request, res: Response) => {
   }
 
   try {
-
     const plan = await client.newsletterPlan.findUnique({
       where: { id: planId },
     });
@@ -55,7 +53,6 @@ export const createCheckout = async (req: Request, res: Response) => {
         .status(500)
         .json({ error: "Plan not configured on Razorpay yet" });
     }
-
 
     const existingSubscriber = await client.newsletterSubscriber.findUnique({
       where: { email },
@@ -89,15 +86,14 @@ export const createCheckout = async (req: Request, res: Response) => {
     const razorpayCustomer = await razorpay.customers.create({
       name: name || email,
       email,
-      fail_existing: 0, 
+      fail_existing: 0,
     });
-
 
     const razorpaySubscription = await (razorpay.subscriptions as any).create({
       plan_id: plan.razorpayPlanId,
-      customer_notify: 1, 
+      customer_notify: 1,
       quantity: 1,
-      total_count: plan.billingInterval === "YEARLY" ? 12 : 120, 
+      total_count: plan.billingInterval === "YEARLY" ? 12 : 120,
       addons: [],
       notes: {
         subscriberId: subscriber.id,
@@ -116,7 +112,7 @@ export const createCheckout = async (req: Request, res: Response) => {
         razorpayCustomerId: razorpayCustomer.id,
         razorpaySubscriptionId: razorpaySubscription.id,
         currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(), 
+        currentPeriodEnd: new Date(),
       },
     });
 
@@ -130,7 +126,8 @@ export const createCheckout = async (req: Request, res: Response) => {
       razorpayKeyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error: any) {
-    logger.error(`createCheckout error: ${error.message}`);
+    console.error(error);
+    logger.error(`createCheckout error: ${JSON.stringify(error)}`);
     return res.status(500).json({ error: "Failed to create checkout" });
   }
 };
@@ -156,14 +153,13 @@ export const unsubscribe = async (req: Request, res: Response) => {
       return res.status(200).json({ message: "Already unsubscribed" });
     }
 
-
     for (const sub of subscriber.subscriptions) {
       if (sub.razorpaySubscriptionId && sub.status === "ACTIVE") {
         try {
           await (razorpay.subscriptions as any).cancel(
             sub.razorpaySubscriptionId,
             {
-              cancel_at_cycle_end: 1, 
+              cancel_at_cycle_end: 1,
             },
           );
         } catch (rzpError: any) {
@@ -182,7 +178,6 @@ export const unsubscribe = async (req: Request, res: Response) => {
       });
     }
 
-  
     await client.newsletterSubscriber.update({
       where: { id: subscriber.id },
       data: {
@@ -200,8 +195,10 @@ export const unsubscribe = async (req: Request, res: Response) => {
   }
 };
 
-
-export const getSubscriptionStatusById = async (req: Request, res: Response) => {
+export const getSubscriptionStatusById = async (
+  req: Request,
+  res: Response,
+) => {
   const { razorpaySubscriptionId } = req.params;
 
   try {
@@ -227,7 +224,9 @@ export const getSubscriptionStatusById = async (req: Request, res: Response) => 
     });
   } catch (error: any) {
     logger.error(`getSubscriptionStatusById error: ${error.message}`);
-    return res.status(500).json({ error: "Failed to fetch subscription status" });
+    return res
+      .status(500)
+      .json({ error: "Failed to fetch subscription status" });
   }
 };
 

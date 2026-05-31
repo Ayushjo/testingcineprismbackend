@@ -114,7 +114,8 @@ const createCheckout = async (req, res) => {
         });
     }
     catch (error) {
-        logger_js_1.default.error(`createCheckout error: ${error.message}`);
+        console.error(error);
+        logger_js_1.default.error(`createCheckout error: ${JSON.stringify(error)}`);
         return res.status(500).json({ error: "Failed to create checkout" });
     }
 };
@@ -194,7 +195,9 @@ const getSubscriptionStatusById = async (req, res) => {
     }
     catch (error) {
         logger_js_1.default.error(`getSubscriptionStatusById error: ${error.message}`);
-        return res.status(500).json({ error: "Failed to fetch subscription status" });
+        return res
+            .status(500)
+            .json({ error: "Failed to fetch subscription status" });
     }
 };
 exports.getSubscriptionStatusById = getSubscriptionStatusById;
