@@ -3,21 +3,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSubscriberStatus = exports.unsubscribe = exports.createCheckout = exports.getPlans = void 0;
+exports.getSubscriberStatus = exports.getSubscriptionStatusById = exports.unsubscribe = exports.createCheckout = exports.getPlans = void 0;
 const razorpay_1 = __importDefault(require("razorpay"));
 const index_js_1 = __importDefault(require("../index.js"));
 const logger_js_1 = __importDefault(require("../logger.js"));
+const redis_js_1 = require("../config/redis.js");
 const razorpay = new razorpay_1.default({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 const getPlans = async (req, res) => {
     try {
+        const cached = await (0, redis_js_1.getFromCache)("newsletter:plans");
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
+        }
         const plans = await index_js_1.default.newsletterPlan.findMany({
             where: { isActive: true },
             orderBy: { amount: "asc" },
         });
-        return res.status(200).json({ plans });
+        const result = { plans };
+        await (0, redis_js_1.setCache)("newsletter:plans", JSON.stringify(result), 3600);
+        return res.status(200).json(result);
     }
     catch (error) {
         logger_js_1.default.error(`getPlans error: ${error.message}`);
@@ -163,6 +170,34 @@ const unsubscribe = async (req, res) => {
     }
 };
 exports.unsubscribe = unsubscribe;
+const getSubscriptionStatusById = async (req, res) => {
+    const { razorpaySubscriptionId } = req.params;
+    try {
+        const subscription = await index_js_1.default.newsletterSubscription.findUnique({
+            where: { razorpaySubscriptionId },
+            include: {
+                plan: true,
+                subscriber: { select: { email: true, status: true } },
+            },
+        });
+        if (!subscription) {
+            return res.status(404).json({ error: "Subscription not found" });
+        }
+        return res.status(200).json({
+            status: subscription.status,
+            subscriberStatus: subscription.subscriber.status,
+            planName: subscription.plan.name,
+            planType: subscription.plan.type,
+            subscriberEmail: subscription.subscriber.email,
+            currentPeriodEnd: subscription.currentPeriodEnd,
+        });
+    }
+    catch (error) {
+        logger_js_1.default.error(`getSubscriptionStatusById error: ${error.message}`);
+        return res.status(500).json({ error: "Failed to fetch subscription status" });
+    }
+};
+exports.getSubscriptionStatusById = getSubscriptionStatusById;
 const getSubscriberStatus = async (req, res) => {
     const { email } = req.params;
     try {

@@ -6,8 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.editTrendingMoviesRank = exports.getMovieById = exports.getRefreshStatus = exports.refreshTrendingMovies = exports.getTrendingMovies = void 0;
 const __1 = __importDefault(require(".."));
 const axios_1 = __importDefault(require("axios"));
+const redis_1 = require("../config/redis");
 const getTrendingMovies = async (req, res) => {
     try {
+        const cached = await (0, redis_1.getFromCache)("trending:movies");
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
+        }
         const movies = await __1.default.trendingMovie.findMany({
             orderBy: { trendingRank: "asc" },
             take: 20,
@@ -33,6 +38,7 @@ const getTrendingMovies = async (req, res) => {
             count: formattedMovies.length,
             last_updated: movies[0]?.lastUpdated || null,
         };
+        await (0, redis_1.setCache)("trending:movies", JSON.stringify(response), 1800);
         res.status(200).json(response);
     }
     catch (error) {
@@ -99,6 +105,7 @@ const refreshTrendingMovies = async (req, res) => {
             },
         });
         console.log(`✅ Successfully refreshed ${insertedMovies.length} trending movies in ${processingTime}ms`);
+        await (0, redis_1.deleteCache)("trending:movies");
         res.status(200).json({
             success: true,
             message: "Trending movies refreshed successfully",
@@ -296,6 +303,8 @@ const editTrendingMoviesRank = async (req, res) => {
                 data: { trendingRank: movie.trendingRank },
             });
         }
+        // Invalidate trending movies cache — sort order has changed
+        await (0, redis_1.deleteCache)("trending:movies");
         res.status(200).json({
             success: true,
             message: "Movie rank updated successfully",

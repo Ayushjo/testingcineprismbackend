@@ -1,6 +1,7 @@
 import client from "..";
 import { Request, Response } from "express";
 import axios from "axios";
+import { setCache, getFromCache, deleteCache } from "../config/redis";
 interface TrendingMovie {
   id: number;
   tmdb_id: number;
@@ -32,6 +33,11 @@ interface TMDBMovie {
 
 export const getTrendingMovies = async (req: Request, res: Response) => {
   try {
+    const cached = await getFromCache("trending:movies");
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const movies = await client.trendingMovie.findMany({
       orderBy: { trendingRank: "asc" },
       take: 20,
@@ -60,6 +66,7 @@ export const getTrendingMovies = async (req: Request, res: Response) => {
       last_updated: movies[0]?.lastUpdated || null,
     };
 
+    await setCache("trending:movies", JSON.stringify(response), 1800);
     res.status(200).json(response);
   } catch (error: any) {
     console.error("Error fetching trending movies:", error.message);
@@ -140,6 +147,7 @@ export const refreshTrendingMovies = async (req: Request, res: Response) => {
       `✅ Successfully refreshed ${insertedMovies.length} trending movies in ${processingTime}ms`
     );
 
+    await deleteCache("trending:movies");
     res.status(200).json({
       success: true,
       message: "Trending movies refreshed successfully",
@@ -378,6 +386,8 @@ export const editTrendingMoviesRank = async (req: Request, res: Response) => {
         data: { trendingRank: movie.trendingRank },
       });
     }
+    // Invalidate trending movies cache — sort order has changed
+    await deleteCache("trending:movies");
     res.status(200).json({
       success: true,
       message: "Movie rank updated successfully",

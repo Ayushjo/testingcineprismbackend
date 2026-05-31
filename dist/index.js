@@ -159,6 +159,8 @@ const userRoutes_js_1 = __importDefault(require("./routes/userRoutes.js"));
 app.use("/api/v1/user", userRoutes_js_1.default);
 const adminRoutes_js_1 = __importDefault(require("./routes/adminRoutes.js"));
 app.use("/api/v1/admin", adminRoutes_js_1.default);
+const newsletterAdminRoutes_js_1 = __importDefault(require("./routes/newsletterAdminRoutes.js"));
+app.use("/api/v1/admin/newsletter", newsletterAdminRoutes_js_1.default);
 const postRoutes_js_1 = __importDefault(require("./routes/postRoutes.js"));
 app.use("/api/v1/posts", postRoutes_js_1.default);
 const moviesRouter_js_1 = __importDefault(require("./routes/moviesRouter.js"));
@@ -173,7 +175,24 @@ const articleRoutes_js_1 = __importDefault(require("./routes/articleRoutes.js"))
 app.use("/api/v1/articles", articleRoutes_js_1.default);
 const newsletterRoutes_js_1 = __importDefault(require("./routes/newsletterRoutes.js"));
 app.use("/api/v1/newsletter", newsletterRoutes_js_1.default);
+const cacheRoutes_js_1 = __importDefault(require("./routes/cacheRoutes.js"));
+app.use("/api/v1/cache", cacheRoutes_js_1.default);
 require("./queues/emailWorker.js");
+const redis_js_1 = require("./config/redis.js");
 app.listen(PORT, () => {
     logger_js_1.default.info(`Server is running on port ${PORT}`);
+    // Warm up newsletter plans cache so first visitor never hits a cold miss
+    (async () => {
+        try {
+            const plans = await client.newsletterPlan.findMany({
+                where: { isActive: true },
+                orderBy: { amount: "asc" },
+            });
+            await (0, redis_js_1.setCache)("newsletter:plans", JSON.stringify({ plans }), 3600);
+            logger_js_1.default.info(`[Cache Warm-up] newsletter:plans loaded (${plans.length} plan${plans.length !== 1 ? "s" : ""}) — TTL 3600s`);
+        }
+        catch (err) {
+            logger_js_1.default.warn(`[Cache Warm-up] newsletter:plans failed: ${err.message}`);
+        }
+    })();
 });

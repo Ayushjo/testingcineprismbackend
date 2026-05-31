@@ -7,4 +7,5 @@ router.get("/plans", newsletterController_js_1.getPlans);
 router.post("/checkout", newsletterController_js_1.createCheckout);
 router.get("/unsubscribe", newsletterController_js_1.unsubscribe);
 router.get("/status/:email", newsletterController_js_1.getSubscriberStatus);
+router.get("/subscription-status/:razorpaySubscriptionId", newsletterController_js_1.getSubscriptionStatusById);
 exports.default = router;

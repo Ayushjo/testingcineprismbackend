@@ -4,9 +4,11 @@ import {
   SendEmailCommand,
   SendEmailCommandInput,
 } from "@aws-sdk/client-ses";
+import { PrismaClient } from "@prisma/client";
 import { EmailJobData } from "../types/newsletter.types.js";
-import client from "../index.js"; // your prisma client
 import logger from "../logger.js";
+
+const client = new PrismaClient();
 
 const sesClient = new SESClient({
   region: process.env.AWS_REGION!,
@@ -16,16 +18,25 @@ const sesClient = new SESClient({
   },
 });
 
-const connection = {
-  url: process.env.REDIS_URL!,
+const redisUrl = process.env.REDIS_URL!;
+export const emailWorkerConnection = {
+  url: redisUrl,
+  maxRetriesPerRequest: null, // required by BullMQ
+  enableReadyCheck: false,
+  ...(redisUrl?.startsWith("rediss://")
+    ? { tls: { rejectUnauthorized: false } }
+    : {}),
 };
+const connection = emailWorkerConnection;
 
-const processEmail = async (job: Job<EmailJobData>) => {
+const FROM_ADDRESS =
+  process.env.SES_FROM_EMAIL || "newsletter@thecineprism.com";
+
+export const processEmail = async (job: Job<EmailJobData>) => {
   const {
     subscriberId,
     campaignId,
     email,
-    name,
     subject,
     htmlContent,
     unsubscribeToken,
@@ -33,62 +44,63 @@ const processEmail = async (job: Job<EmailJobData>) => {
 
   logger.info(`Processing email job ${job.id} for ${email}`);
 
-  // Build unsubscribe URL - appended to every email (CAN-SPAM requirement)
-  const unsubscribeUrl = `${process.env.FRONTEND_URL}/unsubscribe?token=${unsubscribeToken}`;
+  try {
+    const frontendUrl = (process.env.FRONTEND_URL || "").replace(/\/$/, "");
+    const unsubscribeUrl = `${frontendUrl}/unsubscribe?token=${unsubscribeToken}`;
 
-  // Inject unsubscribe link into HTML before sending
-  const finalHtml = htmlContent.replace("{{UNSUBSCRIBE_URL}}", unsubscribeUrl);
+    // Replace placeholder after HTML is built (supports multiple footer links)
+    const finalHtml = htmlContent.replace(
+      /\{\{UNSUBSCRIBE_URL\}\}/g,
+      unsubscribeUrl,
+    );
 
-  const params: SendEmailCommandInput = {
-    Source: `The Cineprism <${process.env.SES_FROM_EMAIL}>`,
-    Destination: {
-      ToAddresses: [email],
-    },
-    Message: {
-      Subject: {
-        Data: subject,
-        Charset: "UTF-8",
+    const params: SendEmailCommandInput = {
+      Source: `The Cineprism <${FROM_ADDRESS}>`,
+      Destination: {
+        ToAddresses: [email],
       },
-      Body: {
-        Html: {
-          Data: finalHtml,
+      Message: {
+        Subject: {
+          Data: subject,
           Charset: "UTF-8",
         },
+        Body: {
+          Html: {
+            Data: finalHtml,
+            Charset: "UTF-8",
+          },
+        },
       },
-    },
-    // This ties the send to your configuration set for open/click tracking
-    ConfigurationSetName: "cineprism-newsletter",
-  };
+      ConfigurationSetName: "cineprism-newsletter",
+    };
 
-  const command = new SendEmailCommand(params);
-  const result = await sesClient.send(command);
+    const command = new SendEmailCommand(params);
+    const result = await sesClient.send(command);
+    const sesMessageId = result.MessageId;
 
-  const sesMessageId = result.MessageId;
+    // Transactional emails (welcome, etc.) have no campaignId — skip log/stats
+    if (campaignId) {
+      await client.newsletterEmailLog.updateMany({
+        where: { subscriberId, campaignId },
+        data: {
+          status: "SENT",
+          sesMessageId,
+          sentAt: new Date(),
+        },
+      });
 
-  // Update email log with sent status and SES message ID
-  await client.newsletterEmailLog.updateMany({
-    where: {
-      subscriberId,
-      campaignId,
-    },
-    data: {
-      status: "SENT",
-      sesMessageId,
-      sentAt: new Date(),
-    },
-  });
+      await client.newsletterCampaign.update({
+        where: { id: campaignId },
+        data: { totalSent: { increment: 1 } },
+      });
+    }
 
-  // Increment campaign sent count
-  await client.newsletterCampaign.update({
-    where: { id: campaignId },
-    data: {
-      totalSent: { increment: 1 },
-    },
-  });
-
-  logger.info(`Email sent to ${email}, SES ID: ${sesMessageId}`);
-
-  return { sesMessageId };
+    logger.info(`Email sent to ${email}, SES ID: ${sesMessageId}`);
+    return { sesMessageId };
+  } catch (error: any) {
+    logger.error(`Failed to send email to ${email}: ${error.message}`);
+    throw error;
+  }
 };
 
 // Create the worker - this runs in the background processing jobs
@@ -109,24 +121,27 @@ emailWorker.on("completed", (job) => {
 emailWorker.on("failed", async (job, error) => {
   logger.error(`Email job ${job?.id} failed: ${error.message}`);
 
-  if (job) {
-    // If all retries exhausted, mark as failed in DB
-    if (job.attemptsMade >= (job.opts.attempts || 3)) {
+  if (job && job.attemptsMade >= (job.opts.attempts || 3)) {
+    // Only update campaign email logs — transactional emails have no log row
+    if (job.data.campaignId) {
       await client.newsletterEmailLog.updateMany({
         where: {
           subscriberId: job.data.subscriberId,
           campaignId: job.data.campaignId,
         },
-        data: {
-          status: "FAILED",
-        },
+        data: { status: "FAILED" },
       });
     }
   }
 });
 
 emailWorker.on("error", (error) => {
-  logger.error(`Email worker error: ${error.message}`);
+  // Log Redis/connection errors without crashing the process — BullMQ reconnects
+  logger.error(`Email worker connection error (will retry): ${error.message}`);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error(`Email worker unhandled rejection: ${reason}`);
 });
 
 logger.info("Email worker started and listening for jobs");

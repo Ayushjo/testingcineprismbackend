@@ -5,6 +5,7 @@ import client from "..";
 import cloudinary from "cloudinary";
 import { Multer } from "multer";
 import { uploadToS3 } from "../utils/s3Upload";
+import { setCache, getFromCache, deleteCache, deleteCachePattern } from "../config/redis";
 export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
   try {
     const user = req.user;
@@ -157,6 +158,8 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
         },
       });
 
+      await Promise.all([deleteCache("all_posts"), deleteCache("latest_reviews")]);
+
       res.status(201).json({ post, message: "Post created successfully" });
     } else {
       res.status(401).json({ message: "You are not an admin" });
@@ -209,6 +212,11 @@ export const uploadImages = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchAllPost = async (req: Request, res: Response) => {
   try {
+    const cached = await getFromCache("all_posts");
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const posts = await client.post.findMany({
       include: {
         images: true,
@@ -230,10 +238,10 @@ export const fetchAllPost = async (req: Request, res: Response) => {
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
 
-    res.status(200).json({
-      posts: filteredPosts,
-      message: "Posts fetched successfully",
-    });
+    const result = { posts: filteredPosts, message: "Posts fetched successfully" };
+    await setCache("all_posts", JSON.stringify(result), 300);
+
+    res.status(200).json(result);
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -267,6 +275,7 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
       },
     });
 
+    await deleteCache("top_picks");
     res.status(200).json({
       topPick,
       message: "Top pick added successfully",
@@ -279,12 +288,17 @@ export const addTopPicks = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchTopPicks = async (req: AuthorizedRequest, res: Response) => {
   try {
+    const cached = await getFromCache("top_picks");
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const topPicks = await client.topPicks.findMany({});
 
-    res.status(200).json({
-      topPicks,
-      message: "Top picks fetched successfully",
-    });
+    const result = { topPicks, message: "Top picks fetched successfully" };
+    await setCache("top_picks", JSON.stringify(result), 3600);
+
+    res.status(200).json(result);
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -334,6 +348,7 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
             language,
           },
         });
+        await Promise.all([deleteCache("all_posts"), deleteCache("latest_reviews"), deleteCache(`post:${postId}`)]);
         return res.status(200).json({ message: "Post updated successfully" });
       }
     }
@@ -361,6 +376,7 @@ export const deletePost = async (req: AuthorizedRequest, res: Response) => {
             id: postId,
           },
         });
+        await Promise.all([deleteCache("all_posts"), deleteCache("latest_reviews"), deleteCache(`post:${postId}`)]);
         return res.status(200).json({ message: "Post deleted successfully" });
       }
     }
@@ -419,6 +435,11 @@ export const hasLiked = async (req: AuthorizedRequest, res: Response) => {
 
 export const latestReviews = async (req: Request, res: Response) => {
   try {
+    const cached = await getFromCache("latest_reviews");
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const latestReviews = await client.post.findMany({
       orderBy: {
         createdAt: "desc",
@@ -426,10 +447,10 @@ export const latestReviews = async (req: Request, res: Response) => {
       take: 7,
     });
 
-    res.status(200).json({
-      latestReviews,
-      message: "Latest reviews fetched successfully",
-    });
+    const result = { latestReviews, message: "Latest reviews fetched successfully" };
+    await setCache("latest_reviews", JSON.stringify(result), 300);
+
+    res.status(200).json(result);
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -455,6 +476,7 @@ export const addQuotes = async (req: AuthorizedRequest, res: Response) => {
         rank: newestQuote ? newestQuote.rank + 1 : 1,
       },
     });
+    await deleteCache("quotes");
     return res.status(200).json({
       newQuote,
       message: "Quote added successfully",
@@ -483,6 +505,7 @@ export const editQutoe = async (req: AuthorizedRequest, res: Response) => {
       },
     });
     if (editedQuote) {
+      await deleteCache("quotes");
       return res.status(200).json({
         editedQuote,
         message: "Quote edited successfully",
@@ -499,6 +522,11 @@ export const editQutoe = async (req: AuthorizedRequest, res: Response) => {
 
 export const fetchQuotes = async (req: Request, res: Response) => {
   try {
+    const cached = await getFromCache("quotes");
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const quotes = await client.quotes.findMany({
       orderBy: {
         rank: "asc",
@@ -510,11 +538,11 @@ export const fetchQuotes = async (req: Request, res: Response) => {
         },
       },
     });
-    return res.status(200).json({
-      quotes,
-      message: "Quotes fetched successfully",
-      success: true,
-    });
+
+    const result = { quotes, message: "Quotes fetched successfully", success: true };
+    await setCache("quotes", JSON.stringify(result), 3600);
+
+    return res.status(200).json(result);
   } catch (error: any) {
     console.log(error.message);
     res.status(500).json({ message: error.message });
@@ -554,6 +582,8 @@ export const addByGenre = async (req: AuthorizedRequest, res: Response) => {
       },
     });
 
+    // Invalidate the genre cache for each genre in the new entry
+    await Promise.all((genre as string[]).map((g) => deleteCache(`genre:${g}`)));
     return res.status(200).json({ newByGenre });
   } catch (error: any) {
     console.log(error.message);
@@ -564,6 +594,12 @@ export const addByGenre = async (req: AuthorizedRequest, res: Response) => {
 export const fetchGenre = async (req: Request, res: Response) => {
   try {
     const { genre } = req.params;
+
+    const cached = await getFromCache(`genre:${genre}`);
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const genrePosts = await client.byGenres.findMany({
       where: {
         genre: {
@@ -576,6 +612,8 @@ export const fetchGenre = async (req: Request, res: Response) => {
         .status(400)
         .json({ success: false, message: "No posts found" });
     }
+
+    await setCache(`genre:${genre}`, JSON.stringify({ genrePosts }), 1800);
     return res.status(200).json({ genrePosts });
   } catch (error: any) {
     console.log(error.message);
@@ -616,6 +654,10 @@ export const createIndieMovie = async (
       },
     });
 
+    await Promise.all([
+      deleteCache("indie:all"),
+      ...((genres as string[]).map((g) => deleteCache(`indie:genre:${g}`))),
+    ]);
     return res.status(200).json({ newIndieMovie });
   } catch (error: any) {
     console.log(error.message);
@@ -625,6 +667,11 @@ export const createIndieMovie = async (
 
 export const fetchAllIndieMovies = async (req: Request, res: Response) => {
   try {
+    const cached = await getFromCache("indie:all");
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const indieMovies = await client.indieMovies.findMany();
 
     if (indieMovies.length === 0) {
@@ -633,6 +680,7 @@ export const fetchAllIndieMovies = async (req: Request, res: Response) => {
         .json({ success: false, message: "No indie movies found" });
     }
 
+    await setCache("indie:all", JSON.stringify({ indieMovies }), 1800);
     return res.status(200).json({ indieMovies });
   } catch (error: any) {
     console.log(error.message);
@@ -643,6 +691,11 @@ export const fetchAllIndieMovies = async (req: Request, res: Response) => {
 export const fetchIndieByGenre = async (req: Request, res: Response) => {
   try {
     const { genre } = req.params;
+
+    const cached = await getFromCache(`indie:genre:${genre}`);
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
 
     const indieMovies = await client.indieMovies.findMany({
       where: {
@@ -661,6 +714,7 @@ export const fetchIndieByGenre = async (req: Request, res: Response) => {
         });
     }
 
+    await setCache(`indie:genre:${genre}`, JSON.stringify({ indieMovies }), 1800);
     return res.status(200).json({ indieMovies });
   } catch (error: any) {
     console.log(error.message);

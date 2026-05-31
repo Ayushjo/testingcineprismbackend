@@ -7,6 +7,8 @@ exports.handleSNSNotification = exports.handleRazorpayWebhook = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const index_js_1 = __importDefault(require("../index.js"));
 const logger_js_1 = __importDefault(require("../logger.js"));
+const emailQueue_js_1 = require("../queues/emailQueue.js");
+const emailTemplate_js_1 = require("../helpers/emailTemplate.js");
 // ─── RAZORPAY WEBHOOK ─────────────────────────────────────────────────────────
 // All subscription events from Razorpay hit this handler
 // Razorpay sends: subscription.activated, subscription.charged,
@@ -56,6 +58,27 @@ const handleRazorpayWebhook = async (req, res) => {
                         where: { id: subscription.subscriberId },
                         data: { status: "ACTIVE" },
                     });
+                    // Queue welcome email — subscriber already loaded via include
+                    const subscriber = subscription.subscriber;
+                    const plan = await index_js_1.default.newsletterPlan.findUnique({
+                        where: { id: subscription.planId },
+                    });
+                    if (plan) {
+                        const html = (0, emailTemplate_js_1.buildWelcomeEmail)({
+                            name: subscriber.name,
+                            planName: plan.name,
+                            unsubscribeToken: subscriber.unsubscribeToken,
+                        });
+                        await (0, emailQueue_js_1.queueEmail)({
+                            subscriberId: subscriber.id,
+                            email: subscriber.email,
+                            name: subscriber.name,
+                            subject: "Welcome to The Cineprism Newsletter 🎬",
+                            htmlContent: html,
+                            unsubscribeToken: subscriber.unsubscribeToken,
+                        });
+                        logger_js_1.default.info(`Welcome email queued for ${subscriber.email}`);
+                    }
                 }
                 logger_js_1.default.info(`Subscription activated: ${sub.id}`);
                 break;

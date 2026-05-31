@@ -8,6 +8,7 @@ const __1 = __importDefault(require(".."));
 const dataUri_1 = __importDefault(require("../config/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
 const s3Upload_1 = require("../utils/s3Upload");
+const redis_1 = require("../config/redis");
 /**
  * Process an array of async tasks in batches to avoid overwhelming the server
  * with too many concurrent S3 uploads at once (important on a single small EC2).
@@ -93,6 +94,7 @@ const createArticle = async (req, res) => {
                 },
             },
         });
+        await (0, redis_1.deleteCache)("all_articles");
         res.status(200).json({ article });
     }
     catch (error) {
@@ -103,9 +105,14 @@ const createArticle = async (req, res) => {
 exports.createArticle = createArticle;
 const getArticles = async (req, res) => {
     try {
+        const cached = await (0, redis_1.getFromCache)("all_articles");
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
+        }
         const articles = await __1.default.article.findMany({
             where: { published: true },
         });
+        await (0, redis_1.setCache)("all_articles", JSON.stringify({ articles }), 600);
         res.status(200).json({ articles });
     }
     catch (error) {
@@ -117,6 +124,16 @@ exports.getArticles = getArticles;
 const getSingleArticle = async (req, res) => {
     try {
         const { slug } = req.params;
+        const cached = await (0, redis_1.getFromCache)(`article:${slug}`);
+        if (cached) {
+            // Increment view count in background without blocking the response
+            const parsed = JSON.parse(cached);
+            __1.default.article.update({
+                where: { id: parsed.article.id },
+                data: { viewCount: { increment: 1 } },
+            }).catch(() => { });
+            return res.status(200).json(parsed);
+        }
         const article = await __1.default.article.findFirst({
             where: { slug },
             include: {
@@ -147,6 +164,7 @@ const getSingleArticle = async (req, res) => {
                 },
             });
         }
+        await (0, redis_1.setCache)(`article:${slug}`, JSON.stringify({ article: updatedArticle }), 600);
         res.status(200).json({ article: updatedArticle });
     }
     catch (error) {
@@ -331,7 +349,12 @@ const updateArticle = async (req, res) => {
                 console.error("Error deleting images:", error);
             });
         }
-        // 14. Send response
+        // 14. Invalidate caches and send response
+        await Promise.all([
+            (0, redis_1.deleteCache)("all_articles"),
+            (0, redis_1.deleteCache)(`article:${slug}`),
+            (0, redis_1.deleteCache)(`article:${existingArticle.slug}`),
+        ]);
         res.status(200).json({
             message: "Article updated successfully",
             article: updatedArticle,

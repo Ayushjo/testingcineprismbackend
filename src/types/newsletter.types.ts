@@ -44,7 +44,7 @@ export interface RazorpayWebhookPayload {
 
 export interface EmailJobData {
   subscriberId: string;
-  campaignId: string;
+  campaignId?: string; // undefined for transactional emails (welcome, etc.)
   email: string;
   name: string | null;
   subject: string;

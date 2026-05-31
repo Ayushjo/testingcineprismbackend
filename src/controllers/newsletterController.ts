@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Razorpay from "razorpay";
 import client from "../index.js";
 import logger from "../logger.js";
+import { getFromCache, setCache, deleteCache } from "../config/redis.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID!,
@@ -10,11 +11,19 @@ const razorpay = new Razorpay({
 
 export const getPlans = async (req: Request, res: Response) => {
   try {
+    const cached = await getFromCache("newsletter:plans");
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const plans = await client.newsletterPlan.findMany({
       where: { isActive: true },
       orderBy: { amount: "asc" },
     });
-    return res.status(200).json({ plans });
+
+    const result = { plans };
+    await setCache("newsletter:plans", JSON.stringify(result), 3600);
+    return res.status(200).json(result);
   } catch (error: any) {
     logger.error(`getPlans error: ${error.message}`);
     return res.status(500).json({ error: "Failed to fetch plans" });
@@ -191,6 +200,36 @@ export const unsubscribe = async (req: Request, res: Response) => {
   }
 };
 
+
+export const getSubscriptionStatusById = async (req: Request, res: Response) => {
+  const { razorpaySubscriptionId } = req.params;
+
+  try {
+    const subscription = await client.newsletterSubscription.findUnique({
+      where: { razorpaySubscriptionId },
+      include: {
+        plan: true,
+        subscriber: { select: { email: true, status: true } },
+      },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ error: "Subscription not found" });
+    }
+
+    return res.status(200).json({
+      status: subscription.status,
+      subscriberStatus: subscription.subscriber.status,
+      planName: subscription.plan.name,
+      planType: subscription.plan.type,
+      subscriberEmail: subscription.subscriber.email,
+      currentPeriodEnd: subscription.currentPeriodEnd,
+    });
+  } catch (error: any) {
+    logger.error(`getSubscriptionStatusById error: ${error.message}`);
+    return res.status(500).json({ error: "Failed to fetch subscription status" });
+  }
+};
 
 export const getSubscriberStatus = async (req: Request, res: Response) => {
   const { email } = req.params;

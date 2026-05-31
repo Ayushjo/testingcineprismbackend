@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,226 +7,200 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
-model User{
-  id String @id @default(uuid())
-  username String
-  email String @unique
-  role Role @default(USER)
-  googleId String @unique
-  profilePicture String?
-  isEmailVerified Boolean @default(true)
-  comments Comment[]
-  likes Like[]
-  opinions UnpopularOpinion[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model User {
+  id                   String                @id @default(uuid())
+  username             String
+  email                String                @unique
+  role                 Role                  @default(USER)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  googleId             String                @unique
+  isEmailVerified      Boolean               @default(true)
+  profilePicture       String?
+  comments             Comment[]
+  likes                Like[]
   newsletterSubscriber NewsletterSubscriber?
+  opinions             UnpopularOpinion[]
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
-model Quotes{
-  id String @id @default(uuid())
-  quote String
-  author String
-  rank Int @default(1)
+model Quotes {
+  id        String   @id @default(uuid())
+  quote     String
+  author    String
+  rank      Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Post {
-  id            String      @id @default(uuid())
-  title         String
-  content       String
-  
-  directedBy    String
-  genres        String[]
-  
-  language      String @default("English")
-
-  images        PostImage[]
-  comments      Comment[]
-  likes         Like[]
-  viewCount     Int         @default(0)
-  adminId       Int         @default(1)
-  year          Int
-  ratingCategories Json
+  id                   String      @id @default(uuid())
+  title                String
+  content              String
+  genres               String[]
+  year                 Int
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  adminId              Int         @default(1)
+  relatedPostIds       String[]
+  posterImageUrl       String?
   reviewPosterImageUrl String?
-  streamingAt   String
-  posterImageUrl String?     // Reference to the poster image ID
-  relatedPostIds String[]   // Array of related post IDs for "You may also like"
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  
+  directedBy           String
+  streamingAt          String
+  ratingCategories     Json
+  viewCount            Int         @default(0)
+  language             String      @default("English")
+  comments             Comment[]
+  likes                Like[]
+  images               PostImage[]
 }
 
-model byGenres{
-  id String @id @default(uuid())
-  genre String[]
-  directedBy String
-  year Int
+model byGenres {
+  id             String   @id @default(uuid())
+  genre          String[]
+  directedBy     String
+  year           Int
   posterImageUrl String
-  title String
-  synopsis String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  title          String
+  synopsis       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
-
-model IndieMovies{
-  id String @id @default(uuid())
-  genres String[]
-  title String
-  year Int
+model IndieMovies {
+  id             String   @id @default(uuid())
+  genres         String[]
+  title          String
+  year           Int
   posterImageUrl String
-  directedBy String
-  streamingAt String
-  synopsis String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  directedBy     String
+  streamingAt    String
+  synopsis       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
-model Article{
-  id String @id @default(uuid())
-  title String
-  shortDescription String
-  slug String
-  author String
-  mainImageUrl String
-  published Boolean @default(true)
-  publishedAt DateTime?
-  viewCount Int @default(0)
+model Article {
+  id                String         @id @default(uuid())
+  title             String
+  shortDescription  String
+  slug              String
+  author            String
+  mainImageUrl      String
+  published         Boolean        @default(true)
+  publishedAt       DateTime?
+  viewCount         Int            @default(0)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
   mainImagePublicId String?
-  images ArticleImage[]
-  comments Comment[]
-  likes Like[]
-  blocks ContentBlock[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  images            ArticleImage[]
+  comments          Comment[]
+  blocks            ContentBlock[]
+  likes             Like[]
 }
 
-model ContentBlock{
-  id String @id @default(uuid())
+model ContentBlock {
+  id        String    @id @default(uuid())
   articleId String
-  type BlockType
-  content Json
-  order Int
-  publicId String?
+  type      BlockType
+  content   Json
+  order     Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  publicId  String?
+  article   Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
-  article Article @relation(fields: [articleId], references: [id],onDelete: Cascade)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
   @@index([articleId, order])
 }
 
-enum BlockType{
-  PARAGRAPH
-  HEADING
-  IMAGE
-  LIST
-  QUOTE
-  DIVIDER
-}
-
-model TopPicks{
-  id String @id @default(uuid())
-  title String
+model TopPicks {
+  id             String   @id @default(uuid())
+  genre          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   posterImageUrl String
-  genre String
-  year Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  title          String
+  year           Int
 }
 
 model PostImage {
   id        String   @id @default(uuid())
   imageUrl  String
   postId    String
-  post      Post     @relation(fields: [postId], references: [id],onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
+
 model ArticleImage {
-  id String    @id @default(uuid())
-  imageUrl String
+  id        String   @id @default(uuid())
+  imageUrl  String
   articleId String
-  article Article @relation(fields: [articleId], references: [id],onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 }
 
-
-model Comment{
-  id String @id @default(uuid())
-  content String
-  userId String
-  postId String?
-  opinionId String?
+model Comment {
+  id              String            @id @default(uuid())
+  content         String
+  userId          String
+  postId          String?
+  opinionId       String?
   parentCommentId String?
-  articleId String?
-  replies Comment[] @relation(name: "CommentToComment")
-  user User @relation(fields: [userId], references: [id])
-  post Post? @relation(fields: [postId], references: [id],onDelete: Cascade)
-  article Article? @relation(fields: [articleId], references: [id],onDelete: Cascade)
-  opinion UnpopularOpinion? @relation(fields: [opinionId], references: [id])
-  parentComment Comment? @relation("CommentToComment",fields: [parentCommentId],references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  articleId       String?
+  article         Article?          @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  opinion         UnpopularOpinion? @relation(fields: [opinionId], references: [id])
+  parentComment   Comment?          @relation("CommentToComment", fields: [parentCommentId], references: [id])
+  replies         Comment[]         @relation("CommentToComment")
+  post            Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user            User              @relation(fields: [userId], references: [id])
 }
 
-
-model Like{
-  id String @id @default(uuid())
-  userId String
-  postId String?
+model Like {
+  id        String            @id @default(uuid())
+  userId    String
+  postId    String?
   opinionId String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
   articleId String?
-  user User @relation(fields: [userId], references: [id])
-  post Post? @relation(fields: [postId], references: [id],onDelete: Cascade)
-  article Article? @relation(fields: [articleId], references: [id],onDelete: Cascade)
-  opinion UnpopularOpinion? @relation(fields: [opinionId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  article   Article?          @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  opinion   UnpopularOpinion? @relation(fields: [opinionId], references: [id])
+  post      Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id])
+
   @@unique([userId, postId])
 }
 
-model UnpopularOpinion{
-  id String @id @default(uuid())
-  userId String
-  content String
-  genres String[]
-  
-  user User @relation(fields: [userId], references: [id])
-  likes Like[]
-  comments Comment[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+model UnpopularOpinion {
+  id        String    @id @default(uuid())
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  content   String
+  genres    String[]
+  comments  Comment[]
+  likes     Like[]
+  user      User      @relation(fields: [userId], references: [id])
 }
 
 model TrendingMovie {
-  id               Int      @id @default(autoincrement())
-  tmdbId           Int      @map("tmdb_id")
-  title            String
-  posterPath       String?  @map("poster_path")
-  backdropPath     String?  @map("backdrop_path")
-  overview         String?  @db.Text
-  releaseDate      DateTime @map("release_date") @db.Date
-  voteAverage      Decimal  @map("vote_average") @db.Decimal(3, 1)
-  voteCount        Int      @map("vote_count")
-  popularityScore  Decimal  @map("popularity_score") @db.Decimal(10, 2)
-  trendingRank     Int      @map("trending_rank")
-  genreIds         String   @map("genre_ids") // JSON as string - you can use Json type for PostgreSQL
-  lastUpdated      DateTime @map("last_updated") @default(now())
-  createdAt        DateTime @map("created_at") @default(now())
+  id              Int      @id @default(autoincrement())
+  tmdbId          Int      @map("tmdb_id")
+  title           String
+  posterPath      String?  @map("poster_path")
+  backdropPath    String?  @map("backdrop_path")
+  overview        String?
+  releaseDate     DateTime @map("release_date") @db.Date
+  voteAverage     Decimal  @map("vote_average") @db.Decimal(3, 1)
+  voteCount       Int      @map("vote_count")
+  popularityScore Decimal  @map("popularity_score") @db.Decimal(10, 2)
+  trendingRank    Int      @map("trending_rank")
+  genreIds        String   @map("genre_ids")
+  lastUpdated     DateTime @default(now()) @map("last_updated")
+  createdAt       DateTime @default(now()) @map("created_at")
 
   @@index([tmdbId])
   @@index([trendingRank])
@@ -238,8 +211,8 @@ model TrendingMovie {
 model TrendingNews {
   id            Int      @id @default(autoincrement())
   title         String
-  description   String   @db.Text
-  content       String?  @db.Text
+  description   String
+  content       String?
   url           String   @unique
   sourceName    String   @map("source_name")
   author        String?
@@ -247,8 +220,8 @@ model TrendingNews {
   imageUrl      String?  @map("image_url")
   category      String
   trendingScore Int?     @map("trending_score")
-  lastUpdated   DateTime @map("last_updated") @default(now())
-  createdAt     DateTime @map("created_at") @default(now())
+  lastUpdated   DateTime @default(now()) @map("last_updated")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   @@index([publishedAt])
   @@index([lastUpdated])
@@ -256,7 +229,180 @@ model TrendingNews {
   @@map("trending_news")
 }
 
-enum ContentType { 
+model AITrendingContent {
+  id              Int           @id @default(autoincrement())
+  title           String
+  content         String
+  contentType     ContentType   @map("content_type")
+  promptUsed      String?       @map("prompt_used")
+  status          ContentStatus @default(active)
+  viewCount       Int           @default(0) @map("view_count")
+  engagementScore Decimal?      @map("engagement_score") @db.Decimal(5, 2)
+  expiresAt       DateTime?     @map("expires_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@index([contentType])
+  @@index([status])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("ai_trending_content")
+}
+
+model ContentRefreshLog {
+  id                    Int           @id @default(autoincrement())
+  sectionType           SectionType   @map("section_type")
+  lastRefreshAttempt    DateTime      @default(now()) @map("last_refresh_attempt")
+  lastSuccessfulRefresh DateTime?     @map("last_successful_refresh")
+  status                RefreshStatus
+  errorMessage          String?       @map("error_message")
+  recordsUpdated        Int?          @map("records_updated")
+
+  @@index([sectionType])
+  @@index([lastSuccessfulRefresh])
+  @@index([status])
+  @@map("content_refresh_log")
+}
+
+model NewsletterPlan {
+  id              String                   @id @default(uuid())
+  name            String
+  description     String?
+  type            NewsletterType
+  billingInterval BillingInterval
+  amount          Decimal                  @db.Decimal(10, 2)
+  currency        String                   @default("inr")
+  isActive        Boolean                  @default(true)
+  stripePriceId   String?
+  razorpayPlanId  String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  campaigns       NewsletterCampaign[]
+  subscriptions   NewsletterSubscription[]
+}
+
+model NewsletterSubscriber {
+  id               String                   @id @default(uuid())
+  email            String                   @unique
+  name             String?
+  userId           String?                  @unique
+  status           SubscriberStatus         @default(PENDING)
+  country          String?
+  provider         PaymentProvider?
+  unsubscribeToken String                   @unique @default(uuid())
+  unsubscribedAt   DateTime?
+  confirmToken     String?
+  confirmedAt      DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  emailLogs        NewsletterEmailLog[]
+  user             User?                    @relation(fields: [userId], references: [id])
+  subscriptions    NewsletterSubscription[]
+}
+
+model NewsletterSubscription {
+  id                        String               @id @default(uuid())
+  subscriberId              String
+  planId                    String
+  provider                  PaymentProvider
+  status                    PaymentStatus        @default(ACTIVE)
+  stripeCustomerId          String?
+  stripeSubscriptionId      String?              @unique
+  stripePaymentMethodId     String?
+  razorpayCustomerId        String?
+  razorpaySubscriptionId    String?              @unique
+  razorpayMandateId         String?
+  razorpayPaymentMethodType String?
+  currentPeriodStart        DateTime
+  currentPeriodEnd          DateTime
+  cancelAtPeriodEnd         Boolean              @default(false)
+  canceledAt                DateTime?
+  retryCount                Int                  @default(0)
+  lastPaymentError          String?
+  createdAt                 DateTime             @default(now())
+  updatedAt                 DateTime             @updatedAt
+  payments                  NewsletterPayment[]
+  plan                      NewsletterPlan       @relation(fields: [planId], references: [id])
+  subscriber                NewsletterSubscriber @relation(fields: [subscriberId], references: [id])
+
+  @@unique([subscriberId, planId])
+}
+
+model NewsletterPayment {
+  id                    String                 @id @default(uuid())
+  subscriptionId        String
+  provider              PaymentProvider
+  status                InvoiceStatus
+  amount                Decimal                @db.Decimal(10, 2)
+  currency              String
+  stripeInvoiceId       String?                @unique
+  stripePaymentIntentId String?
+  razorpayPaymentId     String?                @unique
+  razorpayInvoiceId     String?
+  paidAt                DateTime?
+  failureReason         String?
+  createdAt             DateTime               @default(now())
+  subscription          NewsletterSubscription @relation(fields: [subscriptionId], references: [id])
+}
+
+model NewsletterCampaign {
+  id              String               @id @default(uuid())
+  planId          String
+  subject         String
+  previewText     String?
+  content         Json
+  status          CampaignStatus       @default(DRAFT)
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  totalRecipients Int                  @default(0)
+  totalSent       Int                  @default(0)
+  totalOpened     Int                  @default(0)
+  totalClicked    Int                  @default(0)
+  totalBounced    Int                  @default(0)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  plan            NewsletterPlan       @relation(fields: [planId], references: [id])
+  emailLogs       NewsletterEmailLog[]
+}
+
+model NewsletterEmailLog {
+  id            String               @id @default(uuid())
+  subscriberId  String
+  campaignId    String
+  sesMessageId  String?              @unique
+  status        EmailLogStatus       @default(QUEUED)
+  sentAt        DateTime?
+  openedAt      DateTime?
+  clickedAt     DateTime?
+  bouncedAt     DateTime?
+  complainedAt  DateTime?
+  bounceType    String?
+  bounceSubType String?
+  createdAt     DateTime             @default(now())
+  campaign      NewsletterCampaign   @relation(fields: [campaignId], references: [id])
+  subscriber    NewsletterSubscriber @relation(fields: [subscriberId], references: [id])
+
+  @@index([subscriberId])
+  @@index([campaignId])
+  @@index([sesMessageId])
+  @@index([status])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BlockType {
+  PARAGRAPH
+  HEADING
+  IMAGE
+  LIST
+  QUOTE
+  DIVIDER
+}
+
+enum ContentType {
   discussion
   recommendation
   analysis
@@ -267,26 +413,6 @@ enum ContentStatus {
   active
   archived
   draft
-}
-
-model AITrendingContent {
-  id              Int           @id @default(autoincrement())
-  title           String
-  content         String        @db.Text
-  contentType     ContentType   @map("content_type")
-  promptUsed      String?       @map("prompt_used") @db.Text
-  status          ContentStatus @default(active)
-  viewCount       Int           @map("view_count") @default(0)
-  engagementScore Decimal?      @map("engagement_score") @db.Decimal(5, 2)
-  expiresAt       DateTime?     @map("expires_at")
-  createdAt       DateTime      @map("created_at") @default(now())
-  updatedAt       DateTime      @map("updated_at") @updatedAt
-
-  @@index([contentType])
-  @@index([status])
-  @@index([createdAt])
-  @@index([expiresAt])
-  @@map("ai_trending_content")
 }
 
 enum SectionType {
@@ -301,28 +427,6 @@ enum RefreshStatus {
   in_progress
 }
 
-model ContentRefreshLog {
-  id                    Int           @id @default(autoincrement())
-  sectionType           SectionType   @map("section_type")
-  lastRefreshAttempt    DateTime      @map("last_refresh_attempt") @default(now())
-  lastSuccessfulRefresh DateTime?     @map("last_successful_refresh")
-  status                RefreshStatus
-  errorMessage          String?       @map("error_message") @db.Text
-  recordsUpdated        Int?          @map("records_updated")
-
-  @@index([sectionType])
-  @@index([lastSuccessfulRefresh])
-  @@index([status])
-  @@map("content_refresh_log")
-}
-
-
-//Newsletter
-
-
-
-// ─── ENUMS ───────────────────────────────────────────────
-
 enum NewsletterType {
   BOLLYWOOD
   HOLLYWOOD
@@ -334,11 +438,11 @@ enum PaymentProvider {
 }
 
 enum SubscriberStatus {
-  PENDING        // signed up, payment not completed yet
-  ACTIVE         // paying, receiving emails
-  PAST_DUE       // payment failed, in retry window
-  CANCELED       // fully canceled, no access
-  UNSUBSCRIBED   // opted out of emails manually
+  PENDING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNSUBSCRIBED
 }
 
 enum BillingInterval {
@@ -373,226 +477,6 @@ enum EmailLogStatus {
   OPENED
   CLICKED
   BOUNCED
-  COMPLAINED   // SES complaint — critical to track
+  COMPLAINED
   FAILED
-}
-
-// ─── NEWSLETTER PLAN ─────────────────────────────────────
-
-// One row per plan. You'll have at least:
-// - Bollywood Monthly, Bollywood Yearly
-// - Hollywood Monthly, Hollywood Yearly
-// Pricing is DB-driven so you can change it without redeploying
-
-model NewsletterPlan {
-  id                String          @id @default(uuid())
-  name              String          // e.g. "Bollywood Weekly"
-  description       String?
-  type              NewsletterType
-  billingInterval   BillingInterval
-  amount            Decimal         @db.Decimal(10, 2)
-  currency          String          @default("inr") // inr for Razorpay, usd for Stripe
-  isActive          Boolean         @default(true)  // set false to retire a plan
-
-  // Provider-side plan/price IDs
-  // These are created on Stripe/Razorpay dashboards and stored here
-  stripePriceId     String?         // Stripe Price ID e.g. price_xxxxx
-  razorpayPlanId    String?         // Razorpay Plan ID e.g. plan_xxxxx
-
-  subscriptions     NewsletterSubscription[]
-  campaigns         NewsletterCampaign[]
-
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-}
-
-// ─── NEWSLETTER SUBSCRIBER ───────────────────────────────
-
-// Core identity table. One row per email address.
-// userId is optional — someone can subscribe without a Google account
-
-model NewsletterSubscriber {
-  id                String             @id @default(uuid())
-  email             String             @unique
-  name              String?
-
-  // Optional link to your existing User model
-  userId            String?            @unique
-  user              User?              @relation(fields: [userId], references: [id])
-
-  status            SubscriberStatus   @default(PENDING)
-
-  // Country detected from IP during signup
-  // Used to route to Stripe (international) or Razorpay (India)
-  country           String?            // e.g. "IN", "US"
-  provider          PaymentProvider?   // set once they complete payment
-
-  // Unsubscribe — unique token, no auth needed
-  // Link format: /unsubscribe?token=xxxx
-  unsubscribeToken  String             @unique @default(uuid())
-  unsubscribedAt    DateTime?
-
-  // Email verification for non-OAuth subscribers
-  confirmToken      String?
-  confirmedAt       DateTime?
-
-  subscriptions     NewsletterSubscription[]
-  emailLogs         NewsletterEmailLog[]
-
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-}
-
-// ─── NEWSLETTER SUBSCRIPTION ─────────────────────────────
-
-// One row per subscriber per plan.
-// A subscriber who wants both Bollywood + Hollywood gets two rows here.
-
-model NewsletterSubscription {
-  id                    String           @id @default(uuid())
-
-  subscriberId          String
-  subscriber            NewsletterSubscriber @relation(fields: [subscriberId], references: [id])
-
-  planId                String
-  plan                  NewsletterPlan   @relation(fields: [planId], references: [id])
-
-  provider              PaymentProvider
-  status                PaymentStatus    @default(ACTIVE)
-
-  // ── Stripe fields (populated if provider = STRIPE) ──
-  stripeCustomerId      String?
-  stripeSubscriptionId  String?          @unique
-  stripePaymentMethodId String?          // saved card
-
-  // ── Razorpay fields (populated if provider = RAZORPAY) ──
-  razorpayCustomerId    String?
-  razorpaySubscriptionId String?         @unique
-  razorpayMandateId     String?          // UPI Autopay mandate ID — separate from subscription
-  razorpayPaymentMethodType String?      // "upi" | "card" | "emandate"
-
-  // Billing period
-  currentPeriodStart    DateTime
-  currentPeriodEnd      DateTime
-
-  // Cancellation
-  cancelAtPeriodEnd     Boolean          @default(false)
-  canceledAt            DateTime?
-
-  // Failed payment tracking
-  retryCount            Int              @default(0)  // increments on each failed charge
-  lastPaymentError      String?          // last error message from provider
-
-  payments              NewsletterPayment[]
-
-  // Ensure one subscription per subscriber per plan
-  @@unique([subscriberId, planId])
-
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-}
-
-// ─── NEWSLETTER PAYMENT ──────────────────────────────────
-
-// Ledger of every charge attempt, success or failure.
-// Never delete rows from here.
-
-model NewsletterPayment {
-  id                String           @id @default(uuid())
-
-  subscriptionId    String
-  subscription      NewsletterSubscription @relation(fields: [subscriptionId], references: [id])
-
-  provider          PaymentProvider
-  status            InvoiceStatus
-
-  amount            Decimal          @db.Decimal(10, 2)
-  currency          String
-
-  // Provider-side invoice/payment IDs
-  stripeInvoiceId   String?          @unique
-  stripePaymentIntentId String?
-
-  razorpayPaymentId String?          @unique  // e.g. pay_xxxxx
-  razorpayInvoiceId String?          // e.g. inv_xxxxx if using Razorpay invoices
-
-  paidAt            DateTime?
-  failureReason     String?          // populated on failed payments
-
-  createdAt         DateTime         @default(now())
-}
-
-// ─── NEWSLETTER CAMPAIGN ─────────────────────────────────
-
-// Each issue/edition you send out.
-// Linked to a plan — Bollywood campaign only goes to Bollywood subscribers.
-
-model NewsletterCampaign {
-  id              String           @id @default(uuid())
-
-  planId          String
-  plan            NewsletterPlan   @relation(fields: [planId], references: [id])
-
-  subject         String
-  previewText     String?          // the snippet shown in email clients before opening
-
-  // The actual newsletter content — stored as JSON
-  // Maps to your HTML template sections:
-  // { spotlight: {...}, releases: [...], editorial: {...}, hiddenGem: {...}, etc. }
-  content         Json
-
-  status          CampaignStatus   @default(DRAFT)
-  scheduledAt     DateTime?        // when to send, null = send immediately
-  sentAt          DateTime?        // populated once sending completes
-
-  // Stats — denormalized for quick admin dashboard reads
-  totalRecipients Int              @default(0)
-  totalSent       Int              @default(0)
-  totalOpened     Int              @default(0)
-  totalClicked    Int              @default(0)
-  totalBounced    Int              @default(0)
-
-  emailLogs       NewsletterEmailLog[]
-
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-}
-
-// ─── NEWSLETTER EMAIL LOG ────────────────────────────────
-
-// One row per email per campaign per subscriber.
-// Critical for SES compliance — bounces and complaints must be tracked
-// or AWS will suspend your sending.
-
-model NewsletterEmailLog {
-  id              String           @id @default(uuid())
-
-  subscriberId    String
-  subscriber      NewsletterSubscriber @relation(fields: [subscriberId], references: [id])
-
-  campaignId      String
-  campaign        NewsletterCampaign @relation(fields: [campaignId], references: [id])
-
-  // SES Message ID — returned when you call SES SendEmail
-  // Used to match SNS bounce/complaint notifications back to this row
-  sesMessageId    String?          @unique
-
-  status          EmailLogStatus   @default(QUEUED)
-
-  sentAt          DateTime?
-  openedAt        DateTime?        // requires SES open tracking pixel
-  clickedAt       DateTime?        // requires SES click tracking
-  bouncedAt       DateTime?
-  complainedAt    DateTime?        // user hit spam — remove from all future sends immediately
-
-  // Bounce details from SNS notification
-  bounceType      String?          // "Permanent" | "Transient"
-  bounceSubType   String?          // "NoEmail" | "Suppressed" | "MailboxFull" etc.
-
-  createdAt       DateTime         @default(now())
-
-  @@index([subscriberId])
-  @@index([campaignId])
-  @@index([sesMessageId])
-  @@index([status])
 }

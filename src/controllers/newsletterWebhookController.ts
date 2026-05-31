@@ -6,6 +6,8 @@ import {
   RazorpayWebhookPayload,
   SNSBounceNotification,
 } from "../types/newsletter.types.js";
+import { queueEmail } from "../queues/emailQueue.js";
+import { buildWelcomeEmail } from "../helpers/emailTemplate.js";
 
 // ─── RAZORPAY WEBHOOK ─────────────────────────────────────────────────────────
 // All subscription events from Razorpay hit this handler
@@ -64,6 +66,31 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
             where: { id: subscription.subscriberId },
             data: { status: "ACTIVE" },
           });
+
+          // Queue welcome email — subscriber already loaded via include
+          const subscriber = subscription.subscriber;
+          const plan = await client.newsletterPlan.findUnique({
+            where: { id: subscription.planId },
+          });
+
+          if (plan) {
+            const html = buildWelcomeEmail({
+              name: subscriber.name,
+              planName: plan.name,
+              unsubscribeToken: subscriber.unsubscribeToken,
+            });
+
+            await queueEmail({
+              subscriberId: subscriber.id,
+              email: subscriber.email,
+              name: subscriber.name,
+              subject: "Welcome to The Cineprism Newsletter 🎬",
+              htmlContent: html,
+              unsubscribeToken: subscriber.unsubscribeToken,
+            });
+
+            logger.info(`Welcome email queued for ${subscriber.email}`);
+          }
         }
 
         logger.info(`Subscription activated: ${sub.id}`);

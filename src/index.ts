@@ -199,6 +199,9 @@ import adminRouter from "./routes/adminRoutes.js";
 
 app.use("/api/v1/admin", adminRouter);
 
+import newsletterAdminRoutes from "./routes/newsletterAdminRoutes.js";
+app.use("/api/v1/admin/newsletter", newsletterAdminRoutes);
+
 import postRoutes from "./routes/postRoutes.js";
 
 app.use("/api/v1/posts", postRoutes);
@@ -224,10 +227,30 @@ app.use("/api/v1/articles",articleRoutes)
 import newsletterRoutes from "./routes/newsletterRoutes.js";
 app.use("/api/v1/newsletter", newsletterRoutes);
 
+import cacheRoutes from "./routes/cacheRoutes.js";
+app.use("/api/v1/cache", cacheRoutes);
+
 
 
 import "./queues/emailWorker.js";
+import { setCache } from "./config/redis.js";
 
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
+
+  // Warm up newsletter plans cache so first visitor never hits a cold miss
+  (async () => {
+    try {
+      const plans = await client.newsletterPlan.findMany({
+        where: { isActive: true },
+        orderBy: { amount: "asc" },
+      });
+      await setCache("newsletter:plans", JSON.stringify({ plans }), 3600);
+      logger.info(
+        `[Cache Warm-up] newsletter:plans loaded (${plans.length} plan${plans.length !== 1 ? "s" : ""}) — TTL 3600s`,
+      );
+    } catch (err: any) {
+      logger.warn(`[Cache Warm-up] newsletter:plans failed: ${err.message}`);
+    }
+  })();
 });

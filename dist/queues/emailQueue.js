@@ -2,9 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.queueBulkEmails = exports.queueEmail = exports.emailQueue = void 0;
 const bullmq_1 = require("bullmq");
-// Use REDIS_URL from env - make sure this is the PUBLIC URL if backend is not on Railway
+const redisUrl = process.env.REDIS_URL;
 const connection = {
-    url: process.env.REDIS_URL,
+    url: redisUrl,
+    maxRetriesPerRequest: null, // required by BullMQ
+    enableReadyCheck: false,
+    ...(redisUrl?.startsWith("rediss://")
+        ? { tls: { rejectUnauthorized: false } }
+        : {}),
 };
 // Main queue for sending newsletter emails
 exports.emailQueue = new bullmq_1.Queue("newsletter-emails", {
@@ -21,9 +26,12 @@ exports.emailQueue = new bullmq_1.Queue("newsletter-emails", {
 });
 // Helper to add a single email job to the queue
 const queueEmail = async (data) => {
-    await exports.emailQueue.add(`email-${data.subscriberId}-${data.campaignId}`, data, {
-        jobId: `${data.campaignId}-${data.subscriberId}`, // prevents duplicate jobs for same campaign+subscriber
-    });
+    // Transactional emails get a timestamp-based unique ID; campaign emails use
+    // campaignId+subscriberId so duplicate jobs for the same send are deduplicated.
+    const jobId = data.campaignId
+        ? `${data.campaignId}-${data.subscriberId}`
+        : `tx-${data.subscriberId}-${Date.now()}`;
+    await exports.emailQueue.add(`email-${data.subscriberId}-${data.campaignId ?? "tx"}`, data, { jobId });
 };
 exports.queueEmail = queueEmail;
 // Helper to add bulk emails - used when sending a campaign

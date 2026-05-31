@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchNews = exports.getNewsByCategory = exports.getNewsById = exports.getRefreshStatus = exports.refreshTrendingNews = exports.getTrendingNews = void 0;
 const axios_1 = __importDefault(require("axios"));
 const __1 = __importDefault(require(".."));
+const redis_1 = require("../config/redis");
 // NewsAPI Integration
 const fetchFromNewsAPI = async () => {
     if (!process.env.NEWS_API_KEY) {
@@ -228,6 +229,10 @@ const removeDuplicateArticles = (articles) => {
 };
 const getTrendingNews = async (req, res) => {
     try {
+        const cached = await (0, redis_1.getFromCache)("trending:news");
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
+        }
         const news = await __1.default.trendingNews.findMany({
             orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
             take: 50,
@@ -255,6 +260,7 @@ const getTrendingNews = async (req, res) => {
                 sources: [...new Set(news.map((n) => n.sourceName))],
             },
         };
+        await (0, redis_1.setCache)("trending:news", JSON.stringify(response), 900);
         res.status(200).json(response);
     }
     catch (error) {
@@ -338,6 +344,11 @@ const refreshTrendingNews = async (req, res) => {
             },
         });
         console.log(`Successfully refreshed ${insertedNews.length} articles in ${processingTime}ms`);
+        // Invalidate all news-related caches
+        await Promise.all([
+            (0, redis_1.deleteCache)("trending:news"),
+            (0, redis_1.deleteCachePattern)("news:*"),
+        ]);
         res.status(200).json({
             success: true,
             message: "Trending news refreshed successfully",
@@ -402,6 +413,11 @@ exports.getRefreshStatus = getRefreshStatus;
 const getNewsById = async (req, res) => {
     try {
         const { id } = req.params;
+        const cacheKey = `news:${id}`;
+        const cached = await (0, redis_1.getFromCache)(cacheKey);
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
+        }
         const article = await __1.default.trendingNews.findUnique({
             where: { id: parseInt(id) },
         });
@@ -411,7 +427,7 @@ const getNewsById = async (req, res) => {
                 message: "News article not found",
             });
         }
-        res.status(200).json({
+        const response = {
             success: true,
             data: {
                 id: article.id,
@@ -426,7 +442,9 @@ const getNewsById = async (req, res) => {
                 category: article.category,
                 trending_score: article.trendingScore,
             },
-        });
+        };
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(response), 900);
+        res.status(200).json(response);
     }
     catch (error) {
         console.error("Error fetching news article:", error.message);
@@ -442,12 +460,17 @@ const getNewsByCategory = async (req, res) => {
     try {
         const { category = "entertainment" } = req.params;
         const { limit = 10 } = req.query;
+        const cacheKey = `news:category:${category}`;
+        const cached = await (0, redis_1.getFromCache)(cacheKey);
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
+        }
         const news = await __1.default.trendingNews.findMany({
             where: { category },
             orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
             take: parseInt(limit),
         });
-        res.status(200).json({
+        const response = {
             success: true,
             data: news.map((article) => ({
                 id: article.id,
@@ -464,7 +487,9 @@ const getNewsByCategory = async (req, res) => {
                 category,
                 count: news.length,
             },
-        });
+        };
+        await (0, redis_1.setCache)(cacheKey, JSON.stringify(response), 900);
+        res.status(200).json(response);
     }
     catch (error) {
         console.error("Error fetching news by category:", error.message);

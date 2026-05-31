@@ -1,6 +1,8 @@
 import { Router } from "express";
 import {
+  checkRedisHealth,
   listAllCaches,
+  getCacheStats,
   deleteSingleCache,
   deleteCachesByPattern,
   deleteAllArticleCaches,
@@ -10,6 +12,12 @@ import {
 import { extractUserDetails } from "../middlewares/extractUser.js";
 
 const router = Router();
+
+// Public health check — no auth needed
+router.get("/health", checkRedisHealth);
+
+// Cache stats summary (admin only)
+router.get("/stats", extractUserDetails, getCacheStats);
 
 // Get all caches
 router.get("/list", extractUserDetails, listAllCaches);

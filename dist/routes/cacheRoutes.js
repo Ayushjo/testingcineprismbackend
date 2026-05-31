@@ -4,6 +4,10 @@ const express_1 = require("express");
 const cacheController_js_1 = require("../controllers/cacheController.js");
 const extractUser_js_1 = require("../middlewares/extractUser.js");
 const router = (0, express_1.Router)();
+// Public health check — no auth needed
+router.get("/health", cacheController_js_1.checkRedisHealth);
+// Cache stats summary (admin only)
+router.get("/stats", extractUser_js_1.extractUserDetails, cacheController_js_1.getCacheStats);
 // Get all caches
 router.get("/list", extractUser_js_1.extractUserDetails, cacheController_js_1.listAllCaches);
 // Delete specific cache

@@ -5,6 +5,7 @@ import getBuffer from "../config/dataUri";
 import cloudinary from "cloudinary";
 import { uploadToS3 } from "../utils/s3Upload";
 import { deleteFromS3 } from "../utils/s3Delete";
+import { setCache, getFromCache, deleteCache, deleteCachePattern } from "../config/redis";
 
 /**
  * Process an array of async tasks in batches to avoid overwhelming the server
@@ -119,6 +120,7 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
       },
     });
 
+    await deleteCache("all_articles");
     res.status(200).json({ article });
   } catch (error: any) {
     console.log(error.message);
@@ -127,9 +129,16 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
 };
 export const getArticles = async (req: Request, res: Response) => {
   try {
+    const cached = await getFromCache("all_articles");
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const articles = await client.article.findMany({
       where: { published: true },
     });
+
+    await setCache("all_articles", JSON.stringify({ articles }), 600);
     res.status(200).json({ articles });
   } catch (error: any) {
     console.log(error.message);
@@ -143,6 +152,17 @@ export const getSingleArticle = async (
 ) => {
   try {
     const { slug } = req.params;
+
+    const cached = await getFromCache(`article:${slug}`);
+    if (cached) {
+      // Increment view count in background without blocking the response
+      const parsed = JSON.parse(cached);
+      client.article.update({
+        where: { id: parsed.article.id },
+        data: { viewCount: { increment: 1 } },
+      }).catch(() => {});
+      return res.status(200).json(parsed);
+    }
 
     const article = await client.article.findFirst({
       where: { slug },
@@ -177,6 +197,7 @@ export const getSingleArticle = async (
       });
     }
 
+    await setCache(`article:${slug}`, JSON.stringify({ article: updatedArticle }), 600);
     res.status(200).json({ article: updatedArticle });
   } catch (error: any) {
     console.log(error.message);
@@ -418,7 +439,12 @@ export const updateArticle = async (req: AuthorizedRequest, res: Response) => {
       });
     }
 
-    // 14. Send response
+    // 14. Invalidate caches and send response
+    await Promise.all([
+      deleteCache("all_articles"),
+      deleteCache(`article:${slug}`),
+      deleteCache(`article:${existingArticle.slug}`),
+    ]);
     res.status(200).json({
       message: "Article updated successfully",
       article: updatedArticle,

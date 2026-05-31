@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import axios from "axios";
 import client from "..";
 import { ScrapedNews } from "../types/news";
+import { setCache, getFromCache, deleteCache, deleteCachePattern } from "../config/redis";
 
 // NewsAPI Integration
 const fetchFromNewsAPI = async (): Promise<ScrapedNews[]> => {
@@ -255,6 +256,11 @@ const removeDuplicateArticles = (articles: ScrapedNews[]): ScrapedNews[] => {
 
 export const getTrendingNews = async (req: Request, res: Response) => {
   try {
+    const cached = await getFromCache("trending:news");
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const news = await client.trendingNews.findMany({
       orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
       take: 50,
@@ -285,6 +291,7 @@ export const getTrendingNews = async (req: Request, res: Response) => {
       },
     };
 
+    await setCache("trending:news", JSON.stringify(response), 900);
     res.status(200).json(response);
   } catch (error: any) {
     console.error("Error fetching trending news:", error.message);
@@ -388,6 +395,11 @@ export const refreshTrendingNews = async (req: Request, res: Response) => {
       `Successfully refreshed ${insertedNews.length} articles in ${processingTime}ms`
     );
 
+    // Invalidate all news-related caches
+    await Promise.all([
+      deleteCache("trending:news"),
+      deleteCachePattern("news:*"),
+    ]);
     res.status(200).json({
       success: true,
       message: "Trending news refreshed successfully",
@@ -457,6 +469,12 @@ export const getNewsById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
+    const cacheKey = `news:${id}`;
+    const cached = await getFromCache(cacheKey);
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const article = await client.trendingNews.findUnique({
       where: { id: parseInt(id) },
     });
@@ -468,7 +486,7 @@ export const getNewsById = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(200).json({
+    const response = {
       success: true,
       data: {
         id: article.id,
@@ -483,7 +501,10 @@ export const getNewsById = async (req: Request, res: Response) => {
         category: article.category,
         trending_score: article.trendingScore,
       },
-    });
+    };
+
+    await setCache(cacheKey, JSON.stringify(response), 900);
+    res.status(200).json(response);
   } catch (error: any) {
     console.error("Error fetching news article:", error.message);
     res.status(500).json({
@@ -499,13 +520,19 @@ export const getNewsByCategory = async (req: Request, res: Response) => {
     const { category = "entertainment" } = req.params;
     const { limit = 10 } = req.query;
 
+    const cacheKey = `news:category:${category}`;
+    const cached = await getFromCache(cacheKey);
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+
     const news = await client.trendingNews.findMany({
       where: { category },
       orderBy: [{ trendingScore: "desc" }, { publishedAt: "desc" }],
       take: parseInt(limit as string),
     });
 
-    res.status(200).json({
+    const response = {
       success: true,
       data: news.map((article) => ({
         id: article.id,
@@ -522,7 +549,10 @@ export const getNewsByCategory = async (req: Request, res: Response) => {
         category,
         count: news.length,
       },
-    });
+    };
+
+    await setCache(cacheKey, JSON.stringify(response), 900);
+    res.status(200).json(response);
   } catch (error: any) {
     console.error("Error fetching news by category:", error.message);
     res.status(500).json({

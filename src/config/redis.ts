@@ -1,10 +1,9 @@
 import Redis from "ioredis";
 
-const redisClient = new Redis({
-  host: process.env.REDIS_HOST,
-  port: Number(process.env.REDIS_PORT),
-  tls: {}, // AWS Serverless Redis requires TLS
-  enableReadyCheck: false, // Serverless Redis does NOT support CLUSTER commands
+const redisUrl = process.env.REDIS_URL!;
+
+const redisClient = new Redis(redisUrl, {
+  enableReadyCheck: false,
   maxRetriesPerRequest: null,
   retryStrategy(times) {
     return Math.min(times * 200, 2000);
