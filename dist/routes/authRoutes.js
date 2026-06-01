@@ -6,7 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const passport_1 = __importDefault(require("../config/passport"));
 const authController_1 = require("../controllers/authController");
+const rateLimiter_1 = require("../middlewares/rateLimiter");
 const router = (0, express_1.Router)();
+// TIER 2 — 20 req / 15 min per IP on all auth routes
+router.use(rateLimiter_1.authLimiter);
 // Google OAuth routes
 router.get("/google", passport_1.default.authenticate("google", {
     scope: ["profile", "email"],

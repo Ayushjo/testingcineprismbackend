@@ -6,9 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const multer_1 = __importDefault(require("../middlewares/multer"));
 const extractUser_1 = require("../middlewares/extractUser");
+const rateLimiter_1 = require("../middlewares/rateLimiter");
 const adminController_1 = require("../controllers/adminController");
 const router = (0, express_1.Router)();
-router.route("/add-byGenres").post(extractUser_1.extractUserDetails, multer_1.default.single("file"), adminController_1.addByGenre);
+// TIER 4 — 100 req / 15 min per IP on all admin routes
+router.use(rateLimiter_1.adminLimiter);
+router
+    .route("/add-byGenres")
+    .post(extractUser_1.extractUserDetails, multer_1.default.single("file"), adminController_1.addByGenre);
 router.route("/fetch-byGenre/:genre").get(adminController_1.fetchGenre);
 router
     .route("/add-poster")
@@ -19,7 +24,7 @@ router
 router.route("/create-post").post(extractUser_1.extractUserDetails, adminController_1.createPost);
 router
     .route("/upload-images")
-    .post(extractUser_1.extractUserDetails, multer_1.default.array("files", 10), adminController_1.uploadImages);
+    .post(extractUser_1.extractUserDetails, multer_1.default.array("files", 50), adminController_1.uploadImages);
 router
     .route("/create-top-picks")
     .post(extractUser_1.extractUserDetails, multer_1.default.single("file"), adminController_1.addTopPicks);

@@ -18,17 +18,17 @@ if (typeof globalThis.File === "undefined") {
 
     async arrayBuffer(): Promise<ArrayBuffer> {
       const buffer = Buffer.concat(
-        this._chunks.map((chunk) => Buffer.from(chunk))
+        this._chunks.map((chunk) => Buffer.from(chunk)),
       );
       return buffer.buffer.slice(
         buffer.byteOffset,
-        buffer.byteOffset + buffer.byteLength
+        buffer.byteOffset + buffer.byteLength,
       );
     }
 
     async bytes(): Promise<Uint8Array> {
       const buffer = Buffer.concat(
-        this._chunks.map((chunk) => Buffer.from(chunk))
+        this._chunks.map((chunk) => Buffer.from(chunk)),
       );
       return new Uint8Array(buffer);
     }
@@ -46,7 +46,7 @@ if (typeof globalThis.File === "undefined") {
 
     async text(): Promise<string> {
       const buffer = Buffer.concat(
-        this._chunks.map((chunk) => Buffer.from(chunk))
+        this._chunks.map((chunk) => Buffer.from(chunk)),
       );
       return buffer.toString("utf8");
     }
@@ -60,6 +60,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import logger from "./logger.js";
 import morgan from "morgan";
+import { globalLimiter } from "./middlewares/rateLimiter.js";
 import { PrismaClient } from "@prisma/client";
 import { cli } from "winston/lib/winston/config";
 import cookieParser from "cookie-parser";
@@ -83,7 +84,7 @@ app.use(
         logger.info(JSON.stringify(logObject));
       },
     },
-  })
+  }),
 );
 const client = new PrismaClient();
 export default client;
@@ -147,7 +148,7 @@ app.use(
     maxAge: 86400, // 24 hours
     preflightContinue: false,
     optionsSuccessStatus: 204,
-  })
+  }),
 );
 
 // Add trust proxy setting if behind a proxy (Vercel, Heroku, etc.)
@@ -175,7 +176,7 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
     res.header(
       "Access-Control-Allow-Headers",
-      "Content-Type,Authorization,Cookie"
+      "Content-Type,Authorization,Cookie",
     );
     res.header("Access-Control-Max-Age", "86400"); // 24 hours
     console.log("✅ OPTIONS response headers set");
@@ -184,6 +185,12 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// ── TIER 1 global rate limiter ───────────────────────────────────────────
+// Must come AFTER the OPTIONS handler so CORS preflight is never blocked.
+// The skip() function in globalLimiter ensures /api/v1/webhooks/* and every
+// route that carries its own tier limiter are NEVER counted here.
+app.use(globalLimiter);
 
 app.use(cookieParser());
 import newsletterWebhookRoutes from "./routes/newsletterWebhookRoutes.js";
@@ -218,11 +225,11 @@ import authRoutes from "./routes/authRoutes.js";
 
 app.use("/api/v1/auth", authRoutes);
 
-import htmlRoutes from "./routes/htmlRoutes.js"
-app.use("/",htmlRoutes)
+import htmlRoutes from "./routes/htmlRoutes.js";
+app.use("/", htmlRoutes);
 
-import articleRoutes from "./routes/articleRoutes.js"
-app.use("/api/v1/articles",articleRoutes)
+import articleRoutes from "./routes/articleRoutes.js";
+app.use("/api/v1/articles", articleRoutes);
 
 import newsletterRoutes from "./routes/newsletterRoutes.js";
 app.use("/api/v1/newsletter", newsletterRoutes);
@@ -230,13 +237,35 @@ app.use("/api/v1/newsletter", newsletterRoutes);
 import cacheRoutes from "./routes/cacheRoutes.js";
 app.use("/api/v1/cache", cacheRoutes);
 
-
-
 import "./queues/emailWorker.js";
 import { setCache } from "./config/redis.js";
+import fs from "fs";
+import path from "path";
+
+const TEMP_DIR = "/tmp/cineprism-uploads";
+const ONE_HOUR = 60 * 60 * 1000;
 
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
+
+  // Periodically delete orphaned temp upload files older than 1 hour.
+  // These are left behind when an upload fails mid-way after Multer wrote
+  // the file to disk but before s3Upload.ts could delete it.
+  setInterval(() => {
+    if (!fs.existsSync(TEMP_DIR)) return;
+    const files = fs.readdirSync(TEMP_DIR);
+    const now = Date.now();
+    files.forEach((file) => {
+      const filePath = path.join(TEMP_DIR, file);
+      try {
+        const stat = fs.statSync(filePath);
+        if (now - stat.mtimeMs > ONE_HOUR) {
+          fs.unlinkSync(filePath);
+          logger.info(`[Cleanup] Deleted orphaned temp file: ${file}`);
+        }
+      } catch {}
+    });
+  }, ONE_HOUR);
 
   // Warm up newsletter plans cache so first visitor never hits a cold miss
   (async () => {

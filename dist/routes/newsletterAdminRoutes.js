@@ -2,8 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const extractUser_js_1 = require("../middlewares/extractUser.js");
+const rateLimiter_js_1 = require("../middlewares/rateLimiter.js");
 const newsletterAdminController_js_1 = require("../controllers/newsletterAdminController.js");
 const router = (0, express_1.Router)();
+// TIER 4 — 100 req / 15 min per IP. Must be first so it covers every route below.
+router.use(rateLimiter_js_1.adminLimiter);
 // All routes require authentication; admin check is inside each controller.
 router.use(extractUser_js_1.extractUserDetails);
 router.post("/campaigns", newsletterAdminController_js_1.createCampaign);

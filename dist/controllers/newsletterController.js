@@ -51,6 +51,24 @@ const createCheckout = async (req, res) => {
                 .status(500)
                 .json({ error: "Plan not configured on Razorpay yet" });
         }
+        // FIX 3: Clean up any stale PENDING checkout for this email + plan
+        // (subscriber never completed payment, record is > 1 hour old)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        const staleSubscription = await index_js_1.default.newsletterSubscription.findFirst({
+            where: {
+                planId,
+                createdAt: { lt: oneHourAgo },
+                subscriber: { email, status: "PENDING" },
+            },
+            select: { id: true },
+        });
+        if (staleSubscription) {
+            await index_js_1.default.newsletterSubscription.delete({
+                where: { id: staleSubscription.id },
+            });
+            logger_js_1.default.info(`Cleaned up stale PENDING subscription for ${email}`);
+        }
+        // Load subscriber AFTER cleanup so stale subscription is not included
         const existingSubscriber = await index_js_1.default.newsletterSubscriber.findUnique({
             where: { email },
             include: {
@@ -59,7 +77,10 @@ const createCheckout = async (req, res) => {
                 },
             },
         });
-        if (existingSubscriber?.subscriptions[0]?.status === "ACTIVE") {
+        // 409 only when BOTH subscriber AND subscription are genuinely active
+        // (not an abandoned/pending checkout)
+        if (existingSubscriber?.status === "ACTIVE" &&
+            existingSubscriber?.subscriptions[0]?.status === "ACTIVE") {
             return res.status(409).json({ error: "Already subscribed to this plan" });
         }
         let subscriber = existingSubscriber;
@@ -105,6 +126,7 @@ const createCheckout = async (req, res) => {
                 throw customerError;
             }
         }
+        const frontendUrl = (process.env.FRONTEND_URL || "").replace(/\/$/, "");
         const razorpaySubscription = await razorpay.subscriptions.create({
             plan_id: plan.razorpayPlanId,
             customer_notify: 1,
@@ -116,7 +138,9 @@ const createCheckout = async (req, res) => {
                 planId: plan.id,
                 email,
             },
-            // FIX 2: callback_url is not accepted by Razorpay subscriptions API — removed
+            // callback_url: Razorpay redirects here after payment with
+            // ?razorpay_payment_id=&razorpay_subscription_id=&razorpay_signature=
+            callback_url: `${frontendUrl}/newsletter/status`,
         });
         await index_js_1.default.newsletterSubscription.create({
             data: {

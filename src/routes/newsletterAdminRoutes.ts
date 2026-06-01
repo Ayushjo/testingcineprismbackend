@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { extractUserDetails } from "../middlewares/extractUser.js";
+import { adminLimiter } from "../middlewares/rateLimiter.js";
 import {
   createCampaign,
   sendCampaign,
@@ -11,6 +12,8 @@ import {
 
 const router = Router();
 
+// TIER 4 — 100 req / 15 min per IP. Must be first so it covers every route below.
+router.use(adminLimiter);
 // All routes require authentication; admin check is inside each controller.
 router.use(extractUserDetails);
 

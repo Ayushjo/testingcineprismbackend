@@ -8,15 +8,19 @@ import {
   // ... other imports
 } from "../controllers/authController";
 import { extractUserDetails } from "../middlewares/extractUser";
+import { authLimiter } from "../middlewares/rateLimiter";
 
 const router = Router();
+
+// TIER 2 — 20 req / 15 min per IP on all auth routes
+router.use(authLimiter);
 
 // Google OAuth routes
 router.get(
   "/google",
   passport.authenticate("google", {
     scope: ["profile", "email"],
-  })
+  }),
 );
 
 router.get(
@@ -25,9 +29,9 @@ router.get(
     failureRedirect: "/auth/google/failure",
     session: false,
   }),
-  googleAuthSuccess
+  googleAuthSuccess,
 );
 
 router.get("/google/failure", googleAuthFailure);
 
-export default router
+export default router;

@@ -42,6 +42,7 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const logger_js_1 = __importDefault(require("./logger.js"));
 const morgan_1 = __importDefault(require("morgan"));
+const rateLimiter_js_1 = require("./middlewares/rateLimiter.js");
 const client_1 = require("@prisma/client");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -149,6 +150,11 @@ app.use((req, res, next) => {
     }
     next();
 });
+// ── TIER 1 global rate limiter ───────────────────────────────────────────
+// Must come AFTER the OPTIONS handler so CORS preflight is never blocked.
+// The skip() function in globalLimiter ensures /api/v1/webhooks/* and every
+// route that carries its own tier limiter are NEVER counted here.
+app.use(rateLimiter_js_1.globalLimiter);
 app.use((0, cookie_parser_1.default)());
 const newsletterWebhookRoutes_js_1 = __importDefault(require("./routes/newsletterWebhookRoutes.js"));
 app.use("/api/v1/webhooks", newsletterWebhookRoutes_js_1.default);
@@ -179,8 +185,32 @@ const cacheRoutes_js_1 = __importDefault(require("./routes/cacheRoutes.js"));
 app.use("/api/v1/cache", cacheRoutes_js_1.default);
 require("./queues/emailWorker.js");
 const redis_js_1 = require("./config/redis.js");
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const TEMP_DIR = "/tmp/cineprism-uploads";
+const ONE_HOUR = 60 * 60 * 1000;
 app.listen(PORT, () => {
     logger_js_1.default.info(`Server is running on port ${PORT}`);
+    // Periodically delete orphaned temp upload files older than 1 hour.
+    // These are left behind when an upload fails mid-way after Multer wrote
+    // the file to disk but before s3Upload.ts could delete it.
+    setInterval(() => {
+        if (!fs_1.default.existsSync(TEMP_DIR))
+            return;
+        const files = fs_1.default.readdirSync(TEMP_DIR);
+        const now = Date.now();
+        files.forEach((file) => {
+            const filePath = path_1.default.join(TEMP_DIR, file);
+            try {
+                const stat = fs_1.default.statSync(filePath);
+                if (now - stat.mtimeMs > ONE_HOUR) {
+                    fs_1.default.unlinkSync(filePath);
+                    logger_js_1.default.info(`[Cleanup] Deleted orphaned temp file: ${file}`);
+                }
+            }
+            catch { }
+        });
+    }, ONE_HOUR);
     // Warm up newsletter plans cache so first visitor never hits a cold miss
     (async () => {
         try {
