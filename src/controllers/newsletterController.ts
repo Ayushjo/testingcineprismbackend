@@ -139,6 +139,22 @@ export const createCheckout = async (req: Request, res: Response) => {
       }
     }
 
+    // Guard: after ALL subscriber-determination paths (email lookup, userId re-link,
+    // or fresh create), verify the plan subscription state before hitting Razorpay.
+    // The initial 409 check only ran against `existingSubscriber` (by email); a
+    // userId-re-linked subscriber could still carry an existing subscription here.
+    if (subscriber?.subscriptions?.length) {
+      const existingSub = subscriber.subscriptions[0];
+      if (existingSub.status === "ACTIVE") {
+        return res.status(409).json({ error: "Already subscribed to this plan" });
+      }
+      // PENDING / CANCELLED / other stale state — remove so a fresh record can be created
+      await client.newsletterSubscription.delete({ where: { id: existingSub.id } });
+      logger.info(
+        `Cleared stale (${existingSub.status}) subscription ${existingSub.id} for subscriber ${subscriber.id}`,
+      );
+    }
+
     // FIX 1: Handle "customer already exists" gracefully
     let razorpayCustomer: { id?: string } | null = null;
     try {
@@ -191,18 +207,41 @@ export const createCheckout = async (req: Request, res: Response) => {
       // Razorpay Dashboard under Settings → Checkout → Redirect URL.
     });
 
-    await client.newsletterSubscription.create({
-      data: {
-        subscriberId: subscriber!.id,
-        planId: plan.id,
-        provider: "RAZORPAY",
-        status: "ACTIVE",
-        razorpayCustomerId: razorpayCustomer?.id ?? undefined,
-        razorpaySubscriptionId: razorpaySubscription.id,
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(),
-      },
-    });
+    try {
+      await client.newsletterSubscription.create({
+        data: {
+          subscriberId: subscriber!.id,
+          planId: plan.id,
+          provider: "RAZORPAY",
+          status: "ACTIVE",
+          razorpayCustomerId: razorpayCustomer?.id ?? undefined,
+          razorpaySubscriptionId: razorpaySubscription.id,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(),
+        },
+      });
+    } catch (subErr: any) {
+      // Race-condition safety net: if a subscription record snuck in between our
+      // delete and this create (P2002 on subscriberId+planId), update it in-place.
+      if (subErr.code === "P2002") {
+        logger.warn(
+          `P2002 on subscription create for subscriber ${subscriber!.id} — updating existing record`,
+        );
+        await client.newsletterSubscription.updateMany({
+          where: { subscriberId: subscriber!.id, planId: plan.id },
+          data: {
+            provider: "RAZORPAY",
+            status: "ACTIVE",
+            razorpayCustomerId: razorpayCustomer?.id ?? undefined,
+            razorpaySubscriptionId: razorpaySubscription.id,
+            currentPeriodStart: new Date(),
+            currentPeriodEnd: new Date(),
+          },
+        });
+      } else {
+        throw subErr;
+      }
+    }
 
     logger.info(
       `Checkout created for ${email}, subscription: ${razorpaySubscription.id}`,
