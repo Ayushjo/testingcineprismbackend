@@ -143,15 +143,23 @@ export const createCheckout = async (req: Request, res: Response) => {
     // or fresh create), verify the plan subscription state before hitting Razorpay.
     // The initial 409 check only ran against `existingSubscriber` (by email); a
     // userId-re-linked subscriber could still carry an existing subscription here.
+    //
+    // IMPORTANT: mirror the same dual-condition as the original 409 check above.
+    // A subscription row is created with status="ACTIVE" at checkout initiation —
+    // the subscriber row only becomes "ACTIVE" after the Razorpay webhook confirms
+    // payment. So subscriber.status="PENDING" + subscription.status="ACTIVE" means
+    // an incomplete (never-paid) checkout, NOT an active subscription.
     if (subscriber?.subscriptions?.length) {
       const existingSub = subscriber.subscriptions[0];
-      if (existingSub.status === "ACTIVE") {
+      if (subscriber.status === "ACTIVE" && existingSub.status === "ACTIVE") {
+        // Both confirmed ACTIVE — genuine duplicate subscription attempt
         return res.status(409).json({ error: "Already subscribed to this plan" });
       }
-      // PENDING / CANCELLED / other stale state — remove so a fresh record can be created
+      // Subscriber still PENDING (payment never completed) — stale record, clear it
       await client.newsletterSubscription.delete({ where: { id: existingSub.id } });
       logger.info(
-        `Cleared stale (${existingSub.status}) subscription ${existingSub.id} for subscriber ${subscriber.id}`,
+        `Cleared stale checkout (subscriber:${subscriber.status} / sub:${existingSub.status}) ` +
+        `subscription ${existingSub.id} for subscriber ${subscriber.id}`,
       );
     }
 
