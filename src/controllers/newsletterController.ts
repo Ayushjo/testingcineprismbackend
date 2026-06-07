@@ -94,17 +94,49 @@ export const createCheckout = async (req: Request, res: Response) => {
     let subscriber = existingSubscriber;
 
     if (!subscriber) {
-      subscriber = await client.newsletterSubscriber.create({
-        data: {
-          email,
-          name,
-          userId: userId || null,
-          country,
-          provider: "RAZORPAY",
-          status: "PENDING",
-        },
-        include: { subscriptions: true },
-      });
+      // The stale cleanup may have deleted the subscription in a way that
+      // also removed the subscriber (cascade). Before creating, check if a
+      // subscriber already exists under the same userId (Google account) so
+      // we don't hit a P2002 unique constraint on the userId field.
+      if (userId) {
+        const byUserId = await client.newsletterSubscriber.findUnique({
+          where: { userId },
+          include: { subscriptions: { where: { planId } } },
+        });
+        if (byUserId) {
+          subscriber = byUserId;
+          logger.info(`Re-linked subscriber ${byUserId.id} via userId for ${email}`);
+        }
+      }
+    }
+
+    if (!subscriber) {
+      try {
+        subscriber = await client.newsletterSubscriber.create({
+          data: {
+            email,
+            name,
+            userId: userId || null,
+            country,
+            provider: "RAZORPAY",
+            status: "PENDING",
+          },
+          include: { subscriptions: true },
+        });
+      } catch (createErr: any) {
+        // P2002 on userId — another record already owns this userId.
+        // Recover by fetching that record and using it.
+        if (createErr.code === "P2002" && createErr.meta?.target?.includes("userId") && userId) {
+          logger.warn(`P2002 on userId during subscriber create for ${email}, recovering`);
+          subscriber = await client.newsletterSubscriber.findUnique({
+            where: { userId },
+            include: { subscriptions: { where: { planId } } },
+          });
+          if (!subscriber) throw createErr; // genuinely unrecoverable
+        } else {
+          throw createErr;
+        }
+      }
     }
 
     // FIX 1: Handle "customer already exists" gracefully
@@ -153,9 +185,10 @@ export const createCheckout = async (req: Request, res: Response) => {
         planId: plan.id,
         email,
       },
-      // callback_url: Razorpay redirects here after payment with
-      // ?razorpay_payment_id=&razorpay_subscription_id=&razorpay_signature=
-      callback_url: `${frontendUrl}/newsletter/status`,
+      // callback_url is NOT a valid field on subscriptions.create() —
+      // Razorpay returns BAD_REQUEST_ERROR if it is included.
+      // The redirect URL after hosted checkout is configured in the
+      // Razorpay Dashboard under Settings → Checkout → Redirect URL.
     });
 
     await client.newsletterSubscription.create({
