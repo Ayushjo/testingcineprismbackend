@@ -28,7 +28,8 @@ router
 router
     .route("/create-top-picks")
     .post(extractUser_1.extractUserDetails, multer_1.default.single("file"), adminController_1.addTopPicks);
-router.route("/fetch-top-picks").post(extractUser_1.extractUserDetails, adminController_1.fetchTopPicks);
+// NOTE: auth guard temporarily disabled for public read (testing).
+router.route("/fetch-top-picks").post(/* extractUserDetails, */ adminController_1.fetchTopPicks);
 router.route("/fetch-posts").post(adminController_1.fetchAllPost);
 router.route("/edit-post").post(extractUser_1.extractUserDetails, adminController_1.editPost);
 router.route("/delete-post").post(extractUser_1.extractUserDetails, adminController_1.deletePost);

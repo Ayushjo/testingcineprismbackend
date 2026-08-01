@@ -47,7 +47,8 @@ router
 router
   .route("/create-top-picks")
   .post(extractUserDetails, uploadFile.single("file"), addTopPicks);
-router.route("/fetch-top-picks").post(extractUserDetails, fetchTopPicks);
+// NOTE: auth guard temporarily disabled for public read (testing).
+router.route("/fetch-top-picks").post(/* extractUserDetails, */ fetchTopPicks);
 router.route("/fetch-posts").post(fetchAllPost);
 router.route("/edit-post").post(extractUserDetails, editPost);
 router.route("/delete-post").post(extractUserDetails, deletePost);

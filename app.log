@@ -2033,3 +2033,14 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"Processing email job test-email-1780242210245 for ayushsingh202586@gmail.com","timestamp":"2026-05-31T15:43:30.781Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Email sent to ayushsingh202586@gmail.com, SES ID: 0109019e7eb4633e-188df436-d79c-46be-9516-48686db638b2-000000","timestamp":"2026-05-31T15:43:31.058Z"}
 {"level":"\u001b[32minfo\u001b[39m","message":"Email job test-email-1780242210245 completed","timestamp":"2026-05-31T15:43:31.183Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Email worker started and listening for jobs","timestamp":"2026-08-01T05:55:48.518Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-08-01T05:55:48.524Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker connection error (will retry): read ECONNRESET","timestamp":"2026-08-01T05:55:51.782Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker connection error (will retry): read ECONNRESET","timestamp":"2026-08-01T05:55:53.292Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker connection error (will retry): read ECONNRESET","timestamp":"2026-08-01T05:55:53.293Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker connection error (will retry): read ECONNRESET","timestamp":"2026-08-01T05:55:54.510Z"}
+{"level":"\u001b[31merror\u001b[39m","message":"Email worker connection error (will retry): read ECONNRESET","timestamp":"2026-08-01T05:55:55.893Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"{\"method\":\"GET\",\"url\":\"/\",\"status\":\"404\",\"responseTime\":\"2.073\"}","timestamp":"2026-08-01T05:55:57.199Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Email worker started and listening for jobs","timestamp":"2026-08-01T06:00:27.516Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"Server is running on port 3500","timestamp":"2026-08-01T06:00:27.522Z"}
+{"level":"\u001b[32minfo\u001b[39m","message":"[Cache Warm-up] newsletter:plans loaded (2 plans) — TTL 3600s","timestamp":"2026-08-01T06:00:31.095Z"}
