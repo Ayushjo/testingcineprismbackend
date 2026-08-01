@@ -9,7 +9,11 @@
     "start": "node ./dist/index.js",
     "test:s3": "ts-node ./src/scripts/testS3Connection.ts",
     "dryRun:s3": "ts-node ./src/scripts/dryRunMigration.ts",
-    "migrate:cloudinary-to-s3": "ts-node ./src/scripts/migrateToS3.ts"
+    "migrate:cloudinary-to-s3": "ts-node ./src/scripts/migrateToS3.ts",
+    "seed:thrillers": "ts-node ./src/scripts/seedThrillers.ts",
+    "seed:dramas": "ts-node ./src/scripts/seedDramas.ts",
+    "seed:horrors": "ts-node ./src/scripts/seedHorror.ts",
+    "seed:anime": "ts-node ./src/scripts/seedAnime.ts"
   },
   "keywords": [],
   "author": "",

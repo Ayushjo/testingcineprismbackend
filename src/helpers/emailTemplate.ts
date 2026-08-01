@@ -411,7 +411,7 @@ export function buildWelcomeEmail(subscriber: SubscriberMeta & { planName: strin
           </table>
           <p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#334155;">
             If you ever have thoughts, film recommendations, or questions, reach us at
-            <a href="mailto:editorial@thecineprism.com" style="color:#0f172a;font-weight:600;">editorial@thecineprism.com</a>.
+            <a href="mailto:writetothecineprism@gmail.com" style="color:#0f172a;font-weight:600;">writetothecineprism@gmail.com</a>.
           </p>
           <p style="margin:0;font-size:16px;line-height:1.8;color:#334155;font-style:italic;">
             — The Cineprism Team
