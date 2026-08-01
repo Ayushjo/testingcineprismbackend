@@ -62,7 +62,9 @@ exports.rateLimiter = {
 // The skip function is the single source of truth for the webhook exemption.
 exports.globalLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 200,
+    // Raised for testing / SSG builds (Next pre-renders ~100 pages in a burst).
+    // Restore to 200 for production, or exempt public GET read routes.
+    limit: 5000,
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => {
