@@ -23,7 +23,8 @@ const router = Router();
 
 // Post routes
 router.route("/search").get(searchPosts);
-router.route("/search/:genre").get(extractUserDetails,getPostByGenre);
+// NOTE: auth guard temporarily disabled for public read (testing).
+router.route("/search/:genre").get(/* extractUserDetails, */ getPostByGenre);
 router.route("/:id").get(optionalAuth, fetchSinglePost);
 router.route("/:id/related").get(fetchRelatedPosts);
 router.route("/:id/stats").get(optionalAuth, getPostStats);
