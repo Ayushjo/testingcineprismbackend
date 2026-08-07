@@ -34,6 +34,7 @@ model Quotes {
 
 model Post {
   id                   String      @id @default(uuid())
+  shortId              String?     @unique
   title                String
   content              String
   genres               String[]
@@ -81,6 +82,7 @@ model IndieMovies {
 
 model Article {
   id                String         @id @default(uuid())
+  shortId           String?        @unique
   title             String
   shortDescription  String
   slug              String

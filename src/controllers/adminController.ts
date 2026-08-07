@@ -5,6 +5,7 @@ import client from "..";
 import cloudinary from "cloudinary";
 import { Multer } from "multer";
 import { uploadToS3 } from "../utils/s3Upload";
+import { generateUniqueShortCode } from "../utils/shortId";
 import { setCache, getFromCache, deleteCache, deleteCachePattern } from "../config/redis";
 export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
   try {
@@ -144,6 +145,10 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
         language,
       } = req.body;
 
+      const shortId = await generateUniqueShortCode(
+        async (code) => !!(await client.post.findUnique({ where: { shortId: code } }))
+      );
+
       const post = await client.post.create({
         data: {
           title,
@@ -155,6 +160,7 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
           relatedPostIds,
           ratingCategories,
           language,
+          shortId,
         },
       });
 

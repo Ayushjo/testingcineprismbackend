@@ -5,6 +5,7 @@ import getBuffer from "../config/dataUri";
 import cloudinary from "cloudinary";
 import { uploadToS3 } from "../utils/s3Upload";
 import { deleteFromS3 } from "../utils/s3Delete";
+import { generateUniqueShortCode } from "../utils/shortId";
 import { setCache, getFromCache, deleteCache, deleteCachePattern } from "../config/redis";
 
 /**
@@ -100,10 +101,15 @@ export const createArticle = async (req: AuthorizedRequest, res: Response) => {
       }
     );
 
+    const shortId = await generateUniqueShortCode(
+      async (code) => !!(await client.article.findUnique({ where: { shortId: code } }))
+    );
+
     const article = await client.article.create({
       data: {
         title,
         slug,
+        shortId,
         shortDescription,
         author,
         published: published === "true",

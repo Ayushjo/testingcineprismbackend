@@ -237,6 +237,9 @@ app.use("/api/v1/newsletter", newsletterRoutes);
 import cacheRoutes from "./routes/cacheRoutes.js";
 app.use("/api/v1/cache", cacheRoutes);
 
+import shortlinkRoutes from "./routes/shortlinkRoutes.js";
+app.use("/api/v1/s", shortlinkRoutes);
+
 import "./queues/emailWorker.js";
 import { setCache } from "./config/redis.js";
 import fs from "fs";
