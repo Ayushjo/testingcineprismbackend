@@ -7,6 +7,7 @@ import { Multer } from "multer";
 import { uploadToS3 } from "../utils/s3Upload";
 import { generateUniqueShortCode } from "../utils/shortId";
 import { setCache, getFromCache, deleteCache, deleteCachePattern } from "../config/redis";
+import { syncPostStreamingInBackground } from "../utils/streamingSync";
 export const uploadPoster = async (req: AuthorizedRequest, res: Response) => {
   try {
     const user = req.user;
@@ -165,6 +166,7 @@ export const createPost = async (req: AuthorizedRequest, res: Response) => {
       });
 
       await Promise.all([deleteCache("all_posts"), deleteCache("latest_reviews")]);
+      syncPostStreamingInBackground(post.id);
 
       res.status(201).json({ post, message: "Post created successfully" });
     } else {
@@ -352,9 +354,14 @@ export const editPost = async (req: AuthorizedRequest, res: Response) => {
             relatedPostIds,
             ratingCategories,
             language,
+            // Re-match on TMDB if the film's identity changed.
+            ...(post.title !== title || Number(post.year) !== Number(year) || post.directedBy !== directedBy
+              ? { tmdbId: null }
+              : {}),
           },
         });
         await Promise.all([deleteCache("all_posts"), deleteCache("latest_reviews"), deleteCache(`post:${postId}`)]);
+        syncPostStreamingInBackground(postId);
         return res.status(200).json({ message: "Post updated successfully" });
       }
     }

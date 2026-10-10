@@ -59,6 +59,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import logger from "./logger.js";
+import { scheduleStreamingSync } from "./utils/streamingSync";
 import morgan from "morgan";
 import { globalLimiter } from "./middlewares/rateLimiter.js";
 import { PrismaClient } from "@prisma/client";
@@ -250,6 +251,9 @@ const ONE_HOUR = 60 * 60 * 1000;
 
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
+
+  // Refresh every review's "where to watch" (TMDB/JustWatch) now and daily.
+  scheduleStreamingSync();
 
   // Periodically delete orphaned temp upload files older than 1 hour.
   // These are left behind when an upload fails mid-way after Multer wrote

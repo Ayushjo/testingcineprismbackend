@@ -47,6 +47,8 @@ model Post {
   reviewPosterImageUrl String?
   directedBy           String
   streamingAt          String
+  tmdbId               Int?
+  streamingSyncedAt    DateTime?
   ratingCategories     Json
   viewCount            Int         @default(0)
   language             String      @default("English")
