@@ -59,7 +59,6 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import logger from "./logger.js";
-import { scheduleStreamingSync } from "./utils/streamingSync";
 import morgan from "morgan";
 import { globalLimiter } from "./middlewares/rateLimiter.js";
 import { PrismaClient } from "@prisma/client";
@@ -243,6 +242,8 @@ app.use("/api/v1/s", shortlinkRoutes);
 
 import "./queues/emailWorker.js";
 import { setCache } from "./config/redis.js";
+// Must stay below dotenv.config(): it loads the Redis client, which reads REDIS_URL at import time.
+import { scheduleStreamingSync } from "./utils/streamingSync";
 import fs from "fs";
 import path from "path";
 
